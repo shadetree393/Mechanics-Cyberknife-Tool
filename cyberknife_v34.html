@@ -1,0 +1,2338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0d1117">
+<title>CYBERKNIFE v3.4</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{--bg:#0d1117;--panel:#161b22;--dark:#0a0e14;--green:#00ff88;--amber:#ffaa00;
+--red:#ff4040;--blue:#4488ff;--cyan:#00ccff;--yell:#ffff44;--purp:#cc55ff;
+--white:#ddeeff;--gray:#445566;--dim:#223344;--orange:#ff7722;--teal:#00ddaa}
+body{background:var(--bg);color:var(--white);font-family:'Courier New',monospace;
+font-size:11px;overflow:hidden;height:100dvh;display:flex;flex-direction:column;touch-action:manipulation}
+#statusbar{background:#050a0f;padding:2px 3px;flex-shrink:0}
+.sb-row{display:flex;gap:1px;margin-bottom:1px}
+.sb-cell{flex:1;text-align:center;background:#070c14;border-radius:2px;padding:1px 0;cursor:pointer;position:relative}
+.sb-cell:active{background:#0f1a2a}
+.sb-lbl{font-size:7px;color:var(--gray);line-height:1.1}
+.sb-val{font-size:12px;font-weight:bold;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#dtcbar{background:#0a0505;padding:2px 5px;display:flex;justify-content:space-between;font-size:9px;font-weight:bold;flex-shrink:0}
+#tabnav{display:flex;background:#050a0f;overflow-x:auto;flex-shrink:0;scrollbar-width:none}
+#tabnav::-webkit-scrollbar{display:none}
+.tab-btn{background:var(--panel);color:#aaccff;border:none;padding:5px 8px;
+font-family:'Courier New',monospace;font-size:9px;font-weight:bold;cursor:pointer;
+white-space:nowrap;border-right:1px solid #1a2030;flex-shrink:0;touch-action:manipulation}
+.tab-btn.active{background:#0f3460;color:var(--cyan);border-bottom:2px solid var(--cyan)}
+#tabcontent{flex:1;overflow:hidden;display:flex;flex-direction:column;min-height:0}
+.tabpane{display:none;flex:1;overflow-y:auto;padding:3px;min-height:0}
+.tabpane.active{display:flex;flex-direction:column}
+.card{background:var(--panel);border-radius:3px;margin-bottom:3px;padding:5px}
+.card-title{color:var(--green);font-size:8px;font-weight:bold;margin-bottom:3px;
+text-transform:uppercase;letter-spacing:1px;border-bottom:1px solid #1a3020;padding-bottom:2px}
+.ck-btn{background:#0f3460;color:var(--white);border:1px solid #1a4070;
+padding:5px 8px;font-family:'Courier New',monospace;font-size:10px;font-weight:bold;
+border-radius:3px;cursor:pointer;touch-action:manipulation;white-space:nowrap}
+.ck-btn:active{opacity:.7}
+.btn-green{background:#002a0e;color:var(--green);border-color:#004020}
+.btn-amber{background:#2a1800;color:var(--amber);border-color:#503000}
+.btn-red{background:#2a0000;color:var(--red);border-color:#500000}
+.btn-cyan{background:#001a2a;color:var(--cyan);border-color:#003050}
+.btn-purp{background:#1a0028;color:var(--purp);border-color:#330055}
+.btn-orange{background:#2a1000;color:var(--orange);border-color:#502000}
+.btn-teal{background:#001a14;color:var(--teal);border-color:#003025}
+.btn-row{display:flex;flex-wrap:wrap;gap:2px;margin-bottom:3px}
+.gauge-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:2px}
+.gauge{background:var(--dark);border-radius:2px;padding:3px 5px;text-align:center;cursor:pointer}
+.gauge:active{background:#111820}
+.gauge-lbl{font-size:7px;color:var(--gray)}
+.gauge-val{font-size:13px;font-weight:bold}
+.mini-wrap{position:relative;cursor:pointer;border:1px solid #1a3020;border-radius:2px}
+.mini-wrap::after{content:"TAP▶EXPAND";position:absolute;top:2px;right:4px;
+font-size:6px;color:var(--dim);pointer-events:none}
+canvas.mini{width:100%;height:70px;display:block}
+/* SCOPE OVERLAY */
+#scope-ov{position:fixed;inset:0;background:var(--bg);z-index:200;display:none;flex-direction:column}
+#scope-ov.open{display:flex}
+#scope-topbar{background:#050a0f;padding:3px 5px;display:flex;align-items:center;gap:3px;flex-wrap:wrap;flex-shrink:0}
+#scope-left{width:130px;background:var(--panel);overflow-y:auto;flex-shrink:0;padding:3px;font-size:8px}
+#scope-left h4{color:var(--cyan);margin-bottom:2px;font-size:8px;font-weight:bold}
+#scope-left label{display:block;padding:1px 0;cursor:pointer;font-size:8px}
+#scope-main{flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0}
+#scope-num-strip{background:#070c10;display:flex;flex-wrap:wrap;gap:1px;padding:2px 3px;flex-shrink:0}
+.num-cell{text-align:center;min-width:48px;padding:1px}
+.num-lbl{font-size:6px;color:var(--gray)}
+.num-val{font-size:11px;font-weight:bold;color:var(--yell)}
+#scope-cv-wrap{flex:1;position:relative;overflow:hidden}
+#scope-cv{position:absolute;inset:0;width:100%;height:100%}
+#snap-bar{background:#0a0a05;padding:2px 5px;font-size:7px;color:var(--amber);flex-shrink:0}
+/* POPUP */
+#popup-ov{position:fixed;inset:0;background:#000a;z-index:300;display:none;align-items:center;justify-content:center}
+#popup-ov.open{display:flex}
+#popup-box{background:var(--panel);border:1px solid var(--cyan);border-radius:5px;
+padding:10px;min-width:240px;max-width:90vw;max-height:80vh;overflow-y:auto}
+#popup-title{color:var(--cyan);font-size:11px;font-weight:bold;margin-bottom:8px;
+border-bottom:1px solid #1a3050;padding-bottom:4px}
+.popup-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px}
+.popup-lbl{color:var(--gray);font-size:9px}
+.popup-input{background:var(--dark);color:var(--amber);border:1px solid #1a3050;
+padding:3px 5px;font-family:'Courier New',monospace;font-size:10px;border-radius:2px;width:80px;text-align:right}
+/* TABLES */
+.data-table{width:100%;border-collapse:collapse;font-size:8px}
+.data-table th{background:var(--panel);color:var(--cyan);padding:2px 3px;text-align:left;position:sticky;top:0;z-index:1;white-space:nowrap}
+.data-table td{padding:2px 3px;border-bottom:1px solid #1a2030;white-space:nowrap;font-size:8px}
+.data-table tr:nth-child(even){background:#0e1520}
+.tbl-wrap{overflow:auto;max-height:220px;border:1px solid #1a2030;border-radius:2px}
+/* MAP TABLES */
+.map-cell{width:34px;height:19px;text-align:center;border:1px solid #1a2030;border-radius:1px;
+font-family:'Courier New',monospace;font-size:7px;color:var(--white);padding:0}
+.map-cell.hi{border:2px solid var(--yell)!important}
+/* FAULTS */
+.fault-card{background:var(--panel);border-radius:3px;padding:5px 7px;margin-bottom:2px;display:flex;align-items:flex-start;gap:7px}
+.fault-card input[type=checkbox]{width:16px;height:16px;margin-top:1px;flex-shrink:0;accent-color:var(--red)}
+/* SELECT / INPUT */
+select,input[type=range]{background:var(--dark);color:var(--white);border:1px solid #1a3050;
+padding:3px 5px;font-family:'Courier New',monospace;font-size:10px;border-radius:2px;width:100%}
+input[type=range]{accent-color:var(--cyan);padding:0;height:16px}
+input[type=text],input[type=number]{background:var(--dark);color:var(--amber);
+border:1px solid #1a3050;padding:3px 5px;font-family:'Courier New',monospace;font-size:10px;border-radius:2px}
+/* DTC CODE COLORS */
+.dtc-p{color:#ff8888}.dtc-c{color:#88ccff}.dtc-b{color:#ffaa44}.dtc-u{color:#cc88ff}
+/* MODULE STATUS */
+.mod-badge{display:inline-block;padding:1px 5px;border-radius:2px;font-size:8px;font-weight:bold;margin:1px}
+.mod-ok{background:#002a0e;color:var(--green)}
+.mod-fault{background:#2a0000;color:var(--red)}
+.mod-warn{background:#2a1800;color:var(--amber)}
+.mod-off{background:#0a0e14;color:var(--gray)}
+/* ENGINE CONFIG */
+#eng-config-bar{background:#0a1020;border-bottom:1px solid #1a2530;padding:3px 5px;
+display:flex;align-items:center;gap:5px;flex-shrink:0;flex-wrap:wrap}
+.eng-badge{background:#001830;color:var(--blue);border:1px solid #004060;
+padding:2px 6px;border-radius:2px;font-size:9px;font-weight:bold}
+/* CAMERA/THERMAL OVERLAY */
+#cam-ov{position:fixed;inset:0;background:#000;z-index:400;display:none;flex-direction:column}
+#cam-ov.open{display:flex}
+#cam-topbar{background:#0a0a05;padding:4px 8px;display:flex;gap:5px;align-items:center}
+#cam-display{flex:1;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
+#thermal-canvas{position:absolute;inset:0;width:100%;height:100%;opacity:0.85}
+#cam-video{width:100%;height:100%;object-fit:contain}
+/* LIN badge */
+.lin-frame{font-family:'Courier New',monospace;font-size:8px;background:#0a0814;
+border-left:2px solid var(--purp);padding:2px 5px;margin-bottom:1px}
+/* SERVICE FUNCTION */
+.svc-btn{background:#001828;color:var(--teal);border:1px solid #003040;
+padding:5px 8px;font-family:'Courier New',monospace;font-size:9px;font-weight:bold;
+border-radius:2px;cursor:pointer;width:100%;text-align:left;margin-bottom:2px}
+.svc-btn:active{background:#002838}
+.svc-result{background:var(--dark);color:var(--green);font-size:9px;padding:4px;
+border-radius:2px;margin-top:3px;min-height:20px;white-space:pre-wrap}
+/* POWER PROBE */
+.probe-val{font-size:28px;font-weight:bold;text-align:center;padding:8px;
+background:var(--dark);border-radius:3px;margin-bottom:3px}
+</style>
+</head>
+<body>
+<!-- ENGINE CONFIG BAR -->
+<div id="eng-config-bar">
+  <span style="color:var(--gray);font-size:8px">ENGINE:</span>
+  <span class="eng-badge" id="eng-badge">I4 NA 2.0L</span>
+  <select id="eng-sel" style="width:140px;font-size:9px" onchange="setEngineConfig(this.value)">
+    <optgroup label="Petrol NA">
+      <option value="i4_na">I4 NA 2.0L (DOHC)</option>
+      <option value="v6_na">V6 NA 3.5L</option>
+      <option value="s6_na">Straight-6 NA 3.0L</option>
+      <option value="v8_na">V8 NA 5.7L</option>
+    </optgroup>
+    <optgroup label="Petrol Forced">
+      <option value="i4_turbo">I4 Turbo 2.0T</option>
+      <option value="v6_turbo">V6 Turbo 3.0T (BiTurbo)</option>
+      <option value="v8_turbo">V8 Turbo 6.2L (Supercharged)</option>
+    </optgroup>
+    <optgroup label="Diesel Light Duty">
+      <option value="i4_diesel">I4 Diesel 2.2L (CRDI)</option>
+      <option value="v6_diesel">V6 Diesel 3.0L (TDI)</option>
+    </optgroup>
+    <optgroup label="Diesel Heavy Duty">
+      <option value="i6_hd_diesel">I6 HD Diesel 6.7L (Cummins-style)</option>
+      <option value="v8_hd_diesel">V8 HD Diesel 6.6L (Duramax-style)</option>
+    </optgroup>
+    <optgroup label="Semi / Commercial">
+      <option value="i6_semi">I6 Semi 15L (Detroit/Cummins)</option>
+      <option value="i6_semi_cat">I6 Semi 13L (Cat C13-style)</option>
+    </optgroup>
+  </select>
+  <span style="color:var(--gray);font-size:8px">COND:</span>
+  <select id="cond-sel" style="width:110px;font-size:9px" onchange="setCondition(this.value)">
+    <option value="auto">Auto Scenario</option>
+    <option value="warmup">Warmup Cold Start</option>
+    <option value="idle">Hot Idle</option>
+    <option value="cruise">Highway Cruise</option>
+    <option value="wot">Full Load WOT</option>
+    <option value="decel">Decel / Overrun</option>
+    <option value="boost_test">Boost Test</option>
+    <option value="regen">Regen Braking</option>
+  </select>
+  <button class="ck-btn btn-orange" onclick="showTab('config')" style="font-size:8px;padding:3px 6px">⚙ ENV</button>
+  <button class="ck-btn btn-teal" onclick="openCamera('scope')" style="font-size:8px;padding:3px 6px">📷 CAM</button>
+  <button class="ck-btn btn-purp" onclick="openCamera('thermal')" style="font-size:8px;padding:3px 6px">🌡 THERM</button>
+  <span id="boost-badge" style="color:var(--orange);font-size:9px;font-weight:bold;display:none">BOOST: 0psi</span>
+</div>
+
+<!-- STATUS BAR -->
+<div id="statusbar">
+  <div class="sb-row" id="sb-row1"></div>
+  <div class="sb-row" id="sb-row2"></div>
+</div>
+<div id="dtcbar">
+  <span id="dtc-txt" style="color:var(--red)">NO DTCs</span>
+  <span id="scene-txt" style="color:var(--purp)">WARMUP</span>
+</div>
+
+<!-- TABS -->
+<nav id="tabnav">
+  <button class="tab-btn active" onclick="showTab('mech')">MECH</button>
+  <button class="tab-btn" onclick="showTab('scope')">SCOPE</button>
+  <button class="tab-btn" onclick="showTab('can')">CAN/LIN</button>
+  <button class="tab-btn" onclick="showTab('tune')">TUNE</button>
+  <button class="tab-btn" onclick="showTab('corr')">CORR</button>
+  <button class="tab-btn" onclick="showTab('modules')">MODULES</button>
+  <button class="tab-btn" onclick="showTab('service')">SERVICE</button>
+  <button class="tab-btn" onclick="showTab('build')">BUILD</button>
+  <button class="tab-btn" onclick="showTab('probe')">PROBE</button>
+  <button class="tab-btn" onclick="showTab('sens')">SENS</button>
+  <button class="tab-btn" onclick="showTab('log')">LOG</button>
+  <button class="tab-btn" onclick="showTab('fault')">FAULT</button>
+  <button class="tab-btn" onclick="showTab('config')">CONFIG</button>
+</nav>
+
+<div id="tabcontent">
+<!-- MECH TAB -->
+<div id="tab-mech" class="tabpane active">
+  <div class="card"><div class="card-title">OBD-II REQUESTS (SAE J1979)</div>
+    <div class="btn-row" id="obd-btn-row"></div>
+  </div>
+  <div class="card"><div class="card-title">DTC FUNCTIONS</div>
+    <div class="btn-row">
+      <button class="ck-btn btn-amber" onclick="obdMode(3)">Active DTCs</button>
+      <button class="ck-btn btn-amber" onclick="obdMode(7)">Pending DTCs</button>
+      <button class="ck-btn btn-red" onclick="obdMode(4)">Clear DTCs</button>
+      <button class="ck-btn btn-amber" onclick="obdMode(9,2)">Read VIN</button>
+      <button class="ck-btn btn-amber" onclick="freezeFrame()">Freeze Frame</button>
+      <button class="ck-btn btn-cyan" onclick="obdMode(9,4)">CAL ID</button>
+      <button class="ck-btn btn-cyan" onclick="obdMode(9,6)">CVN</button>
+    </div>
+    <label style="color:var(--cyan);font-size:9px;display:flex;align-items:center;gap:5px;margin-top:3px">
+      <input type="checkbox" id="autopoll" onchange="eng.autopoll=this.checked" style="width:14px;height:14px;accent-color:var(--cyan)"> AUTO-POLL all PIDs (400ms)
+    </label>
+  </div>
+  <div class="card"><div class="card-title">LIVE VALUES</div>
+    <div class="gauge-grid" id="lv-grid"></div>
+  </div>
+  <div class="card" id="result-card"><div class="card-title">REQUEST RESULT</div>
+    <pre id="obd-result" style="font-size:9px;color:var(--cyan);white-space:pre-wrap;word-break:break-all;max-height:80px;overflow-y:auto"></pre>
+  </div>
+  <div class="card"><div class="card-title">AFR / O2 LIVE ▸ TAP EXPAND</div>
+    <div class="mini-wrap" onclick="openScope('Wideband O2','Narrowband O2')">
+      <canvas class="mini" id="mini-afr"></canvas>
+    </div>
+  </div>
+</div>
+
+<!-- SCOPE TAB -->
+<div id="tab-scope" class="tabpane">
+  <div class="card"><div class="card-title">CHANNEL SELECT</div>
+    <div style="display:flex;gap:3px">
+      <div style="flex:1"><div style="font-size:7px;color:var(--gray)">CH1 (green)</div>
+        <select id="ch1-sel" style="font-size:9px"></select></div>
+      <div style="flex:1"><div style="font-size:7px;color:var(--gray)">CH2 (amber)</div>
+        <select id="ch2-sel" style="font-size:9px"></select></div>
+    </div>
+    <button class="ck-btn btn-green" style="width:100%;margin-top:4px"
+      onclick="openScope(document.getElementById('ch1-sel').value,document.getElementById('ch2-sel').value)">
+      ▶ OPEN FULL SCOPE  zoom · pan · snapshot · compare
+    </button>
+  </div>
+  <div class="card"><div class="card-title">SCOPE PREVIEW ▸ TAP EXPAND</div>
+    <div class="mini-wrap" id="scope-preview" onclick="openScope(document.getElementById('ch1-sel').value,document.getElementById('ch2-sel').value)">
+      <canvas class="mini" id="mini-scope" style="height:110px"></canvas>
+    </div>
+  </div>
+  <div class="card"><div class="card-title">CRANK/CAM DECODE</div>
+    <div id="crank-info" style="font-size:9px;color:var(--cyan)">Waiting for RPM...</div>
+  </div>
+</div>
+
+<!-- CAN/LIN TAB -->
+<div id="tab-can" class="tabpane">
+  <div class="btn-row" style="margin-bottom:3px">
+    <button class="ck-btn btn-cyan" onclick="canSubTab('j1939')" id="csub-j1939">J1939</button>
+    <button class="ck-btn" onclick="canSubTab('obd')" id="csub-obd">OBD-II</button>
+    <button class="ck-btn btn-purp" onclick="canSubTab('lin')" id="csub-lin">LIN</button>
+    <button class="ck-btn btn-orange" onclick="canSubTab('uds')" id="csub-uds">UDS</button>
+    <button class="ck-btn btn-teal" onclick="canSubTab('proto')" id="csub-proto">PROTO ANLYZ</button>
+    <button class="ck-btn btn-amber" onclick="canSubTab('info')" id="csub-info">INFO</button>
+  </div>
+  <div id="can-j1939" class="can-sub">
+    <div class="card"><div class="card-title">J1939 LIVE FRAMES (29-bit)</div>
+      <div class="tbl-wrap"><table class="data-table"><thead><tr><th>Time</th><th>CAN ID</th><th>PGN</th><th>Name</th><th>Data (hex)</th><th>Decoded</th></tr></thead><tbody id="j1939-body"></tbody></table></div>
+    </div>
+  </div>
+  <div id="can-obd" class="can-sub" style="display:none">
+    <div class="card"><div class="card-title">OBD-II FRAMES (11-bit)</div>
+      <div class="tbl-wrap"><table class="data-table"><thead><tr><th>Time</th><th>ID</th><th>Dir</th><th>Data</th><th>Decoded</th></tr></thead><tbody id="obd-body"></tbody></table></div>
+    </div>
+  </div>
+  <div id="can-lin" class="can-sub" style="display:none">
+    <div class="card"><div class="card-title">LIN BUS (ISO 17987 / SAE J2602)  13.33kbps</div>
+      <pre style="font-size:7px;color:#aaccff;margin-bottom:4px">BREAK(>13bit low) | SYNC(0x55) | PID(6bit+2par) | DATA(1-8B) | CHECKSUM
+LIN slaves: HVAC blend, mirror ctrl, window lift, seat module, lighting ctrl</pre>
+      <div id="lin-frames" style="max-height:200px;overflow-y:auto"></div>
+    </div>
+  </div>
+  <div id="can-uds" class="can-sub" style="display:none">
+    <div class="card"><div class="card-title">UDS ISO 14229 — DIAGNOSTIC SERVICES</div>
+      <div class="btn-row" id="uds-btns"></div>
+      <div class="svc-result" id="uds-result">Select a service above</div>
+    </div>
+    <div class="card"><div class="card-title">SECURITY ACCESS</div>
+      <div style="display:flex;gap:3px;align-items:center">
+        <span style="font-size:9px;color:var(--gray)">Level:</span>
+        <select id="sec-level" style="width:80px;font-size:9px"><option value="01">01 L1</option><option value="03">03 L2</option><option value="27">27 Prog</option></select>
+        <button class="ck-btn btn-amber" onclick="udsSecAccess()">Request Seed</button>
+        <button class="ck-btn btn-red" onclick="udsSendKey()">Send Key</button>
+      </div>
+      <div id="sec-result" style="font-size:9px;color:var(--amber);margin-top:3px"></div>
+    </div>
+  </div>
+  <div id="can-proto" class="can-sub" style="display:none">
+    <div class="card"><div class="card-title">PROTOCOL ANALYZER / COMMUNITY LIBRARY</div>
+      <div class="btn-row">
+        <button class="ck-btn btn-green" onclick="protoCapStart()">▶ CAPTURE</button>
+        <button class="ck-btn btn-red" onclick="protoCapStop()">■ STOP</button>
+        <button class="ck-btn btn-cyan" onclick="protoByteDiff()">BYTE DIFF</button>
+        <button class="ck-btn btn-amber" onclick="protoFreqAnalysis()">FREQ ANLYZ</button>
+        <button class="ck-btn btn-purp" onclick="protoExport()">EXPORT</button>
+      </div>
+      <div style="display:flex;gap:3px;margin-bottom:3px">
+        <input type="text" id="proto-filter" placeholder="Filter ID (e.g. 0x7E8)" style="flex:1;font-size:9px">
+        <button class="ck-btn btn-teal" onclick="protoAddLib()">+ ADD TO LIB</button>
+      </div>
+      <div id="proto-cap" class="tbl-wrap" style="max-height:180px;font-size:8px">
+        <table class="data-table"><thead><tr><th>Δt ms</th><th>ID</th><th>DLC</th><th>D0</th><th>D1</th><th>D2</th><th>D3</th><th>D4</th><th>D5</th><th>D6</th><th>D7</th><th>Library Match</th></tr></thead><tbody id="proto-body"></tbody></table>
+      </div>
+    </div>
+    <div class="card"><div class="card-title">COMMUNITY LIBRARY ENTRIES</div>
+      <div id="lib-list" style="font-size:8px;max-height:120px;overflow-y:auto"></div>
+    </div>
+  </div>
+  <div id="can-info" class="can-sub" style="display:none">
+    <div class="card"><div class="card-title">PROTOCOL REFERENCE</div>
+      <pre id="can-info-text" style="font-size:8px;color:#aaccff;white-space:pre-wrap"></pre>
+    </div>
+  </div>
+</div>
+
+<!-- TUNE TAB -->
+<div id="tab-tune" class="tabpane">
+  <div style="display:flex;gap:3px;margin-bottom:3px">
+    <div class="card" style="flex:1"><div class="card-title">ECU CONN</div>
+      <div id="conn-badge" style="background:#1a0000;color:var(--red);font-size:10px;font-weight:bold;text-align:center;padding:3px;border-radius:2px;margin-bottom:3px">OFFLINE</div>
+      <button class="ck-btn btn-green" style="width:100%;margin-bottom:2px" onclick="ecuConn()">Connect</button>
+      <button class="ck-btn" style="width:100%;margin-bottom:2px;color:var(--gray)" onclick="ecuDisc()">Disconnect</button>
+      <button class="ck-btn btn-red" style="width:100%;margin-bottom:2px" onclick="ecuBurn()">Burn Flash</button>
+      <button class="ck-btn btn-cyan" style="width:100%;margin-bottom:2px" onclick="exportMaps()">Export CSV</button>
+      <button class="ck-btn btn-amber" style="width:100%;" onclick="ecuRevert()">Revert</button>
+    </div>
+    <div class="card" style="flex:1.2"><div class="card-title">LIVE OP POINT</div>
+      <div id="op-grid" style="font-size:9px;line-height:1.6"></div>
+    </div>
+  </div>
+  <div style="display:flex;gap:2px;margin-bottom:2px">
+    <button class="ck-btn btn-cyan" onclick="tuneSubTab('ve')" style="flex:1;font-size:8px">VE%</button>
+    <button class="ck-btn" onclick="tuneSubTab('ign')" style="flex:1;font-size:8px">IGN</button>
+    <button class="ck-btn" onclick="tuneSubTab('afr')" style="flex:1;font-size:8px">AFR</button>
+    <button class="ck-btn btn-purp" onclick="tuneSubTab('boost')" style="flex:1;font-size:8px">BOOST</button>
+    <button class="ck-btn btn-orange" onclick="tuneSubTab('vvt')" style="flex:1;font-size:8px">VVT</button>
+  </div>
+  <div id="tune-ve"><div class="card"><div class="card-title">VE TABLE (%) — live cursor highlighted</div><div id="ve-wrap" style="overflow-x:auto"></div><button class="ck-btn btn-purp" onclick="show3D('ve')" style="margin-top:3px;width:100%">VIEW 3D SURFACE</button></div></div>
+  <div id="tune-ign" style="display:none"><div class="card"><div class="card-title">IGNITION ADVANCE (deg BTDC)</div><div id="ign-wrap" style="overflow-x:auto"></div></div></div>
+  <div id="tune-afr" style="display:none"><div class="card"><div class="card-title">AFR TARGET TABLE</div><div id="afr-wrap" style="overflow-x:auto"></div></div></div>
+  <div id="tune-boost" style="display:none"><div class="card"><div class="card-title">BOOST CONTROL (psi target)</div><div id="boost-wrap" style="overflow-x:auto"></div></div></div>
+  <div id="tune-vvt" style="display:none"><div class="card"><div class="card-title">VVT CAM ADVANCE (deg)</div><div id="vvt-wrap" style="overflow-x:auto"></div></div></div>
+</div>
+
+<!-- CORR TAB -->
+<div id="tab-corr" class="tabpane">
+  <div class="card"><div class="card-title">CLT FUEL CORRECTION (%) — 100=no change</div><div id="clt-wrap" style="overflow-x:auto"></div></div>
+  <div class="card"><div class="card-title">IAT FUEL CORRECTION (%) — hot air=less fuel</div><div id="iat-wrap" style="overflow-x:auto"></div></div>
+  <div class="card"><div class="card-title">INJECTOR DEAD TIME vs BATTERY VOLTAGE (ms)</div><div id="dt-wrap" style="overflow-x:auto"></div></div>
+  <div class="card"><div class="card-title">IDLE TARGET RPM vs CLT</div><div id="idle-wrap" style="overflow-x:auto"></div></div>
+  <div class="card"><div class="card-title">ALTITUDE FUEL CORRECTION (%) vs kPa baro</div><div id="alt-wrap" style="overflow-x:auto"></div></div>
+  <div class="card"><div class="card-title">GLOBAL CONFIG</div><div id="cfg-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:3px"></div>
+    <button class="ck-btn btn-green" style="width:100%;margin-top:5px" onclick="applyConfig()">Apply Config</button>
+  </div>
+</div>
+
+<!-- MODULES TAB -->
+<div id="tab-modules" class="tabpane">
+  <div class="btn-row" style="margin-bottom:3px">
+    <button class="ck-btn btn-blue" onclick="modSubTab('abs')" id="msub-abs">ABS/ESC</button>
+    <button class="ck-btn btn-red" onclick="modSubTab('srs')" id="msub-srs">SRS/AIRBAG</button>
+    <button class="ck-btn btn-amber" onclick="modSubTab('tcu')" id="msub-tcu">TCU/TRANS</button>
+    <button class="ck-btn btn-teal" onclick="modSubTab('bcm')" id="msub-bcm">BCM/BODY</button>
+    <button class="ck-btn btn-purp" onclick="modSubTab('tpms')" id="msub-tpms">TPMS</button>
+    <button class="ck-btn btn-orange" onclick="modSubTab('hv')" id="msub-hv">HV/HYBRID</button>
+  </div>
+  <!-- ABS -->
+  <div id="mod-abs"><div class="card"><div class="card-title">ABS / ESC / TCS MODULE (C-codes)</div>
+    <div id="abs-status" class="gauge-grid" style="grid-template-columns:repeat(4,1fr);margin-bottom:4px"></div>
+    <div class="btn-row">
+      <button class="ck-btn btn-cyan" onclick="modReadDTC('abs')">Read DTCs</button>
+      <button class="ck-btn btn-red" onclick="modClearDTC('abs')">Clear DTCs</button>
+      <button class="ck-btn btn-teal" onclick="modBidir('abs','bleed')">Auto Bleed</button>
+      <button class="ck-btn btn-teal" onclick="modBidir('abs','pump')">Pump Test</button>
+      <button class="ck-btn btn-amber" onclick="modBidir('abs','yaw')">Yaw Reset</button>
+    </div>
+    <div class="svc-result" id="abs-result">ABS module ready</div>
+  </div></div>
+  <!-- SRS -->
+  <div id="mod-srs" style="display:none"><div class="card"><div class="card-title">SRS / AIRBAG MODULE (B-codes)</div>
+    <div id="srs-status" style="margin-bottom:4px"></div>
+    <div class="btn-row">
+      <button class="ck-btn btn-cyan" onclick="modReadDTC('srs')">Read DTCs</button>
+      <button class="ck-btn btn-red" onclick="modClearDTC('srs')">Clear DTCs</button>
+      <button class="ck-btn btn-amber" onclick="modBidir('srs','squib')">Squib Resist</button>
+      <button class="ck-btn btn-amber" onclick="modBidir('srs','crash')">Crash Data</button>
+    </div>
+    <div style="background:#1a0000;color:var(--red);font-size:8px;padding:4px;border-radius:2px;margin-top:3px">
+      ⚠ CAUTION: Airbag systems — disable ignition, wait 30sec before probing. Live squib testing requires special adapter.
+    </div>
+    <div class="svc-result" id="srs-result">SRS module ready</div>
+  </div></div>
+  <!-- TCU -->
+  <div id="mod-tcu" style="display:none"><div class="card"><div class="card-title">TCU / TRANSMISSION MODULE</div>
+    <div style="margin-bottom:3px">
+      <span style="font-size:8px;color:var(--gray)">TRANS TYPE:</span>
+      <select id="trans-type" style="width:150px;font-size:9px;margin-left:4px" onchange="setTransType(this.value)">
+        <option value="4spd">4-Speed Auto (GM TH400-style)</option>
+        <option value="5spd">5-Speed Auto</option>
+        <option value="6spd">6-Speed Auto (6L80-style)</option>
+        <option value="8spd">8-Speed Auto (8HP-style)</option>
+        <option value="cvt">CVT (belt/chain)</option>
+        <option value="dct">DCT (dual clutch)</option>
+        <option value="paddle">Electronic Manual (paddle shift)</option>
+        <option value="allison">Allison 1000/2000 series</option>
+        <option value="prius">Toyota Synergy Drive (EVT)</option>
+        <option value="cvt_hd">Heavy Duty CVT</option>
+      </select>
+    </div>
+    <div id="tcu-gauges" class="gauge-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:4px"></div>
+    <div class="btn-row">
+      <button class="ck-btn btn-cyan" onclick="modReadDTC('tcu')">Read DTCs</button>
+      <button class="ck-btn btn-red" onclick="modClearDTC('tcu')">Clear DTCs</button>
+      <button class="ck-btn btn-teal" onclick="modBidir('tcu','shift1')">Force 1-2</button>
+      <button class="ck-btn btn-teal" onclick="modBidir('tcu','tcc')">TCC Lock</button>
+      <button class="ck-btn btn-amber" onclick="modBidir('tcu','linepres')">Line Press</button>
+      <button class="ck-btn btn-purp" onclick="modBidir('tcu','adapt')">Clear Adapts</button>
+    </div>
+    <div class="svc-result" id="tcu-result">TCU module ready</div>
+  </div></div>
+  <!-- BCM -->
+  <div id="mod-bcm" style="display:none"><div class="card"><div class="card-title">BCM / BODY CONTROL MODULE (B-codes)</div>
+    <div id="bcm-status" style="margin-bottom:4px"></div>
+    <div class="btn-row">
+      <button class="ck-btn btn-cyan" onclick="modReadDTC('bcm')">Read DTCs</button>
+      <button class="ck-btn btn-red" onclick="modClearDTC('bcm')">Clear DTCs</button>
+      <button class="ck-btn btn-teal" onclick="modBidir('bcm','horn')">Horn</button>
+      <button class="ck-btn btn-teal" onclick="modBidir('bcm','wipers')">Wiper Test</button>
+      <button class="ck-btn btn-teal" onclick="modBidir('bcm','fan')">Fan Test</button>
+      <button class="ck-btn btn-teal" onclick="modBidir('bcm','windows')">Window Test</button>
+      <button class="ck-btn btn-amber" onclick="modBidir('bcm','pats')">PATS/Immo</button>
+    </div>
+    <div class="svc-result" id="bcm-result">BCM module ready</div>
+  </div></div>
+  <!-- TPMS -->
+  <div id="mod-tpms" style="display:none"><div class="card"><div class="card-title">TPMS — TIRE PRESSURE MONITOR</div>
+    <div id="tpms-gauges" style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:4px"></div>
+    <div class="btn-row">
+      <button class="ck-btn btn-cyan" onclick="modReadDTC('tpms')">Read DTCs</button>
+      <button class="ck-btn btn-teal" onclick="tpmsRelearn()">Relearn Mode</button>
+      <button class="ck-btn btn-amber" onclick="tpmsProgSensor()">Program Sensor</button>
+      <button class="ck-btn btn-purp" onclick="tpmsReadIDs()">Read Sensor IDs</button>
+    </div>
+    <div class="svc-result" id="tpms-result">TPMS module ready</div>
+  </div></div>
+  <!-- HV HYBRID -->
+  <div id="mod-hv" style="display:none"><div class="card"><div class="card-title">HV / HYBRID SYSTEM</div>
+    <div id="hv-gauges" class="gauge-grid" style="grid-template-columns:repeat(3,1fr);margin-bottom:4px"></div>
+    <div class="btn-row">
+      <button class="ck-btn btn-cyan" onclick="modReadDTC('hv')">Read DTCs</button>
+      <button class="ck-btn btn-red" onclick="modClearDTC('hv')">Clear DTCs</button>
+      <button class="ck-btn btn-amber" onclick="modBidir('hv','hvready')">HV Ready Chk</button>
+      <button class="ck-btn btn-teal" onclick="modBidir('hv','hvbal')">Cell Balance</button>
+      <button class="ck-btn btn-orange" onclick="modBidir('hv','mg1')">MG1 Test</button>
+      <button class="ck-btn btn-orange" onclick="modBidir('hv','mg2')">MG2 Test</button>
+    </div>
+    <div class="svc-result" id="hv-result">HV module ready</div>
+  </div></div>
+</div>
+
+<!-- SERVICE TAB -->
+<div id="tab-service" class="tabpane">
+  <div class="btn-row" style="margin-bottom:3px">
+    <button class="ck-btn btn-blue" onclick="svcSubTab('generic')" id="ssub-generic">GENERIC</button>
+    <button class="ck-btn" onclick="svcSubTab('bmw')" id="ssub-bmw">BMW</button>
+    <button class="ck-btn" onclick="svcSubTab('ford')" id="ssub-ford">FORD</button>
+    <button class="ck-btn" onclick="svcSubTab('gm')" id="ssub-gm">GM</button>
+    <button class="ck-btn" onclick="svcSubTab('toyota')" id="ssub-toyota">TOYOTA</button>
+    <button class="ck-btn" onclick="svcSubTab('vw')" id="ssub-vw">VW/AUDI</button>
+    <button class="ck-btn" onclick="svcSubTab('hd')" id="ssub-hd">HEAVY DUTY</button>
+  </div>
+  <div id="svc-content"></div>
+</div>
+
+<!-- BUILD TAB (ECU BUILD MODE) -->
+<div id="tab-build" class="tabpane">
+  <div class="btn-row" style="margin-bottom:3px">
+    <button class="ck-btn btn-green" onclick="buildSubTab('ecu')" id="bsub-ecu">ECU CONFIG</button>
+    <button class="ck-btn" onclick="buildSubTab('trigger')" id="bsub-trigger">TRIGGER</button>
+    <button class="ck-btn" onclick="buildSubTab('inj')" id="bsub-inj">INJECTORS</button>
+    <button class="ck-btn" onclick="buildSubTab('out')" id="bsub-out">OUTPUTS</button>
+    <button class="ck-btn btn-purp" onclick="buildSubTab('trans')" id="bsub-trans">TRANS</button>
+    <button class="ck-btn btn-amber" onclick="buildSubTab('schema')" id="bsub-schema">SCHEMATIC</button>
+  </div>
+  <div id="build-content"></div>
+</div>
+
+<!-- PROBE TAB -->
+<div id="tab-probe" class="tabpane">
+  <div class="card"><div class="card-title">POWER PROBE MODE</div>
+    <div class="probe-val" id="probe-v" style="color:var(--green)">12.6 V</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:3px;margin-bottom:4px">
+      <div class="gauge"><div class="gauge-lbl">CURRENT</div><div class="gauge-val" id="probe-a" style="color:var(--cyan)">0.0A</div></div>
+      <div class="gauge"><div class="gauge-lbl">RESISTANCE</div><div class="gauge-val" id="probe-ohm" style="color:var(--amber)">∞ Ω</div></div>
+      <div class="gauge"><div class="gauge-lbl">FREQUENCY</div><div class="gauge-val" id="probe-hz" style="color:var(--purp)">0 Hz</div></div>
+      <div class="gauge"><div class="gauge-lbl">DUTY CYCLE</div><div class="gauge-val" id="probe-dc" style="color:var(--yell)">0%</div></div>
+    </div>
+    <div class="btn-row">
+      <button class="ck-btn btn-green" onclick="probeMode('batt')">BAT+ Test</button>
+      <button class="ck-btn" onclick="probeMode('gnd')" style="color:var(--gray)">GND Test</button>
+      <button class="ck-btn btn-amber" onclick="probeMode('cont')">Continuity</button>
+      <button class="ck-btn btn-red" onclick="probeMode('short_gnd')">Short to GND</button>
+      <button class="ck-btn btn-orange" onclick="probeMode('short_pwr')">Short to PWR</button>
+      <button class="ck-btn btn-cyan" onclick="probeMode('inj')">Injector Pulse</button>
+      <button class="ck-btn btn-purp" onclick="probeMode('pwm')">PWM Output</button>
+      <button class="ck-btn btn-teal" onclick="probeMode('relay')">Relay Actuate</button>
+    </div>
+    <div class="svc-result" id="probe-result">Connect probe tips — select test mode</div>
+  </div>
+  <div class="card"><div class="card-title">COMPONENT ACTIVATION</div>
+    <div class="btn-row">
+      <button class="ck-btn btn-teal" onclick="probeActuate('fan')">Rad Fan</button>
+      <button class="ck-btn btn-teal" onclick="probeActuate('fuel_pump')">Fuel Pump</button>
+      <button class="ck-btn btn-teal" onclick="probeActuate('iac')">IAC/DBW</button>
+      <button class="ck-btn btn-teal" onclick="probeActuate('purge')">EVAP Purge</button>
+      <button class="ck-btn btn-teal" onclick="probeActuate('egr')">EGR Valve</button>
+      <button class="ck-btn btn-teal" onclick="probeActuate('vvt_sol')">VVT Solenoid</button>
+      <button class="ck-btn btn-teal" onclick="probeActuate('boost_sol')">Boost Sol.</button>
+      <button class="ck-btn btn-teal" onclick="probeActuate('glow')">Glow Plugs</button>
+    </div>
+    <div class="svc-result" id="actuate-result">Select component to actuate</div>
+  </div>
+  <div class="card"><div class="card-title">CIRCUIT TEST — CYL BY CYL KILL</div>
+    <div class="btn-row" id="cyl-kill-row"></div>
+    <div class="svc-result" id="kill-result">Kill a cylinder to test contribution</div>
+  </div>
+</div>
+
+<!-- SENS TAB -->
+<div id="tab-sens" class="tabpane">
+  <div class="gauge-grid" id="sens-grid"></div>
+  <div class="card" style="margin-top:3px"><div class="card-title">SENSOR HISTORY ▸ TAP EXPAND</div>
+    <div class="mini-wrap" onclick="openScope('Wideband O2','Knock Sensor')">
+      <canvas class="mini" id="mini-sens"></canvas>
+    </div>
+  </div>
+</div>
+
+<!-- LOG TAB -->
+<div id="tab-log" class="tabpane">
+  <div class="card"><div class="card-title">DATA LOGGER</div>
+    <div style="display:flex;align-items:center;gap:3px;flex-wrap:wrap">
+      <div id="log-badge" style="background:var(--dark);color:var(--red);font-size:9px;font-weight:bold;padding:3px 7px;border-radius:2px;min-width:100px">LOGGING: OFF</div>
+      <button class="ck-btn btn-green" onclick="logStart()">▶ Start</button>
+      <button class="ck-btn btn-red" onclick="logStop()">■ Stop</button>
+      <button class="ck-btn btn-amber" onclick="logSave()">💾 CSV</button>
+      <button class="ck-btn" onclick="logClear()" style="color:var(--gray)">Clear</button>
+    </div>
+  </div>
+  <div class="tbl-wrap" style="max-height:400px"><table class="data-table">
+    <thead><tr><th>Time</th><th>RPM</th><th>MAP</th><th>TPS</th><th>CLT</th><th>IAT</th><th>AFR</th><th>LAM</th><th>IGN</th><th>STFT</th><th>LTFT</th><th>PW</th><th>DC</th><th>KNOCK</th><th>EGT</th><th>BOOST</th><th>GR</th><th>SCENE</th></tr></thead>
+    <tbody id="log-body"></tbody>
+  </table></div>
+</div>
+
+<!-- FAULT TAB -->
+<div id="tab-fault" class="tabpane">
+  <div class="card"><div class="card-title">ENGINE FAULT INJECTION</div>
+    <div id="fault-list"></div>
+  </div>
+  <div class="card"><div class="card-title">MISFIRE</div>
+    <div id="miss-btns" style="display:flex;flex-wrap:wrap;gap:3px"></div>
+  </div>
+  <div class="card"><div class="card-title">MODULE FAULT INJECTION</div>
+    <div id="mod-fault-list"></div>
+  </div>
+  <button class="ck-btn btn-red" style="width:100%;margin-top:4px" onclick="clearAllFaults()">CLEAR ALL FAULTS</button>
+</div>
+
+<!-- CONFIG TAB -->
+<div id="tab-config" class="tabpane">
+  <div class="card"><div class="card-title">ENVIRONMENT & CONDITIONS</div>
+    <div id="env-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:4px"></div>
+  </div>
+  <div class="card"><div class="card-title">BOOST / FORCED INDUCTION</div>
+    <div id="boost-config"></div>
+  </div>
+  <div class="card"><div class="card-title">FUEL SETTINGS</div>
+    <div id="fuel-config"></div>
+  </div>
+  <div class="card"><div class="card-title">DRIVING CONDITIONS</div>
+    <div id="drive-config"></div>
+  </div>
+</div>
+
+</div><!-- /tabcontent -->
+
+<!-- FULLSCREEN SCOPE OVERLAY -->
+<div id="scope-ov">
+  <div id="scope-topbar">
+    <button class="ck-btn btn-red" onclick="closeScope()" style="font-size:9px">✕</button>
+    <button class="ck-btn btn-amber" onclick="scopeSnapshot()" style="font-size:9px">📸</button>
+    <button class="ck-btn" onclick="clearSnaps()" style="color:var(--gray);font-size:9px">CLR</button>
+    <button class="ck-btn btn-cyan" onclick="scopeZoom(0.5)" style="font-size:9px">+ ZOOM</button>
+    <button class="ck-btn btn-cyan" onclick="scopeZoom(2)" style="font-size:9px">- ZOOM</button>
+    <button class="ck-btn" onclick="scopeZoomReset()" style="color:var(--yell);font-size:9px">RESET</button>
+    <span id="scope-info" style="font-size:8px;color:var(--dim)"></span>
+  </div>
+  <div style="display:flex;flex:1;overflow:hidden;min-height:0">
+    <div id="scope-left">
+      <h4>WAVEFORMS</h4><div id="scope-ch-list"></div>
+      <hr style="border-color:var(--gray);margin:3px 0">
+      <h4>NUMERICS</h4><div id="scope-num-list"></div>
+      <div style="margin-top:4px;font-size:7px;color:var(--gray)">Points:</div>
+      <input type="range" id="npts" min="50" max="600" value="200" oninput="document.getElementById('npts-v').textContent=this.value">
+      <div id="npts-v" style="font-size:8px;color:var(--cyan);text-align:center">200</div>
+    </div>
+    <div id="scope-main">
+      <div id="scope-num-strip"></div>
+      <div id="scope-cv-wrap"><canvas id="scope-cv"></canvas></div>
+      <div id="snap-bar">No snapshots</div>
+    </div>
+  </div>
+</div>
+
+<!-- CAMERA/THERMAL OVERLAY -->
+<div id="cam-ov">
+  <div id="cam-topbar">
+    <button class="ck-btn btn-red" onclick="closeCamera()">✕ CLOSE</button>
+    <button class="ck-btn btn-purp" id="cam-thermal-btn" onclick="switchCamMode('thermal')">🌡 THERMAL</button>
+    <button class="ck-btn btn-teal" id="cam-scope-btn" onclick="switchCamMode('scope')">📷 BORESCOPE</button>
+    <span id="cam-label" style="font-size:9px;color:var(--cyan)">SELECT INPUT</span>
+    <span style="font-size:8px;color:var(--dim);margin-left:6px">Main systems continue running — input switch only</span>
+  </div>
+  <div id="cam-display">
+    <canvas id="thermal-canvas"></canvas>
+    <video id="cam-video" autoplay playsinline muted style="display:none"></video>
+    <div id="cam-placeholder" style="color:var(--dim);font-size:11px;text-align:center;padding:20px">
+      <div style="font-size:24px;margin-bottom:8px">📷</div>
+      THERMAL: Connect FLIR Lepton via SPI<br>BORESCOPE: Connect USB-C UVC endoscope<br><br>
+      <span style="font-size:9px">Device continues running diagnostics in background</span>
+    </div>
+  </div>
+</div>
+
+<!-- READING POPUP -->
+<div id="popup-ov" onclick="if(event.target===this)closePopup()">
+  <div id="popup-box">
+    <div id="popup-title">READING OPTIONS</div>
+    <div id="popup-content"></div>
+    <div style="display:flex;gap:5px;margin-top:8px">
+      <button class="ck-btn btn-green" style="flex:1" onclick="applyPopup()">Apply</button>
+      <button class="ck-btn btn-red" style="flex:1" onclick="closePopup()">Close</button>
+    </div>
+  </div>
+</div>
+<script>
+// ══════════════════════════════════════════════════════════════════════
+// ENGINE PROFILES — accurate physics per engine type
+// ══════════════════════════════════════════════════════════════════════
+const ENGINE_PROFILES = {
+  i4_na:      {name:'I4 NA 2.0L',  cyl:4, disp:2.0, cr:10.2, idleRpm:800,  maxRpm:7200, torqueRpm:4000, maxBoost:0,    injectType:'PFI',  fuelType:'petrol', glow:false, diesel:false, turbo:false, oilPressIdle:25, oilPressCruise:50, egt_base:650,  crankPat:'60-2',     firing:[1,3,4,2]},
+  v6_na:      {name:'V6 NA 3.5L',  cyl:6, disp:3.5, cr:10.8, idleRpm:700,  maxRpm:6800, torqueRpm:3800, maxBoost:0,    injectType:'PFI',  fuelType:'petrol', glow:false, diesel:false, turbo:false, oilPressIdle:28, oilPressCruise:55, egt_base:660,  crankPat:'60-2',     firing:[1,2,3,4,5,6]},
+  s6_na:      {name:'S6 NA 3.0L',  cyl:6, disp:3.0, cr:10.5, idleRpm:750,  maxRpm:7000, torqueRpm:3600, maxBoost:0,    injectType:'PFI',  fuelType:'petrol', glow:false, diesel:false, turbo:false, oilPressIdle:30, oilPressCruise:55, egt_base:655,  crankPat:'60-2',     firing:[1,5,3,6,2,4]},
+  v8_na:      {name:'V8 NA 5.7L',  cyl:8, disp:5.7, cr:9.5,  idleRpm:650,  maxRpm:6500, torqueRpm:3200, maxBoost:0,    injectType:'SFI',  fuelType:'petrol', glow:false, diesel:false, turbo:false, oilPressIdle:25, oilPressCruise:45, egt_base:680,  crankPat:'58x',      firing:[1,8,4,3,6,5,7,2]},
+  i4_turbo:   {name:'I4 Turbo 2.0T',cyl:4,disp:2.0, cr:9.0,  idleRpm:800,  maxRpm:6800, torqueRpm:1800, maxBoost:18,   injectType:'DI',   fuelType:'petrol', glow:false, diesel:false, turbo:true,  oilPressIdle:30, oilPressCruise:60, egt_base:720,  crankPat:'60-2',     firing:[1,3,4,2]},
+  v6_turbo:   {name:'V6 BiTurbo 3.0T',cyl:6,disp:3.0,cr:9.3, idleRpm:700,  maxRpm:6500, torqueRpm:1600, maxBoost:16,   injectType:'DI',   fuelType:'petrol', glow:false, diesel:false, turbo:true,  oilPressIdle:35, oilPressCruise:65, egt_base:750,  crankPat:'60-2',     firing:[1,4,2,5,3,6]},
+  v8_turbo:   {name:'V8 SC 6.2L',  cyl:8, disp:6.2, cr:9.1,  idleRpm:650,  maxRpm:6200, torqueRpm:2000, maxBoost:9,    injectType:'SFI',  fuelType:'petrol', glow:false, diesel:false, turbo:true,  oilPressIdle:30, oilPressCruise:55, egt_base:760,  crankPat:'58x',      firing:[1,8,4,3,6,5,7,2]},
+  i4_diesel:  {name:'I4 Diesel 2.2L',cyl:4,disp:2.2,cr:16.5, idleRpm:850,  maxRpm:4800, torqueRpm:2000, maxBoost:22,   injectType:'CRDI', fuelType:'diesel', glow:true,  diesel:true,  turbo:true,  oilPressIdle:35, oilPressCruise:65, egt_base:580,  crankPat:'36-1',     firing:[1,3,4,2]},
+  v6_diesel:  {name:'V6 Diesel TDI 3.0L',cyl:6,disp:3.0,cr:16.8,idleRpm:800,maxRpm:4500,torqueRpm:1750,maxBoost:24,   injectType:'CRDI', fuelType:'diesel', glow:true,  diesel:true,  turbo:true,  oilPressIdle:40, oilPressCruise:70, egt_base:590,  crankPat:'36-1',     firing:[1,4,2,5,3,6]},
+  i6_hd_diesel:{name:'I6 HD Diesel 6.7L',cyl:6,disp:6.7,cr:17.3,idleRpm:700,maxRpm:3400,torqueRpm:1500,maxBoost:35,  injectType:'CRDI', fuelType:'diesel', glow:true,  diesel:true,  turbo:true,  oilPressIdle:45, oilPressCruise:80, egt_base:540,  crankPat:'36-1',     firing:[1,5,3,6,2,4]},
+  v8_hd_diesel:{name:'V8 HD Diesel 6.6L',cyl:8,disp:6.6,cr:17.5,idleRpm:750,maxRpm:3200,torqueRpm:1600,maxBoost:30,  injectType:'CRDI', fuelType:'diesel', glow:true,  diesel:true,  turbo:true,  oilPressIdle:45, oilPressCruise:80, egt_base:545,  crankPat:'58x',      firing:[1,8,4,3,6,5,7,2]},
+  i6_semi:    {name:'I6 Semi 15L', cyl:6, disp:15.0, cr:18.0, idleRpm:600,  maxRpm:2100, torqueRpm:1100, maxBoost:45,   injectType:'CRDI', fuelType:'diesel', glow:false, diesel:true,  turbo:true,  oilPressIdle:50, oilPressCruise:90, egt_base:510,  crankPat:'36-1',     firing:[1,5,3,6,2,4]},
+  i6_semi_cat:{name:'I6 Semi 13L Cat',cyl:6,disp:13.0,cr:17.5,idleRpm:600, maxRpm:2100, torqueRpm:1000, maxBoost:42,   injectType:'CRDI', fuelType:'diesel', glow:false, diesel:true,  turbo:true,  oilPressIdle:50, oilPressCruise:88, egt_base:515,  crankPat:'36-1',     firing:[1,5,3,6,2,4]},
+};
+
+const TRANS_PROFILES = {
+  '4spd':   {name:'4-Speed Auto',gears:4,ratios:[3.06,1.63,1.0,0.7],final:3.73,tcc:true,linePsiIdle:60,linePsiDrive:120},
+  '5spd':   {name:'5-Speed Auto', gears:5,ratios:[3.3,1.9,1.29,1.0,0.75],final:3.55,tcc:true,linePsiIdle:65,linePsiDrive:130},
+  '6spd':   {name:'6L80 Auto',    gears:6,ratios:[4.03,2.36,1.53,1.15,0.85,0.67],final:3.42,tcc:true,linePsiIdle:70,linePsiDrive:140},
+  '8spd':   {name:'8HP Auto',     gears:8,ratios:[4.71,3.14,2.11,1.67,1.29,1.0,0.84,0.67],final:3.15,tcc:true,linePsiIdle:75,linePsiDrive:145},
+  'cvt':    {name:'CVT Belt',     gears:0,ratios:[2.5,1.0,0.45],final:4.1,tcc:false,linePsiIdle:50,linePsiDrive:200},
+  'dct':    {name:'DCT 7-speed',  gears:7,ratios:[3.9,2.7,1.93,1.45,1.17,0.95,0.81],final:3.06,tcc:false,linePsiIdle:80,linePsiDrive:160},
+  'paddle': {name:'E-Manual',     gears:6,ratios:[3.9,2.7,1.9,1.4,1.1,0.88],final:3.42,tcc:false,linePsiIdle:60,linePsiDrive:130},
+  'allison':{name:'Allison 1000', gears:6,ratios:[3.51,1.9,1.42,1.0,0.75,0.64],final:3.73,tcc:true,linePsiIdle:90,linePsiDrive:175},
+  'prius':  {name:'Prius EVT',    gears:0,ratios:[2.4,1.0,0.4],final:3.267,tcc:false,linePsiIdle:0,linePsiDrive:0},
+  'cvt_hd': {name:'HD CVT',       gears:0,ratios:[3.0,1.0,0.4],final:4.5,tcc:false,linePsiIdle:60,linePsiDrive:220},
+};
+
+let currentEngProfile = ENGINE_PROFILES['i4_na'];
+let currentTransProfile = TRANS_PROFILES['6spd'];
+
+// ══════════════════════════════════════════════════════════════════════
+// ECU MAPS
+// ══════════════════════════════════════════════════════════════════════
+const RPM_BINS=[500,1000,1500,2000,2500,3000,3500,4000,4500,5000,5500,6000];
+const MAP_BINS=[20,30,40,50,60,70,80,90,100];
+function randn(){let u=0,v=0;while(!u)u=Math.random();while(!v)v=Math.random();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);}
+function interp1d(xs,ys,v){if(v<=xs[0])return ys[0];if(v>=xs[xs.length-1])return ys[ys.length-1];for(let i=0;i<xs.length-1;i++)if(xs[i]<=v&&v<=xs[i+1])return ys[i]+(v-xs[i])/(xs[i+1]-xs[i])*(ys[i+1]-ys[i]);return ys[ys.length-1];}
+function idxBin(bins,v){for(let i=0;i<bins.length;i++)if(v<=bins[i])return i;return bins.length-1;}
+function interp2d(tbl,rpm,kpa){let ri=idxBin(RPM_BINS,rpm),mi=idxBin(MAP_BINS,kpa);let r0=Math.max(0,ri-1),r1=Math.min(RPM_BINS.length-1,ri),m0=Math.max(0,mi-1),m1=Math.min(MAP_BINS.length-1,mi);let rx=Math.max(0,Math.min(1,(rpm-RPM_BINS[r0])/Math.max(RPM_BINS[r1]-RPM_BINS[r0],1)));let mx=Math.max(0,Math.min(1,(kpa-MAP_BINS[m0])/Math.max(MAP_BINS[m1]-MAP_BINS[m0],1)));return tbl[m0][r0]*(1-rx)*(1-mx)+tbl[m0][r1]*rx*(1-mx)+tbl[m1][r0]*(1-rx)*mx+tbl[m1][r1]*rx*mx;}
+function mkVE(){return MAP_BINS.map((kpa,mi)=>RPM_BINS.map((rpm,ri)=>Math.max(20,Math.min(108,+(38+62*(mi/(MAP_BINS.length-1))*(0.55+0.45*Math.exp(-0.5*((ri-6)/3.2)**2))+randn()*1.5).toFixed(1)))));}
+function mkIGN(){return MAP_BINS.map((kpa,mi)=>RPM_BINS.map((rpm,ri)=>Math.max(0,Math.min(45,+(8+ri*1.9*(1-(mi/(MAP_BINS.length-1))*0.5)+randn()*0.3).toFixed(1)))));}
+function mkAFR(){return MAP_BINS.map((kpa,mi)=>RPM_BINS.map((rpm,ri)=>{if(mi/(MAP_BINS.length-1)>0.85)return+(12.5+(ri/(RPM_BINS.length-1))*0.8).toFixed(1);if(mi/(MAP_BINS.length-1)<0.25)return+(15.2+(ri/(RPM_BINS.length-1))*0.4).toFixed(1);return+(14.7+randn()*0.1).toFixed(1);}));}
+function mkBoost(){return MAP_BINS.map((kpa,mi)=>RPM_BINS.map((rpm,ri)=>Math.max(0,Math.min(currentEngProfile.maxBoost,+(currentEngProfile.maxBoost*(0.2+ri/11*0.8)*(0.3+mi/8*0.7)+randn()*0.3).toFixed(1)))));}
+function mkVVT(){return MAP_BINS.map(()=>RPM_BINS.map((rpm,ri)=>Math.max(0,Math.min(50,+(ri*4.2+randn()*0.5).toFixed(1)))));}
+const maps={ve:mkVE(),ign:mkIGN(),afr:mkAFR(),boost:mkBoost(),vvt:mkVVT(),
+  cltAx:[-40,-20,0,20,40,60,80,90,100],cltCorr:[185,162,142,122,111,105,100,100,98],
+  iatAx:[-40,-20,0,20,40,60,80,100],iatCorr:[114,109,105,100,96,91,85,78],
+  dtV:[8,9,10,11,12,13,14,15],dtMs:[1.9,1.6,1.35,1.1,0.9,0.8,0.7,0.65],
+  idleAx:[0,20,40,60,80,90],idleRpm:[1500,1300,1050,900,850,800],
+  altAx:[100,95,90,85,80,75,70,60],altCorr:[100,100,101,103,106,110,115,124],
+  reqFuel:7.2,softCut:6800,hardCut:7200,accelMult:1.6,accelDur:350,
+  knockStep:2.5,knockMax:12,knockRec:0.3,fuelPsi:43.5
+};
+
+// ══════════════════════════════════════════════════════════════════════
+// ENVIRONMENT & CONDITIONS
+// ══════════════════════════════════════════════════════════════════════
+const env={
+  altitude:0,         // meters
+  ambientTemp:20,     // °C
+  fuelType:'E10',     // E10,E85,91oct,93oct,98oct,diesel,B20
+  octane:95,
+  boostEnabled:true,
+  boostTarget:14,     // psi (when forced)
+  condOverride:'auto',
+  roadGrade:0,        // % grade, positive=uphill
+};
+const FUEL_STOICH={E10:14.5,E85:9.8,'91oct':14.7,'93oct':14.7,'98oct':14.7,diesel:14.5,B20:14.1};
+
+// ══════════════════════════════════════════════════════════════════════
+// ENGINE STATE
+// ══════════════════════════════════════════════════════════════════════
+const eng={
+  rpm:800,map:35,tps:0,clt:20,iat:env.ambientTemp,batt:12.6,gear:1,spd:0,
+  afr:14.7,lam:1,pw:3,dc:0,dwell:3.5,adv:10,egt:600,oil:45,
+  stft:0,ltft:0,ego:false,kret:0,klvl:0,kcnt:0,
+  at:0,ptps:0,ptt:Date.now()/1000,rtgt:850,st:0,scenario:'warmup',
+  activeDtcs:[],storedDtcs:[],
+  faultO2:false,faultMap:false,faultClt:false,faultMiss:0,
+  faultLean:false,faultIgn:false,faultInj:false,
+  autopoll:false,connected:false,
+  ve:0,ignLive:0,afrTgt:14.7,accel:false,
+  boostPsi:0,
+  glowReady:false,
+  cylinderKill:[false,false,false,false,false,false,false,false],
+};
+
+// ABS/ESC module state
+const absState={
+  wsFL:0,wsFR:0,wsRL:0,wsRR:0,
+  pressure:0,activeFault:false,
+  dtcs:[],activations:0,
+};
+// SRS state
+const srsState={
+  dtcs:[],crashData:false,
+  squibFL:3.2,squibFR:3.1,squibRL:3.3,squibRR:3.0,
+  driverSquib:2.8,passSquib:2.9,deployed:false,
+};
+// TCU state
+const tcuState={
+  gear:1,tcc:false,linePsi:60,oilTemp:80,
+  shiftSolenoids:[false,false,false],
+  dtcs:[],transType:'6spd',
+  slipRpm:0,ratio:0,
+};
+// BCM state
+const bcmState={
+  dtcs:[],
+  doorFL:false,doorFR:false,doorRL:false,doorRR:false,
+  battery:12.6,lighting:false,
+};
+// TPMS state
+const tpmsState={
+  fl:32,fr:32,rl:31,rr:31,
+  flId:'0xA3B2C1',frId:'0xA3B2C2',rlId:'0xB4C3D1',rrId:'0xB4C3D2',
+  dtcs:[],lowAlert:false,
+};
+// HV/Hybrid state
+const hvState={
+  soc:68,hvVoltage:201.6,hvCurrent:0,hvTemp:28,
+  mg1rpm:0,mg2rpm:0,hvReady:false,
+  dtcs:[],
+};
+
+// Reading display settings (per key)
+const readingSettings={};
+function getRS(key){return readingSettings[key]||{decimals:2,fontSize:13,unit:'',color:null};}
+
+// ══════════════════════════════════════════════════════════════════════
+// ENGINE PHYSICS STEP
+// ══════════════════════════════════════════════════════════════════════
+let engineRunning=true;
+
+function engineStep(dt){
+  if(!engineRunning)return;
+  const p=currentEngProfile;
+  eng.st+=dt;
+  // scenario
+  if(env.condOverride!=='auto'){
+    applyCondOverride(env.condOverride,dt);
+  } else {
+    autoScenario(dt);
+  }
+  if(eng.tps<1)eng.rtgt=interp1d(maps.idleAx,maps.idleRpm,eng.clt)+randn()*15;
+  // RPM
+  const rpmMax=p.maxRpm*(p.diesel?0.85:1);
+  eng.rpm+=(eng.rtgt-eng.rpm)*3*dt+randn()*eng.rpm*0.003;
+  eng.rpm=Math.max(0,Math.min(rpmMax,eng.rpm));
+  // MAP
+  let mt=Math.max(15,Math.min(105,20+eng.tps*0.78-(eng.rpm/rpmMax)*8));
+  if(eng.faultMap)mt=50;
+  if(eng.faultLean)mt+=8;
+  // altitude correction — thin air = lower manifold pressure ceiling
+  const baroPct=Math.max(0.6,1-(env.altitude/10000)*0.12);
+  mt*=baroPct;
+  eng.map+=(mt-eng.map)*5*dt;eng.map=Math.max(15,Math.min(105,eng.map));
+  // Boost
+  if(p.turbo&&env.boostEnabled){
+    const boostTgt=Math.min(p.maxBoost,env.boostTarget)*(eng.tps/100)*(eng.rpm>1800?1:eng.rpm/1800);
+    eng.boostPsi+=(boostTgt-eng.boostPsi)*2*dt;
+    eng.boostPsi=Math.max(0,eng.boostPsi);
+    eng.map=Math.min(105,eng.map+eng.boostPsi*6.895);
+  } else {
+    eng.boostPsi=0;
+  }
+  // VE/AFR/IGN
+  eng.ve=interp2d(maps.ve,eng.rpm,eng.map);
+  const stoich=FUEL_STOICH[env.fuelType]||14.7;
+  eng.afrTgt=interp2d(maps.afr,eng.rpm,eng.map)*(stoich/14.7);
+  eng.ignLive=interp2d(maps.ign,eng.rpm,eng.map);
+  // Corrections
+  const cltUse=eng.faultClt?-40:eng.clt;
+  const cc=interp1d(maps.cltAx,maps.cltCorr,cltUse)/100;
+  const ic=interp1d(maps.iatAx,maps.iatCorr,eng.iat)/100;
+  const dead=interp1d(maps.dtV,maps.dtMs,eng.batt);
+  const altCorr=interp1d(maps.altAx,maps.altCorr,[100,95,90,85,80,75,70,60].map(v=>v*baroPct)[0]||100)/100;
+  const now=Date.now()/1000;
+  const rate=(eng.tps-eng.ptps)/Math.max(now-eng.ptt,0.001)*0.1;
+  eng.ptps=eng.tps;eng.ptt=now;
+  if(rate>maps.accelMult)eng.at=maps.accelDur/1000;
+  eng.accel=eng.at>0;
+  const am=1+(eng.at>0?(maps.accelMult-1)*(eng.at/(maps.accelDur/1000)):0);
+  if(eng.at>0)eng.at=Math.max(0,eng.at-dt);
+  // Injector PW
+  let killedCyls=eng.cylinderKill.slice(0,p.cyl).filter(Boolean).length;
+  let activeCyls=Math.max(1,p.cyl-killedCyls);
+  const cylFactor=p.cyl/activeCyls;
+  if(eng.faultInj){eng.pw=99;eng.dc=100;}
+  else{
+    const et=1+(eng.stft+eng.ltft)/100;
+    eng.pw=maps.reqFuel*(eng.ve/100)*(stoich/eng.afrTgt)*cc*ic*am*et*cylFactor*altCorr+dead;
+    if(eng.rpm>=maps.hardCut)eng.pw=0;
+    else if(eng.rpm>=maps.softCut&&Math.random()<0.5)eng.pw=0;
+    const cy=120000/Math.max(eng.rpm,100);
+    eng.dc=Math.min(100,(eng.pw/cy)*100);
+  }
+  // Knock
+  let ib=eng.ignLive;
+  if(eng.faultIgn)ib=Math.max(0,ib-10);
+  const risk=Math.max(0,(ib-25)/15)*(eng.map/100)*(eng.rpm/rpmMax);
+  const missRisk=(eng.faultMiss>0&&Math.random()<0.15)?0.4:0;
+  if(Math.random()<(risk+missRisk)*0.08){eng.kret=Math.min(eng.kret+maps.knockStep,maps.knockMax);eng.klvl=Math.min(1,eng.klvl+0.4);eng.kcnt++;}
+  else{eng.kret=Math.max(0,eng.kret-maps.knockRec*dt*10);eng.klvl=Math.max(0,eng.klvl-0.05);}
+  eng.adv=Math.max(0,ib-eng.kret);
+  eng.dwell=Math.max(1.5,(3.8*(13.5/Math.max(eng.batt,8)))-eng.rpm*0.0001);
+  // AFR/EGO
+  const lean=eng.faultLean?1.5:0;
+  if(eng.faultO2){eng.afr=eng.afrTgt+lean+randn()*0.3;eng.ego=false;}
+  else if(eng.faultInj){eng.afr=10.2+Math.random()*1.3;eng.ego=false;}
+  else{eng.afr=Math.max(8,Math.min(22,eng.afrTgt+lean+randn()*0.08));}
+  eng.lam=eng.afr/stoich;
+  const egoActive=!eng.faultO2&&eng.clt>75&&eng.tps<(p.diesel?90:80)&&eng.rpm<4500;
+  if(egoActive){
+    eng.ego=true;
+    eng.stft+=(eng.afrTgt-eng.afr)*0.8*dt;eng.stft=Math.max(-25,Math.min(25,eng.stft));
+    eng.ltft+=eng.stft*0.003*dt;eng.ltft=Math.max(-25,Math.min(25,eng.ltft));
+  } else if(!eng.faultO2){eng.stft*=0.95;eng.ego=false;}
+  // EGT — diesel runs cooler at idle but higher under load
+  const egtBase=p.egt_base||650;
+  eng.egt=Math.max(200,Math.min(p.diesel?950:1050,
+    egtBase+(eng.rpm/rpmMax)*280+(eng.map/100)*180+(eng.lam-1)*100+randn()*5));
+  // Temps
+  if(eng.faultClt)eng.clt=-40+randn()*0.5;
+  else if(eng.clt<90)eng.clt+=((eng.rpm/rpmMax)*0.35+(eng.map/100)*0.18)*dt;
+  else eng.clt=87+randn();
+  eng.iat+=(env.ambientTemp+eng.rpm*0.003-eng.iat)*0.01*dt+randn()*0.1;
+  // Battery
+  const tv=eng.rpm>900?14.2:12.0;
+  eng.batt=Math.max(10,Math.min(15,eng.batt+(tv-eng.batt)*dt+randn()*0.02));
+  // Speed/Gear
+  const g=Math.max(1,Math.min(currentTransProfile.gears||1,eng.gear));
+  const ratios=currentTransProfile.ratios;
+  const ratio=ratios?ratios[Math.min(g-1,ratios.length-1)]:1;
+  eng.spd=eng.rpm/(ratio*currentTransProfile.final)*currentEngProfile.disp/2*60/1000*0.8;
+  eng.spd=Math.max(0,eng.spd);
+  // Oil pressure — diesel trucks run higher
+  const oilBase=p.oilPressIdle;const oilMax=p.oilPressCruise;
+  eng.oil=Math.max(0,Math.min(oilMax+15,eng.rpm<100?0:oilBase+(eng.rpm/rpmMax)*(oilMax-oilBase)+randn()));
+  // Glow plugs
+  eng.glowReady=p.glow&&eng.clt<40;
+  // ABS wheel speeds
+  const wspd=eng.spd*1000/3600;
+  absState.wsFL=wspd+randn()*0.05;absState.wsFR=wspd+randn()*0.05;
+  absState.wsRL=wspd+randn()*0.05;absState.wsRR=wspd+randn()*0.05;
+  absState.pressure=eng.map*1.1+randn()*2;
+  // TCU
+  tcuState.gear=eng.gear;tcuState.linePsi=currentTransProfile.linePsiIdle+(eng.tps/100)*(currentTransProfile.linePsiDrive-currentTransProfile.linePsiIdle);
+  tcuState.tcc=(eng.spd>45&&eng.tps<80);tcuState.oilTemp=eng.clt-5+randn();
+  const curRatio=ratio;const expRatio=currentTransProfile.ratios?currentTransProfile.ratios[0]:4;
+  tcuState.slipRpm=Math.max(0,(curRatio/expRatio-1)*eng.rpm*0.1);
+  // TPMS — slow leak simulation
+  if(Math.random()<0.0001)tpmsState.fl=Math.max(24,tpmsState.fl-0.1);
+  tpmsState.lowAlert=tpmsState.fl<28||tpmsState.fr<28||tpmsState.rl<28||tpmsState.rr<28;
+  // HV
+  if(currentEngProfile.name.includes('Prius')||currentTransProfile.name.includes('Prius')){
+    hvState.hvReady=true;hvState.soc=Math.max(20,Math.min(80,hvState.soc+(Math.random()-0.5)*0.2));
+    hvState.hvVoltage=201.6*(hvState.soc/80)*0.9+randn();
+    hvState.hvCurrent=(eng.tps/100)*50+randn()*2;
+    hvState.mg1rpm=eng.rpm*0.4+randn()*10;
+    hvState.mg2rpm=eng.spd*45+randn()*5;
+  }
+  updateDTCs();
+}
+
+function autoScenario(dt){
+  const p=currentEngProfile;
+  const c=eng.st%150;
+  if(c<20){eng.scenario='warmup';eng.tps=Math.max(0,0.5+randn()*0.3);eng.gear=1;}
+  else if(c<40){eng.scenario='cruise';eng.tps=Math.max(0,22+Math.sin(eng.st*0.1)*5);eng.gear=3;eng.rtgt=2200+Math.sin(eng.st*0.08)*200;}
+  else if(c<60){eng.scenario='wot';eng.tps=Math.min(100,98+randn()*0.5);eng.gear=2;eng.rtgt=Math.min(p.maxRpm*0.9,eng.rtgt+40);}
+  else if(c<80){eng.scenario='decel';eng.tps=0;eng.gear=4;eng.rtgt=Math.max(p.idleRpm,eng.rtgt-70);}
+  else if(c<100){eng.scenario='hwy';eng.tps=Math.max(0,35+randn()*2);eng.gear=p.diesel?4:5;eng.rtgt=p.diesel?1800:3000+randn()*100;}
+  else{eng.scenario='idle';eng.tps=Math.max(0,0.2+randn()*0.2);eng.gear=1;eng.rtgt=p.idleRpm;}
+  // road grade effect
+  if(env.roadGrade>0)eng.rtgt+=env.roadGrade*30;
+}
+
+function applyCondOverride(cond,dt){
+  const p=currentEngProfile;
+  switch(cond){
+    case'warmup': eng.scenario='warmup';eng.tps=Math.max(0,0.5+randn()*0.3);eng.gear=1;eng.rtgt=p.idleRpm*1.3;break;
+    case'idle':   eng.scenario='idle';eng.tps=0.2;eng.gear=1;eng.rtgt=p.idleRpm;break;
+    case'cruise': eng.scenario='cruise';eng.tps=25+randn()*3;eng.gear=4;eng.rtgt=2200+randn()*100;break;
+    case'wot':    eng.scenario='wot';eng.tps=100;eng.gear=2;eng.rtgt=Math.min(p.maxRpm*0.9,eng.rtgt+30);break;
+    case'decel':  eng.scenario='decel';eng.tps=0;eng.gear=4;eng.rtgt=Math.max(p.idleRpm,eng.rtgt-50);break;
+    case'boost_test': eng.scenario='boost';eng.tps=85;eng.gear=2;eng.rtgt=Math.min(p.maxRpm*0.85,eng.rtgt+20);break;
+    case'regen':  eng.scenario='regen';eng.tps=0;eng.gear=5;eng.rtgt=Math.max(p.idleRpm,eng.rtgt-40);break;
+    default: autoScenario(dt);
+  }
+}
+
+function updateDTCs(){
+  const checks=[
+    [eng.batt<11,'P0562','Battery Voltage Low'],
+    [eng.oil<8&&eng.rpm>500,'P0520','Oil Pressure Low'],
+    [eng.ltft>20,'P0171','Fuel System Lean B1'],
+    [eng.ltft<-20,'P0172','Fuel System Rich B1'],
+    [eng.kcnt>50,'P0325','Knock Sensor 1'],
+    [eng.faultO2,'P0131','O2 Sensor Low Voltage B1S1'],
+    [eng.faultMiss>0,'P030'+eng.faultMiss,'Cyl '+eng.faultMiss+' Misfire'],
+    [eng.faultClt,'P0117','ECT Sensor Circuit Low'],
+    [eng.faultInj,'P0201','Injector Circuit Open Cyl 1'],
+    [tpmsState.lowAlert,'C1731','TPMS Low Pressure'],
+  ];
+  const codes=eng.activeDtcs.map(d=>d[0]);
+  for(const[cond,code,desc] of checks){
+    if(cond&&!codes.includes(code)){
+      eng.activeDtcs.push([code,desc]);
+      if(!eng.storedDtcs.find(d=>d[0]===code))eng.storedDtcs.push([code,desc]);
+    }
+  }
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// SCOPE / WAVEFORM GENERATION
+// ══════════════════════════════════════════════════════════════════════
+const SIGS={
+  'Wideband O2':    {col:'#00ff88', fn:(t)=>eng.afr+Math.sin(t*0.3+eng.rpm*0.001)*0.4+randn()*0.06, unit:'λ→', min:10, max:20},
+  'Narrowband O2':  {col:'#ff8844', fn:(t)=>{const v=eng.lam<1?0.1+Math.random()*0.2:0.8+Math.random()*0.2; return v;}, unit:'V', min:0, max:1},
+  'MAP Sensor':     {col:'#4488ff', fn:(t)=>eng.map+Math.sin(t*(eng.rpm/60)*Math.PI*2)*3+randn()*0.5, unit:'kPa', min:0, max:120},
+  'TPS':            {col:'#ffff44', fn:(t)=>eng.tps+randn()*0.2, unit:'%', min:0, max:100},
+  'CLT':            {col:'#ff4040', fn:(t)=>eng.clt+randn()*0.1, unit:'°C', min:-40, max:130},
+  'IAT':            {col:'#00ccff', fn:(t)=>eng.iat+randn()*0.1, unit:'°C', min:-40, max:80},
+  'Battery':        {col:'#cc55ff', fn:(t)=>eng.batt+Math.sin(t*1.2)*0.08+randn()*0.01, unit:'V', min:8, max:16},
+  'Injector PW':    {col:'#ffaa00', fn:(t)=>eng.pw+randn()*0.03, unit:'ms', min:0, max:25},
+  'Crank Signal':   {col:'#00ff88', fn:(t)=>{const f=eng.rpm/60;const tooth=Math.floor(t*f*60)%60;if(tooth>=58)return 0;return (Math.sin(t*f*2*Math.PI*30)>0.2)?3.3:0.1;}, unit:'V', min:0, max:4},
+  'Cam Signal':     {col:'#aaffcc', fn:(t)=>{const f=eng.rpm/120;return (Math.sin(t*f*2*Math.PI)>0.4)?5:0;}, unit:'V', min:0, max:6},
+  'Ignition Pri':   {col:'#ff6644', fn:(t)=>{const f=eng.rpm/60/2;const ph=t*f*2*Math.PI%(2*Math.PI);return ph<(eng.dwell/1000*f*2*Math.PI)?12:0;}, unit:'V', min:0, max:15},
+  'Knock Sensor':   {col:'#ff4488', fn:(t)=>eng.klvl*Math.sin(t*800+randn())*2.5+randn()*0.08, unit:'V', min:-3, max:3},
+  'EGT':            {col:'#ff9900', fn:(t)=>eng.egt+randn()*4, unit:'°C', min:0, max:1100},
+  'Oil Pressure':   {col:'#33ddaa', fn:(t)=>eng.oil+randn()*1.5, unit:'psi', min:0, max:100},
+  'Boost Pressure': {col:'#dd88ff', fn:(t)=>eng.boostPsi+randn()*0.3, unit:'psi', min:-5, max:50},
+};
+
+const sigNames=Object.keys(SIGS);
+let scopeBuffers={};
+sigNames.forEach(k=>{scopeBuffers[k]=[];});
+let scopeT=0,scopeZoomFactor=1,scopeSnapshots=[],scopeChActive={},scopeNumActive={};
+sigNames.forEach(k=>{scopeChActive[k]=(k==='Wideband O2'||k==='MAP Sensor');scopeNumActive[k]=false;});
+
+function updateScopeBuffers(dt){
+  scopeT+=dt;
+  const npts=parseInt(document.getElementById('npts')?.value||200);
+  sigNames.forEach(k=>{
+    const s=SIGS[k];
+    scopeBuffers[k].push(s.fn(scopeT));
+    if(scopeBuffers[k].length>npts)scopeBuffers[k].shift();
+  });
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// WAVEFORM DRAWING
+// ══════════════════════════════════════════════════════════════════════
+function drawMiniCanvas(canvasId,sig1,sig2){
+  const cv=document.getElementById(canvasId);if(!cv)return;
+  const ctx=cv.getContext('2d');
+  const W=cv.offsetWidth||cv.parentElement.offsetWidth||200;
+  const H=cv.offsetHeight||70;
+  cv.width=W;cv.height=H;
+  ctx.fillStyle='#0a0e14';ctx.fillRect(0,0,W,H);
+  ctx.strokeStyle='#1a2530';ctx.lineWidth=0.5;
+  for(let i=1;i<4;i++){ctx.beginPath();ctx.moveTo(0,H*i/4);ctx.lineTo(W,H*i/4);ctx.stroke();}
+  function drawBuf(name,col){
+    const b=scopeBuffers[name];if(!b||b.length<2)return;
+    const s=SIGS[name];
+    ctx.strokeStyle=col||s.col;ctx.lineWidth=1.2;ctx.beginPath();
+    for(let i=0;i<b.length;i++){
+      const x=i/(b.length-1)*W;
+      const y=H-(b[i]-s.min)/(s.max-s.min)*H;
+      i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);
+    }ctx.stroke();
+  }
+  if(sig1)drawBuf(sig1);
+  if(sig2)drawBuf(sig2);
+}
+
+function drawFullScope(){
+  const cv=document.getElementById('scope-cv');if(!cv)return;
+  const W=cv.parentElement.offsetWidth||window.innerWidth;
+  const H=cv.parentElement.offsetHeight||300;
+  cv.width=W;cv.height=H;
+  const ctx=cv.getContext('2d');
+  ctx.fillStyle='#050a0f';ctx.fillRect(0,0,W,H);
+  const active=sigNames.filter(k=>scopeChActive[k]);
+  const nCh=active.length||1;
+  const chH=Math.floor(H/nCh);
+  ctx.strokeStyle='#0f2030';ctx.lineWidth=0.5;
+  for(let i=0;i<nCh;i++){ctx.beginPath();ctx.moveTo(0,(i+1)*chH);ctx.lineTo(W,(i+1)*chH);ctx.stroke();}
+  // grid
+  ctx.strokeStyle='#0a1820';
+  for(let i=1;i<10;i++){ctx.beginPath();ctx.moveTo(W*i/10,0);ctx.lineTo(W*i/10,H);ctx.stroke();}
+  // snapshots
+  scopeSnapshots.forEach(snap=>{
+    snap.forEach((b,ci)=>{
+      const ch=active[ci];if(!ch)return;
+      const s=SIGS[ch];const yBase=ci*chH;
+      ctx.strokeStyle=s.col+'44';ctx.lineWidth=1;ctx.setLineDash([4,3]);ctx.beginPath();
+      b.forEach((v,i)=>{const x=i/(b.length-1)*W*scopeZoomFactor;const y=yBase+chH-(v-s.min)/(s.max-s.min)*chH;i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);});ctx.stroke();ctx.setLineDash([]);
+    });
+  });
+  // live waveforms
+  active.forEach((ch,ci)=>{
+    const s=SIGS[ch];const b=scopeBuffers[ch];if(!b||b.length<2)return;
+    const yBase=ci*chH;
+    ctx.strokeStyle=s.col;ctx.lineWidth=1.5;ctx.beginPath();
+    const pts=b.slice(Math.floor(b.length*(1-1/scopeZoomFactor)));
+    pts.forEach((v,i)=>{const x=i/(pts.length-1)*W;const y=yBase+chH-(v-s.min)/(s.max-s.min)*chH;i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);});ctx.stroke();
+    ctx.fillStyle=s.col+'aa';ctx.font='8px Courier New';ctx.fillText(ch+' ['+s.unit+']',4,yBase+11);
+    ctx.fillText(s.min.toFixed(0),2,yBase+chH-2);ctx.fillText(s.max.toFixed(0),2,yBase+13);
+  });
+}
+
+let scopeOpen=false;
+function openScope(...names){
+  scopeOpen=true;
+  document.getElementById('scope-ov').classList.add('open');
+  if(names&&names.length)names.forEach(n=>{if(SIGS[n])scopeChActive[n]=true;});
+  buildScopeChList();buildScopeNumStrip();
+}
+function closeScope(){scopeOpen=false;document.getElementById('scope-ov').classList.remove('open');}
+function scopeZoom(f){scopeZoomFactor=Math.max(0.25,Math.min(8,scopeZoomFactor*f));}
+function scopeZoomReset(){scopeZoomFactor=1;}
+function scopeSnapshot(){
+  const active=sigNames.filter(k=>scopeChActive[k]);
+  scopeSnapshots.push(active.map(k=>[...scopeBuffers[k]]));
+  document.getElementById('snap-bar').textContent=`${scopeSnapshots.length} snapshot(s) stored — shown dashed`;
+}
+function clearSnaps(){scopeSnapshots=[];document.getElementById('snap-bar').textContent='Snapshots cleared';}
+
+function buildScopeChList(){
+  const el=document.getElementById('scope-ch-list');if(!el)return;
+  el.innerHTML=sigNames.map(k=>`<label style="color:${SIGS[k].col}"><input type="checkbox" ${scopeChActive[k]?'checked':''} onchange="scopeChActive['${k}']=this.checked;buildScopeNumStrip()"> ${k}</label>`).join('');
+}
+function buildScopeNumStrip(){
+  const el=document.getElementById('scope-num-list');if(!el)return;
+  el.innerHTML=sigNames.map(k=>`<label><input type="checkbox" ${scopeNumActive[k]?'checked':''} onchange="scopeNumActive['${k}']=this.checked"> ${k}</label>`).join('');
+  const strip=document.getElementById('scope-num-strip');if(!strip)return;
+  const active=sigNames.filter(k=>scopeNumActive[k]);
+  strip.innerHTML=active.map(k=>{const b=scopeBuffers[k];const v=b.length?b[b.length-1]:0;return`<div class="num-cell"><div class="num-lbl">${k}</div><div class="num-val" style="color:${SIGS[k].col}">${v.toFixed(2)} ${SIGS[k].unit}</div></div>`;}).join('');
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// STATUS BAR
+// ══════════════════════════════════════════════════════════════════════
+const SB_DEFS=[
+  {k:'RPM',  fn:()=>eng.rpm.toFixed(0),         col:()=>eng.rpm>currentEngProfile.maxRpm*0.88?'#ff4040':eng.rpm>currentEngProfile.maxRpm*0.75?'#ffaa00':'#00ff88'},
+  {k:'MAP',  fn:()=>eng.map.toFixed(1)+'kPa',   col:()=>eng.map>98?'#ff4040':'#4488ff'},
+  {k:'TPS',  fn:()=>eng.tps.toFixed(1)+'%',     col:()=>eng.tps>90?'#ffaa00':'#ffff44'},
+  {k:'CLT',  fn:()=>eng.clt.toFixed(1)+'°',     col:()=>eng.clt>105?'#ff4040':eng.clt<30?'#00ccff':'#00ff88'},
+  {k:'IAT',  fn:()=>eng.iat.toFixed(1)+'°',     col:()=>eng.iat>60?'#ffaa00':'#00ccff'},
+  {k:'AFR',  fn:()=>eng.afr.toFixed(2),         col:()=>eng.afr<12?'#ff4040':eng.afr>15.5?'#ffaa00':'#00ff88'},
+  {k:'BATT', fn:()=>eng.batt.toFixed(2)+'V',    col:()=>eng.batt<11.5?'#ff4040':'#cc55ff'},
+  {k:'EGT',  fn:()=>eng.egt.toFixed(0)+'°',     col:()=>eng.egt>950?'#ff4040':eng.egt>850?'#ffaa00':'#ff9900'},
+  {k:'OIL',  fn:()=>eng.oil.toFixed(1)+'psi',   col:()=>eng.oil<15?'#ff4040':'#33ddaa'},
+  {k:'STFT', fn:()=>(eng.stft>=0?'+':'')+eng.stft.toFixed(1)+'%', col:()=>Math.abs(eng.stft)>15?'#ff4040':'#00ff88'},
+  {k:'LTFT', fn:()=>(eng.ltft>=0?'+':'')+eng.ltft.toFixed(1)+'%', col:()=>Math.abs(eng.ltft)>15?'#ff4040':'#00ff88'},
+  {k:'SPD',  fn:()=>eng.spd.toFixed(0)+'kph',   col:()=>'#ffff44'},
+  {k:'KNOCK',fn:()=>eng.kret.toFixed(1)+'°',    col:()=>eng.kret>8?'#ff4040':eng.kret>3?'#ffaa00':'#00ff88'},
+  {k:'VE',   fn:()=>eng.ve.toFixed(1)+'%',      col:()=>'#4488ff'},
+  {k:'IGN',  fn:()=>eng.adv.toFixed(1)+'°',     col:()=>eng.adv<5?'#ff4040':'#00ccff'},
+  {k:'λ',    fn:()=>eng.lam.toFixed(3),          col:()=>eng.lam<0.85?'#ff4040':eng.lam>1.1?'#ffaa00':'#00ff88'},
+  {k:'PW',   fn:()=>eng.pw.toFixed(2)+'ms',     col:()=>'#ffaa00'},
+  {k:'BOOST',fn:()=>eng.boostPsi.toFixed(1)+'psi',col:()=>eng.boostPsi>currentEngProfile.maxBoost*0.9?'#ff4040':eng.boostPsi>5?'#ff7722':'#445566'},
+];
+function buildStatusBar(){
+  const r1=document.getElementById('sb-row1'),r2=document.getElementById('sb-row2');if(!r1)return;
+  const half=Math.ceil(SB_DEFS.length/2);
+  const mk=(defs)=>defs.map(d=>`<div class="sb-cell" onclick="openReadingPopup('${d.k}')"><div class="sb-lbl">${d.k}</div><div class="sb-val" id="sbv-${d.k}" style="color:${d.col()}">${d.fn()}</div></div>`).join('');
+  r1.innerHTML=mk(SB_DEFS.slice(0,half));
+  r2.innerHTML=mk(SB_DEFS.slice(half));
+}
+function updateStatusBar(){
+  SB_DEFS.forEach(d=>{
+    const el=document.getElementById('sbv-'+d.k);
+    if(el){el.textContent=d.fn();el.style.color=d.col();}
+  });
+  const dtcEl=document.getElementById('dtc-txt');
+  if(dtcEl){
+    dtcEl.textContent=eng.activeDtcs.length>0?'DTCs: '+eng.activeDtcs.map(d=>d[0]).join(' '):'NO DTCs';
+    dtcEl.style.color=eng.activeDtcs.length>0?'#ff4040':'#00ff88';
+  }
+  const sc=document.getElementById('scene-txt');
+  if(sc)sc.textContent=(eng.scenario||'').toUpperCase();
+  const bb=document.getElementById('boost-badge');
+  if(bb){bb.style.display=currentEngProfile.turbo?'inline':'none';bb.textContent='BOOST: '+eng.boostPsi.toFixed(1)+'psi';}
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// STATUS BAR
+// ══════════════════════════════════════════════════════════════════════
+function updateLiveValues(){
+  const grid=document.getElementById('lv-grid');if(!grid)return;
+  const vals=[
+    {k:'RPM', v:eng.rpm.toFixed(0), c:'#00ff88'},
+    {k:'MAP kPa', v:eng.map.toFixed(1), c:'#4488ff'},
+    {k:'TPS %', v:eng.tps.toFixed(1), c:'#ffff44'},
+    {k:'CLT °C', v:eng.clt.toFixed(1), c:'#ff4040'},
+    {k:'IAT °C', v:eng.iat.toFixed(1), c:'#00ccff'},
+    {k:'AFR', v:eng.afr.toFixed(2), c:'#00ff88'},
+    {k:'λ', v:eng.lam.toFixed(3), c:'#00ff88'},
+    {k:'STFT %', v:(eng.stft>=0?'+':'')+eng.stft.toFixed(1), c:Math.abs(eng.stft)>15?'#ff4040':'#00ff88'},
+    {k:'LTFT %', v:(eng.ltft>=0?'+':'')+eng.ltft.toFixed(1), c:Math.abs(eng.ltft)>15?'#ff4040':'#00ff88'},
+    {k:'IGN °', v:eng.adv.toFixed(1), c:'#00ccff'},
+    {k:'KNOCK °', v:eng.kret.toFixed(1), c:eng.kret>5?'#ff4040':'#00ff88'},
+    {k:'EGT °C', v:eng.egt.toFixed(0), c:'#ff9900'},
+    {k:'PW ms', v:eng.pw.toFixed(2), c:'#ffaa00'},
+    {k:'DC %', v:eng.dc.toFixed(1), c:'#ffaa00'},
+    {k:'OIL psi', v:eng.oil.toFixed(1), c:'#33ddaa'},
+    {k:'BATT V', v:eng.batt.toFixed(2), c:'#cc55ff'},
+    {k:'SPD', v:eng.spd.toFixed(0)+'kph', c:'#ffff44'},
+    {k:'BOOST psi', v:eng.boostPsi.toFixed(1), c:'#ff7722'},
+  ];
+  grid.innerHTML=vals.map(v=>`<div class="gauge" onclick="openReadingPopup('${v.k}')"><div class="gauge-lbl">${v.k}</div><div class="gauge-val" style="color:${v.c}">${v.v}</div></div>`).join('');
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// OBD/J1939 FRAMES + CAN SUBTABS
+// ══════════════════════════════════════════════════════════════════════
+const J1939_PGNS={
+  'F004':{name:'EEC1',desc:'Eng Speed'},
+  'FEFF':{name:'EEC2',desc:'Throttle'},
+  'FEF5':{name:'CCVS',desc:'Cruise/Speed'},
+  'FEE5':{name:'HOURS',desc:'Engine Hours'},
+  'FEE6':{name:'TIME',desc:'Time/Date'},
+  'FEF6':{name:'LFC',desc:'Fuel Rate'},
+  'FEF7':{name:'AI',desc:'Ambient Cond'},
+  'FEEE':{name:'ET1',desc:'Eng Temp'},
+  'FEEF':{name:'EFL/P1',desc:'Fluid/Press 1'},
+  'FF05':{name:'TURBO',desc:'Turbo Press'},
+};
+const j1939Rows=[],obdRows=[],linRows=[];
+let j1939Timer=0,obdTimer=0,linTimer=0;
+let protoCap=false,protoRows=[],protoTimer=0;
+const communityLib=[
+  {id:'0x7E8',byte:2,scale:0.25,offset:0,name:'RPM (std OBD)',source:'SAE J1979'},
+  {id:'0x3B0',byte:0,scale:1,offset:-40,name:'Coolant Temp (GMLAN)',source:'GM spec'},
+  {id:'0x540',byte:1,scale:0.5,offset:0,name:'VVT Solenoid Position',source:'Community - ToyotaNation'},
+  {id:'0x7DF',byte:0,scale:1,offset:0,name:'OBD-II broadcast request',source:'SAE J1979'},
+  {id:'0x641',byte:3,scale:0.1,offset:0,name:'Boost pressure (Ford MS-CAN)',source:'Community - FordTech'},
+];
+
+function genJ1939Row(){
+  const pgns=Object.keys(J1939_PGNS);
+  const pgn=pgns[Math.floor(Math.random()*pgns.length)];
+  const info=J1939_PGNS[pgn];
+  const data=Array.from({length:8},()=>Math.floor(Math.random()*256).toString(16).padStart(2,'0').toUpperCase()).join(' ');
+  return {t:(Date.now()%100000/1000).toFixed(3),id:'0CF'+pgn+'00',pgn,name:info.name,data,decoded:info.desc+' '+Math.floor(Math.random()*2000)};
+}
+function genOBDRow(dir,pid){
+  const id=dir==='Req'?'0x7DF':'0x7E8';
+  const d=dir==='Req'?`02 01 ${pid||'0C'} 00 00 00 00 00`:`04 41 ${pid||'0C'} ${Math.floor(Math.random()*255).toString(16).padStart(2,'0')} 00 00 00 00`;
+  return {t:(Date.now()%100000/1000).toFixed(3),id,dir,data:d,decoded:dir==='Resp'?'RPM '+(Math.floor(eng.rpm)).toString(16).toUpperCase():''};
+}
+function genLINFrame(){
+  const ids=['0x01','0x02','0x10','0x11','0x20','0x3C'];
+  const id=ids[Math.floor(Math.random()*ids.length)];
+  const nodes={
+    '0x01':'HVAC Blend Motor','0x02':'Mirror Control','0x10':'Window Lift FL',
+    '0x11':'Window Lift FR','0x20':'Seat Module','0x3C':'Lighting Ctrl'};
+  const data=Array.from({length:4},()=>Math.floor(Math.random()*256).toString(16).padStart(2,'0').toUpperCase()).join(' ');
+  return `<div class="lin-frame"><span style="color:#cc55ff">${id}</span> <span style="color:#778899">[${nodes[id]||'Unknown'}]</span> DATA: <span style="color:#aaffcc">${data}</span> CHK: ${Math.floor(Math.random()*256).toString(16).toUpperCase()}</div>`;
+}
+
+function tickCAN(dt){
+  j1939Timer+=dt;obdTimer+=dt;linTimer+=dt;
+  if(j1939Timer>0.2){
+    j1939Timer=0;
+    j1939Rows.push(genJ1939Row());
+    if(j1939Rows.length>80)j1939Rows.shift();
+    const b=document.getElementById('j1939-body');
+    if(b&&document.getElementById('tab-can').classList.contains('active')&&document.getElementById('can-j1939').style.display!=='none'){
+      const r=j1939Rows.slice(-20);
+      b.innerHTML=r.map(row=>`<tr><td>${row.t}</td><td style="color:#00ccff">${row.id}</td><td style="color:#cc55ff">${row.pgn}</td><td>${row.name}</td><td style="font-family:monospace;font-size:7px">${row.data}</td><td style="color:#00ff88">${row.decoded}</td></tr>`).join('');
+      b.parentElement.parentElement.scrollTop=9999;
+    }
+  }
+  if(obdTimer>0.4&&eng.autopoll){
+    obdTimer=0;
+    const pids=['0C','0D','05','0F','04','11','2F','01'];
+    const p=pids[Math.floor(Math.random()*pids.length)];
+    obdRows.push(genOBDRow('Req',p));obdRows.push(genOBDRow('Resp',p));
+    if(obdRows.length>100)obdRows.splice(0,2);
+    const b=document.getElementById('obd-body');
+    if(b&&document.getElementById('can-obd').style.display!=='none'){
+      const r=obdRows.slice(-30);
+      b.innerHTML=r.map(row=>`<tr><td>${row.t}</td><td style="color:${row.dir==='Req'?'#ffaa00':'#00ff88'}">${row.id}</td><td style="color:${row.dir==='Req'?'#ffaa00':'#00ccff'}">${row.dir}</td><td style="font-family:monospace;font-size:7px">${row.data}</td><td style="color:#aaffcc">${row.decoded}</td></tr>`).join('');
+    }
+  }
+  if(linTimer>0.3){
+    linTimer=0;
+    const el=document.getElementById('lin-frames');
+    if(el&&document.getElementById('can-lin').style.display!=='none'){
+      el.innerHTML+=genLINFrame();
+      if(el.children.length>25)el.removeChild(el.firstChild);
+      el.scrollTop=9999;
+    }
+  }
+  if(protoCap){
+    protoTimer+=dt;
+    if(protoTimer>0.12){
+      protoTimer=0;
+      const id='0x'+Math.floor(Math.random()*0x7FF).toString(16).toUpperCase().padStart(3,'0');
+      const filter=document.getElementById('proto-filter')?.value||'';
+      if(!filter||id.toLowerCase().includes(filter.toLowerCase())){
+        const bytes=Array.from({length:8},()=>Math.floor(Math.random()*256).toString(16).padStart(2,'0').toUpperCase());
+        const match=communityLib.find(e=>e.id.toLowerCase()===id.toLowerCase());
+        protoRows.push({dt:(protoTimer*1000).toFixed(0),id,dlc:8,bytes,match:match?match.name:''});
+        if(protoRows.length>200)protoRows.shift();
+        const b=document.getElementById('proto-body');
+        if(b){
+          const r=protoRows.slice(-25);
+          b.innerHTML=r.map(row=>`<tr style="${row.match?'background:#001828':''}"><td>${row.dt}</td><td style="color:#00ccff">${row.id}</td><td>8</td>${row.bytes.map(b=>`<td>${b}</td>`).join('')}<td style="color:${row.match?'#00ff88':'#445566'}">${row.match||'?'}</td></tr>`).join('');
+        }
+      }
+    }
+  }
+}
+
+function canSubTab(name){
+  document.querySelectorAll('.can-sub').forEach(el=>el.style.display='none');
+  document.getElementById('can-'+name).style.display='';
+  // de/activate button styles
+  ['j1939','obd','lin','uds','proto','info'].forEach(n=>{
+    const b=document.getElementById('csub-'+n);if(b)b.className='ck-btn'+(n===name?' btn-cyan':'');
+  });
+  if(name==='info')document.getElementById('can-info-text').textContent=CAN_INFO_TEXT;
+  if(name==='uds')buildUDSButtons();
+  if(name==='proto')buildLibList();
+}
+
+const CAN_INFO_TEXT=`
+CAN BUS PROTOCOLS REFERENCE
+═══════════════════════════
+High-Speed CAN (ISO 11898-2)     — 500kbps / 1Mbps   — OBD, engine, trans
+Low-Speed CAN (ISO 11898-3)      — 125kbps             — Ford MS-CAN, comfort
+GMLAN Single-Wire                — 33.3kbps            — GM body modules
+LIN (ISO 17987 / J2602)         — 13.33kbps           — sub-bus slaves
+J1939 (SAE)                     — 250/500kbps 29-bit  — heavy duty trucks
+ISO 9141-2 / KWP2000             — 10.4kbps K-Line     — pre-2005 OBD
+SAE J1708 / J1587                — 9.6kbps RS-485      — Allison, Cummins
+
+UDS SERVICES (ISO 14229)
+─────────────────────────
+0x10 DiagnosticSessionControl   — Default/Extended/Programming
+0x11 ECUReset                   — HardReset/SoftReset/KeyOffOn
+0x14 ClearDiagnosticInfo        — Clear DTCs
+0x19 ReadDTCInformation         — Read fault codes + status
+0x22 ReadDataByIdentifier       — Read live data by DID
+0x27 SecurityAccess             — Seed/Key unlock
+0x28 CommunicationControl       — Enable/Disable TX/RX
+0x2E WriteDataByIdentifier      — Write param (coded)
+0x31 RoutineControl             — Actuator tests / relearns
+0x34/36/37 RequestDownload      — ECU programming
+0x3E TesterPresent              — Keep session alive
+
+DoIP (ISO 13400)                — 2018+ via Ethernet
+J2534 PassThru                  — PC-based module flashing
+`;
+
+const UDS_SERVICES=[
+  {sid:'0x10',name:'DiagnosticSessionControl',sub:'03 (Extended)'},
+  {sid:'0x11',name:'ECUReset',sub:'01 (Hard)'},
+  {sid:'0x14',name:'ClearDiagnosticInfo',sub:'FF FF FF'},
+  {sid:'0x19',name:'ReadDTCInfo',sub:'02 (all active)'},
+  {sid:'0x22',name:'ReadDataByID',sub:'F1 90 (VIN)'},
+  {sid:'0x2E',name:'WriteDataByID',sub:'F1 50 (ODO)'},
+  {sid:'0x31',name:'RoutineControl',sub:'01 (start)'},
+  {sid:'0x3E',name:'TesterPresent',sub:'00'},
+];
+function buildUDSButtons(){
+  const el=document.getElementById('uds-btns');if(!el)return;
+  el.innerHTML=UDS_SERVICES.map(s=>`<button class="ck-btn btn-cyan" style="font-size:8px" onclick="udsService('${s.sid}','${s.name}','${s.sub}')">${s.sid} ${s.name}</button>`).join('');
+}
+function udsService(sid,name,sub){
+  const r=document.getElementById('uds-result');if(!r)return;
+  const reqHex=`7DF 02 ${sid} ${sub}`;
+  const respHex=`7E8 ${(parseInt(sid)+0x40).toString(16).toUpperCase()} ${sub} [OK]`;
+  r.textContent=`→ TX: ${reqHex}\n← RX: ${respHex}\n[${name}] Positive Response`;
+  if(sid==='0x19'){
+    const dtcs=eng.activeDtcs;
+    r.textContent+=dtcs.length?'\nDTCs: '+dtcs.map(d=>d[0]).join(', '):'\nNo DTCs stored';
+  }
+}
+function udsSecAccess(){
+  const lvl=document.getElementById('sec-level').value;
+  const seed=Math.floor(Math.random()*0xFFFFFF).toString(16).toUpperCase().padStart(6,'0');
+  document.getElementById('sec-result').textContent=`[Lvl 0x${lvl}] Seed: 0x${seed} — Apply algorithm, send key`;
+}
+function udsSendKey(){
+  const key=Math.floor(Math.random()*0xFFFFFF).toString(16).toUpperCase().padStart(6,'0');
+  document.getElementById('sec-result').textContent=`Key 0x${key} sent → Positive Response 0x67 — Access granted`;
+}
+function protoCapStart(){protoCap=true;document.getElementById('proto-body').innerHTML='';}
+function protoCapStop(){protoCap=false;}
+function protoByteDiff(){
+  if(protoRows.length<2){document.getElementById('proto-cap').innerHTML='<div style="padding:5px;color:#ffaa00">Need ≥2 captures to diff</div>';return;}
+  const a=protoRows[protoRows.length-2].bytes,b=protoRows[protoRows.length-1].bytes;
+  const diff=a.map((v,i)=>v!==b[i]?`<span style="color:#ff4040">${b[i]}</span>`:b[i]).join(' ');
+  document.getElementById('proto-cap').innerHTML=`<div style="padding:5px;font-size:9px;color:#aaffcc">BYTE DIFF (last 2 frames):<br>${diff}</div>`;
+}
+function protoFreqAnalysis(){
+  const freq={};protoRows.forEach(r=>{freq[r.id]=(freq[r.id]||0)+1;});
+  const sorted=Object.entries(freq).sort((a,b)=>b[1]-a[1]).slice(0,10);
+  const el=document.getElementById('proto-cap');
+  el.innerHTML='<table class="data-table" style="font-size:8px"><thead><tr><th>ID</th><th>Count</th><th>~Hz</th></tr></thead><tbody>'+
+    sorted.map(([id,cnt])=>`<tr><td style="color:#00ccff">${id}</td><td>${cnt}</td><td>${(cnt/Math.max(protoRows.length*0.12,1)).toFixed(1)}</td></tr>`).join('')+'</tbody></table>';
+}
+function protoExport(){
+  const csv='Time_ms,ID,D0,D1,D2,D3,D4,D5,D6,D7,LibMatch\n'+
+    protoRows.map(r=>`${r.dt},${r.id},${r.bytes.join(',')},${r.match}`).join('\n');
+  const a=document.createElement('a');a.href='data:text/csv;base64,'+btoa(csv);a.download='proto_capture.csv';a.click();
+}
+function protoAddLib(){
+  const filter=document.getElementById('proto-filter').value||'0x???';
+  const note=prompt('Add to community library:\nID: '+filter+'\nDescription:','Unknown frame');
+  if(note){communityLib.push({id:filter,byte:0,scale:1,offset:0,name:note,source:'Community - User'});buildLibList();}
+}
+function buildLibList(){
+  const el=document.getElementById('lib-list');if(!el)return;
+  el.innerHTML=communityLib.map(e=>`<div style="border-bottom:1px solid #1a2030;padding:2px 0">
+    <span style="color:#00ccff">${e.id}</span> — <span style="color:#00ff88">${e.name}</span>
+    <span style="color:#445566;float:right">${e.source}</span></div>`).join('');
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// TUNE MAPS / TABLES
+// ══════════════════════════════════════════════════════════════════════
+function mapColor(val,lo,hi,mid){
+  const r=(val-lo)/(hi-lo);
+  if(r<0.5){const t=r*2;return`rgb(${Math.round(t*100+50)},${Math.round(t*200)},${Math.round((1-t)*180)})` }
+  else{const t=(r-0.5)*2;return`rgb(${Math.round(50+t*200)},${Math.round(200-t*150)},${Math.round(30)})`}
+}
+function buildMapTable(wrapperId,tbl,lo,hi){
+  const w=document.getElementById(wrapperId);if(!w)return;
+  const ri=idxBin(RPM_BINS,eng.rpm),mi=idxBin(MAP_BINS,eng.map);
+  let h=`<table style="border-collapse:collapse;font-size:7px"><tr><td style="background:var(--panel);padding:1px 2px;font-size:6px;color:#445566">kPa→RPM</td>`;
+  RPM_BINS.forEach(r=>h+=`<td style="background:#0a0e14;color:#445566;padding:1px;text-align:center;font-size:6px">${r}</td>`);
+  h+='</tr>';
+  MAP_BINS.forEach((kpa,mi2)=>{
+    h+=`<tr><td style="background:#0a0e14;color:#445566;padding:1px 3px;font-size:6px">${kpa}</td>`;
+    RPM_BINS.forEach((rpm,ri2)=>{
+      const v=tbl[mi2][ri2];const bg=mapColor(v,lo,hi);
+      const hl=(ri2===ri&&mi2===mi)?'border:2px solid #ffff44!important':'';
+      h+=`<input class="map-cell ${ri2===ri&&mi2===mi?'hi':''}" type="number" value="${v}"
+        style="background:${bg};${hl}"
+        onchange="tbl[${mi2}][${ri2}]=+this.value;buildMapTable('${wrapperId}',tbl,${lo},${hi})">`;
+    });
+    h+='</tr>';
+  });
+  h+='</table>';w.innerHTML=h;
+}
+function buildCorrTable(wrapperId,axVals,corrVals,unit,lo,hi){
+  const w=document.getElementById(wrapperId);if(!w)return;
+  let h=`<table style="border-collapse:collapse;font-size:8px;width:100%"><tr>`;
+  axVals.forEach(v=>h+=`<th style="background:#0a0e14;color:#445566;padding:2px 3px;font-size:7px">${v}${unit}</th>`);
+  h+='</tr><tr>';
+  corrVals.forEach((v,i)=>h+=`<td><input class="map-cell" type="number" value="${v}" style="background:${mapColor(v,lo,hi)};width:100%" onchange="corrVals[${i}]=+this.value"></td>`);
+  h+='</tr></table>';w.innerHTML=h;
+}
+
+function tuneSubTab(name){
+  ['ve','ign','afr','boost','vvt'].forEach(n=>{
+    const el=document.getElementById('tune-'+n);if(el)el.style.display=n===name?'':'none';
+  });
+  if(name==='ve')buildMapTable('ve-wrap',maps.ve,20,110);
+  if(name==='ign')buildMapTable('ign-wrap',maps.ign,0,45);
+  if(name==='afr')buildMapTable('afr-wrap',maps.afr,10,17);
+  if(name==='boost')buildMapTable('boost-wrap',maps.boost,0,Math.max(5,currentEngProfile.maxBoost));
+  if(name==='vvt')buildMapTable('vvt-wrap',maps.vvt,0,50);
+}
+
+function buildCorrTab(){
+  buildCorrTable('clt-wrap',maps.cltAx,maps.cltCorr,'°C',80,200);
+  buildCorrTable('iat-wrap',maps.iatAx,maps.iatCorr,'°C',70,120);
+  buildCorrTable('dt-wrap',maps.dtV,maps.dtMs,'V',0.5,2.2);
+  buildCorrTable('idle-wrap',maps.idleAx,maps.idleRpm,'°C',600,1700);
+  buildCorrTable('alt-wrap',maps.altAx,maps.altCorr,'kPa',95,130);
+  const cfg=document.getElementById('cfg-grid');if(!cfg)return;
+  const cfgItems=[
+    {k:'reqFuel',l:'Req Fuel (ms)',min:1,max:20,step:0.1},
+    {k:'softCut',l:'Soft Rev Cut',min:4000,max:9000,step:100},
+    {k:'hardCut',l:'Hard Rev Cut',min:4500,max:9500,step:100},
+    {k:'accelMult',l:'Accel Enrich',min:1,max:3,step:0.1},
+    {k:'knockStep',l:'Knock Pull (°)',min:0.5,max:5,step:0.5},
+    {k:'fuelPsi',l:'Fuel Press (psi)',min:20,max:100,step:0.5},
+  ];
+  cfg.innerHTML=cfgItems.map(c=>`<div><div style="font-size:7px;color:#445566">${c.l}</div>
+    <input type="number" min="${c.min}" max="${c.max}" step="${c.step}" value="${maps[c.k]}"
+      style="width:100%;font-size:10px;background:var(--dark);color:var(--amber);border:1px solid #1a3050;padding:2px;border-radius:2px"
+      onchange="maps['${c.k}']=+this.value"></div>`).join('');
+}
+
+function ecuConn(){document.getElementById('conn-badge').textContent='CONNECTED';document.getElementById('conn-badge').style.background='#002a0e';document.getElementById('conn-badge').style.color='#00ff88';eng.connected=true;}
+function ecuDisc(){document.getElementById('conn-badge').textContent='OFFLINE';document.getElementById('conn-badge').style.background='#1a0000';document.getElementById('conn-badge').style.color='#ff4040';eng.connected=false;}
+function ecuBurn(){if(!eng.connected){alert('Connect first');return;}document.getElementById('conn-badge').textContent='BURNING…';setTimeout(()=>{document.getElementById('conn-badge').textContent='FLASH OK';},1200);}
+function ecuRevert(){[maps.ve,maps.ign,maps.afr,maps.boost,maps.vvt]=[mkVE(),mkIGN(),mkAFR(),mkBoost(),mkVVT()];tuneSubTab('ve');}
+function exportMaps(){
+  let csv='RPM,'+RPM_BINS.join(',')+'\n';
+  MAP_BINS.forEach((kpa,mi)=>csv+=kpa+','+maps.ve[mi].join(',') +'\n');
+  const a=document.createElement('a');a.href='data:text/csv;base64,'+btoa(csv);a.download='ve_map.csv';a.click();
+}
+function applyConfig(){alert('Config applied to simulation');}
+function show3D(mapname){
+  const canvas=document.createElement('canvas');canvas.width=320;canvas.height=200;
+  const ctx=canvas.getContext('2d');
+  ctx.fillStyle='#0a0e14';ctx.fillRect(0,0,320,200);
+  const tbl=maps[mapname];
+  tbl.forEach((row,mi)=>row.forEach((v,ri)=>{
+    const lo=mapname==='ve'?20:mapname==='ign'?0:10;
+    const hi=mapname==='ve'?110:mapname==='ign'?45:17;
+    ctx.fillStyle=mapColor(v,lo,hi);
+    ctx.fillRect(ri*26+2,(MAP_BINS.length-1-mi)*22+2,24,20);
+    ctx.fillStyle='#000';ctx.font='7px monospace';ctx.fillText(v.toFixed(0),ri*26+4,(MAP_BINS.length-mi)*22-6);
+  }));
+  const w=window.open();w.document.write('<body style="background:#000;margin:0"><img src="'+canvas.toDataURL()+'"></body>');
+}
+function updateOpPoint(){
+  const el=document.getElementById('op-grid');if(!el)return;
+  const ri=Math.min(idxBin(RPM_BINS,eng.rpm),RPM_BINS.length-1);
+  const mi=Math.min(idxBin(MAP_BINS,eng.map),MAP_BINS.length-1);
+  el.innerHTML=`<div>RPM bin: <span style="color:#ffff44">${RPM_BINS[ri]}</span></div>
+  <div>MAP bin: <span style="color:#4488ff">${MAP_BINS[mi]} kPa</span></div>
+  <div>VE: <span style="color:#00ff88">${maps.ve[mi][ri].toFixed(1)}%</span></div>
+  <div>IGN: <span style="color:#00ccff">${maps.ign[mi][ri].toFixed(1)}°</span></div>
+  <div>AFR tgt: <span style="color:#ff9900">${maps.afr[mi][ri].toFixed(2)}</span></div>
+  <div>PW: <span style="color:#ffaa00">${eng.pw.toFixed(2)} ms</span></div>
+  <div>BOOST: <span style="color:#ff7722">${eng.boostPsi.toFixed(1)} psi</span></div>
+  <div>EGO: <span style="color:${eng.ego?'#00ff88':'#ff4040'}">${eng.ego?'CL':'OL'}</span></div>`;
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// MODULES TAB
+// ══════════════════════════════════════════════════════════════════════
+function modSubTab(name){
+  ['abs','srs','tcu','bcm','tpms','hv'].forEach(n=>document.getElementById('mod-'+n).style.display=n===name?'':'none');
+  if(name==='abs')updateABSDisplay();
+  if(name==='tcu')updateTCUDisplay();
+  if(name==='tpms')updateTPMSDisplay();
+  if(name==='hv')updateHVDisplay();
+  if(name==='srs')updateSRSDisplay();
+  if(name==='bcm')updateBCMDisplay();
+  ['abs','srs','tcu','bcm','tpms','hv'].forEach(n=>{
+    const b=document.getElementById('msub-'+n);
+    if(b)b.className='ck-btn'+(n===name?' btn-blue':'');
+  });
+}
+function updateABSDisplay(){
+  const el=document.getElementById('abs-status');if(!el)return;
+  el.innerHTML=[
+    {l:'FL Wheel',v:absState.wsFL.toFixed(1)+'m/s',c:'#00ff88'},
+    {l:'FR Wheel',v:absState.wsFR.toFixed(1)+'m/s',c:'#00ff88'},
+    {l:'RL Wheel',v:absState.wsRL.toFixed(1)+'m/s',c:'#00ff88'},
+    {l:'RR Wheel',v:absState.wsRR.toFixed(1)+'m/s',c:'#00ff88'},
+    {l:'Brake Press',v:absState.pressure.toFixed(0)+'bar',c:'#4488ff'},
+    {l:'ABS Fault',v:absState.activeFault?'ACTIVE':'OK',c:absState.activeFault?'#ff4040':'#00ff88'},
+    {l:'ESC',v:'STANDBY',c:'#ffff44'},
+    {l:'TCS',v:'ACTIVE',c:'#00ff88'},
+  ].map(g=>`<div class="gauge"><div class="gauge-lbl">${g.l}</div><div class="gauge-val" style="color:${g.c};font-size:10px">${g.v}</div></div>`).join('');
+}
+function updateTCUDisplay(){
+  const el=document.getElementById('tcu-gauges');if(!el)return;
+  const tp=currentTransProfile;
+  const gearDisp=tp.gears===0?'CVT':tcuState.gear+'/'+tp.gears;
+  el.innerHTML=[
+    {l:'Gear',v:gearDisp,c:'#ffff44'},
+    {l:'Ratio',v:tp.ratios?(tp.ratios[Math.min(tcuState.gear-1,tp.ratios.length-1)]||'?').toFixed(3):'CVT',c:'#00ccff'},
+    {l:'TCC',v:tcuState.tcc?'LOCKED':'OPEN',c:tcuState.tcc?'#00ff88':'#ffaa00'},
+    {l:'Line PSI',v:tcuState.linePsi.toFixed(0),c:'#4488ff'},
+    {l:'Trans Temp',v:tcuState.oilTemp.toFixed(0)+'°C',c:tcuState.oilTemp>130?'#ff4040':'#00ff88'},
+    {l:'Slip RPM',v:tcuState.slipRpm.toFixed(0),c:tcuState.slipRpm>200?'#ff4040':'#00ff88'},
+  ].map(g=>`<div class="gauge"><div class="gauge-lbl">${g.l}</div><div class="gauge-val" style="color:${g.c};font-size:10px">${g.v}</div></div>`).join('');
+}
+function updateTPMSDisplay(){
+  const el=document.getElementById('tpms-gauges');if(!el)return;
+  const wheels=[
+    {l:'Front Left',psi:tpmsState.fl,id:tpmsState.flId},
+    {l:'Front Right',psi:tpmsState.fr,id:tpmsState.frId},
+    {l:'Rear Left',psi:tpmsState.rl,id:tpmsState.rlId},
+    {l:'Rear Right',psi:tpmsState.rr,id:tpmsState.rrId},
+  ];
+  el.innerHTML=wheels.map(w=>{
+    const c=w.psi<28?'#ff4040':w.psi<30?'#ffaa00':'#00ff88';
+    return`<div class="gauge"><div class="gauge-lbl">${w.l}</div>
+    <div class="gauge-val" style="color:${c};font-size:18px">${w.psi.toFixed(1)}</div>
+    <div class="gauge-lbl">psi  ID:${w.id}</div></div>`;
+  }).join('');
+}
+function updateHVDisplay(){
+  const el=document.getElementById('hv-gauges');if(!el)return;
+  el.innerHTML=[
+    {l:'HV Battery',v:hvState.hvVoltage.toFixed(1)+'V',c:'#ffaa00'},
+    {l:'SOC',v:hvState.soc.toFixed(1)+'%',c:hvState.soc<30?'#ff4040':'#00ff88'},
+    {l:'HV Current',v:hvState.hvCurrent.toFixed(1)+'A',c:'#4488ff'},
+    {l:'HV Temp',v:hvState.hvTemp.toFixed(1)+'°C',c:hvState.hvTemp>45?'#ff4040':'#00ff88'},
+    {l:'MG1 RPM',v:hvState.mg1rpm.toFixed(0),c:'#cc55ff'},
+    {l:'MG2 RPM',v:hvState.mg2rpm.toFixed(0),c:'#00ccff'},
+  ].map(g=>`<div class="gauge"><div class="gauge-lbl">${g.l}</div><div class="gauge-val" style="color:${g.c};font-size:10px">${g.v}</div></div>`).join('');
+}
+function updateSRSDisplay(){
+  const el=document.getElementById('srs-status');if(!el)return;
+  el.innerHTML=[
+    {l:'Driver Airbag Squib',v:srsState.driverSquib.toFixed(1)+'Ω',c:srsState.driverSquib>1.5&&srsState.driverSquib<5?'#00ff88':'#ff4040'},
+    {l:'Pass Airbag Squib',v:srsState.passSquib.toFixed(1)+'Ω',c:'#00ff88'},
+    {l:'Crash Deployed',v:srsState.deployed?'YES':'NO',c:srsState.deployed?'#ff4040':'#00ff88'},
+  ].map(g=>`<span class="mod-badge ${g.c==='#00ff88'?'mod-ok':'mod-fault'}">${g.l}: ${g.v}</span>`).join('');
+}
+function updateBCMDisplay(){
+  const el=document.getElementById('bcm-status');if(!el)return;
+  el.innerHTML=`<span class="mod-badge mod-ok">Doors: All Closed</span><span class="mod-badge mod-ok">Lighting: OK</span><span class="mod-badge mod-warn">Battery: ${bcmState.battery.toFixed(1)}V</span>`;
+}
+function modReadDTC(mod){
+  const states={abs:absState,srs:srsState,tcu:tcuState,bcm:bcmState,tpms:tpmsState,hv:hvState};
+  const st=states[mod];
+  const el=document.getElementById(mod+'-result');
+  if(!st||!el)return;
+  const active=eng.activeDtcs.filter(d=>{
+    if(mod==='abs')return d[0].startsWith('C');
+    if(mod==='srs')return d[0].startsWith('B');
+    if(mod==='tcu')return d[0].startsWith('P07');
+    return false;
+  });
+  el.textContent=active.length?active.map(d=>d[0]+': '+d[1]).join('\n'):'No DTCs stored for '+mod.toUpperCase();
+}
+function modClearDTC(mod){const el=document.getElementById(mod+'-result');if(el)el.textContent='DTCs cleared — retest to confirm';}
+function setTransType(val){currentTransProfile=TRANS_PROFILES[val]||TRANS_PROFILES['6spd'];updateTCUDisplay();}
+function modBidir(mod,action){
+  const el=document.getElementById(mod+'-result');if(!el)return;
+  const responses={
+    'abs-bleed':'Bleed sequence initiated: FL→FR→RL→RR, pump cycling at 50Hz',
+    'abs-pump':'Pump motor test: 12V applied, current 3.2A, pressure building…',
+    'abs-yaw':'Yaw rate sensor calibration: vehicle must be stationary on level surface',
+    'srs-squib':`Squib resistance: Driver ${srsState.driverSquib.toFixed(1)}Ω, Pass ${srsState.passSquib.toFixed(1)}Ω — ADVISORY: safe range 1.5–5Ω`,
+    'srs-crash':'Crash data: '+( srsState.deployed?'Event recorded at 38mph ΔV — airbag deployed':'No crash events recorded'),
+    'tcu-shift1':'Shift solenoid SS-A energised — 1→2 shift forced — observe slip',
+    'tcu-tcc':'TCC lock commanded — apply at ≥45kph, observe converter slip',
+    'tcu-linepres':'Line pressure test: '+tcuState.linePsi.toFixed(0)+' psi — spec 120–145 psi',
+    'tcu-adapt':'Shift adapts cleared — vehicle requires 20 gentle accelerations to relearn',
+    'bcm-horn':'Horn relay actuation: 200ms pulse',
+    'bcm-wipers':'Wiper motor: full sweep cycle test',
+    'bcm-fan':'Cooling fan relay: stage 1 on, stage 2 on, off',
+    'bcm-windows':'Window motors: FL down/up, FR down/up',
+    'bcm-pats':'PATS/Immobilizer: transponder present — key programmed — security active',
+    'hv-hvready':'HV system: '+( hvState.hvReady?'READY — '+hvState.hvVoltage.toFixed(0)+'V nominal':'NOT READY — check 12V auxiliary'),
+    'hv-hvbal':'Cell balance scan: '+hvState.soc.toFixed(0)+'% SOC — min cell '+((hvState.hvVoltage/96-0.05+Math.random()*0.02)).toFixed(3)+'V',
+    'hv-mg1':'MG1 test: '+hvState.mg1rpm.toFixed(0)+' RPM, torque '+Math.round(hvState.hvCurrent*0.3)+'Nm',
+    'hv-mg2':'MG2 test: '+hvState.mg2rpm.toFixed(0)+' RPM — drive motor output nominal',
+  };
+  el.textContent=responses[mod+'-'+action]||'['+action+'] command sent — awaiting response';
+}
+function tpmsRelearn(){document.getElementById('tpms-result').textContent='Relearn mode active — drive >25kph for 10 min\nOrder: FL → FR → RL → RR\nCurrent IDs stored: '+[tpmsState.flId,tpmsState.frId,tpmsState.rlId,tpmsState.rrId].join(', ');}
+function tpmsProgSensor(){document.getElementById('tpms-result').textContent='Sensor programming mode: present TPMS tool to each sensor\nTire must be deflated to ≤10psi, sensor responds at 433MHz';}
+function tpmsReadIDs(){document.getElementById('tpms-result').textContent='Sensor IDs:\nFL: '+tpmsState.flId+' — '+tpmsState.fl.toFixed(1)+' psi\nFR: '+tpmsState.frId+' — '+tpmsState.fr.toFixed(1)+' psi\nRL: '+tpmsState.rlId+' — '+tpmsState.rl.toFixed(1)+' psi\nRR: '+tpmsState.rrId+' — '+tpmsState.rr.toFixed(1)+' psi';}
+
+// ══════════════════════════════════════════════════════════════════════
+// SERVICE FUNCTIONS LIBRARY
+// ══════════════════════════════════════════════════════════════════════
+const SERVICE_LIBRARY={
+  generic:[
+    {name:'Oil Service Reset',cmd:'Mode 0x31 Routine 0xA100',desc:'Resets oil life monitor to 100% — requires key cycle after'},
+    {name:'Throttle Relearn',cmd:'Disconnect bat 10min, idle 10min w/o AC or loads',desc:'IAC/DBW adaptation — do not touch throttle during relearn'},
+    {name:'Idle Relearn',cmd:'Warm engine, idle 10min, drive cycle 30min',desc:'Relearns idle fueling, LTFT correction windows'},
+    {name:'EVAP System Test',cmd:'Mode 0x01 PID 0x41 EVAP monitor',desc:'Check EVAP large/small leak readiness — requires cold soak'},
+    {name:'DPF Regeneration',cmd:'Mode 0x31 Routine 0xBF00',desc:'Force DPF regen — requires >60kph sustained, regen temp 550-650°C EGT'},
+    {name:'AdBlue/DEF Reset',cmd:'Mode 0x2E DID 0xD003',desc:'Reset DEF quality timer after verified fill with correct spec fluid'},
+    {name:'Steering Angle Cal',cmd:'Mode 0x31 Routine 0xF0A1',desc:'SAS calibration — vehicle must be on level ground, steering centered'},
+    {name:'EPB Service Mode',cmd:'Mode 0x31 Routine 0x0206',desc:'Retract rear calipers for pad replacement — re-apply after'},
+  ],
+  bmw:[
+    {name:'CBS Service Reset',cmd:'Kombi module 0x31 Service ID reset',desc:'BMW Condition Based Service — select service category and set interval'},
+    {name:'Transmission Svc Reset',cmd:'ZGM 0x31 0x6020 01 00',desc:'Reset trans service interval after fluid change — Lifetime fill myth: change at 80k'},
+    {name:'Injector Coding',cmd:'DME 0x2E 0x12AB [8-byte code]',desc:'Code injector flow deviation into DME — 8-digit code printed on injector'},
+    {name:'DME Adaptation Reset',cmd:'0x31 0xFF01 01',desc:'Clear learned fuel, idle, and misfire adaptations — full drive cycle needed'},
+    {name:'VANOS Adaptation',cmd:'0x31 0x9000',desc:'Cam phaser relearn after timing work — idle conditions required'},
+    {name:'Transfer Case Learn',cmd:'VTG module 0x31 0x0102',desc:'Clutch pack engagement learn — straight road, full lock cycles'},
+    {name:'Battery Registration',cmd:'BMS module 0x2E DID 0xC840',desc:'Register new battery chemistry, capacity, Ah rating into BMS module'},
+    {name:'EGS Adaptation Clear',cmd:'EGS 0x31 0xE100',desc:'Transmission shift point adaptations — new fluid or component swap'},
+  ],
+  ford:[
+    {name:'Ford PCM Reset',cmd:'PCM 0x11 01 (ECU Hard Reset)',desc:'Clears all adaptations — KAM clear — requires 40min keep-alive relearn'},
+    {name:'IDS Relearn (PATS)',cmd:'PCM 0x27 + 0x2E PATS code',desc:'Program new PATS keys — requires 2 existing programmed keys or dealer'},
+    {name:'MS-CAN Actuator Test',cmd:'BCM 0x31 routine at 125kbps',desc:'Ford body modules run on separate 125kbps low-speed CAN — separate transceiver'},
+    {name:'Injector Characterisation',cmd:'0x2E 0xF00A [4-byte offset per cyl]',desc:'Adaptive trim per cylinder — reads injector flow variation codes'},
+    {name:'ETC Throttle Relearn',cmd:'0x31 0xF080 01',desc:'Electronic Throttle Control adaptation — idle hot, no loads, 10min'},
+    {name:'Cylinder Deactivation Reset',cmd:'PCM 0x31 0xA200',desc:'DEGAS: recalibrate lifter oil pressure for AFM/DoD delete or return'},
+    {name:'DPS6 Clutch Learn',cmd:'TCM 0x31 0x0600',desc:'PowerShift DCT clutch kiss-point adaptation — 10 slow 1st gear engagements'},
+  ],
+  gm:[
+    {name:'ECM/TCM Reset (KAM)',cmd:'PCM Module 0x27 seed+key then 0x11 03',desc:'Keep Alive Memory clear — relearns idle, fuel trims, trans shift adapts'},
+    {name:'Crankshaft Variation',cmd:'CASE Relearn — fixed idle, apply/release throttle cycles',desc:'CKP sensor pattern variation removal — required after any crank/sensor replacement'},
+    {name:'TPMS Relearn (GM)',cmd:'Drive>25kph 10min or dedicated tool',desc:'GM TPMS uses Schrader sensors at 315MHz — ID sequence FL→FR→RL→RR'},
+    {name:'AFM/DoD Disable Check',cmd:'PCM 0x22 OBDID 0xB003',desc:'Active Fuel Management — check disable flags, lifter collapsing faults P3400/P3401'},
+    {name:'Allison Fluid Reset',cmd:'TCM 0x2E 0x4501 [new life value]',desc:'Allison TranSynd fluid service interval — separate Allison protocol 250kbps'},
+    {name:'HVAC Recalibrate',cmd:'BCM 0x31 0x0041',desc:'Blend door motor relearn — required after actuator replacement'},
+    {name:'Fuel Injector Balance',cmd:'PCM 0x31 0xA105 01',desc:'Individual cylinder fuel injector trim calibration — requires scan on all 8 cyls'},
+  ],
+  toyota:[
+    {name:'Toyota Throttle Relearn',cmd:'IGN ON→OFF→wait 5sec, idle 10min',desc:'No special tool needed for basic reset — ECM relearns sub-throttle valve position'},
+    {name:'VSC/TRAC Zero Point Cal',cmd:'Chassis module 0x31 0x0234',desc:'Yaw rate and lateral G sensor calibration — level surface, vehicle stationary'},
+    {name:'Injector Coding (D4-S)',cmd:'ECM 0x2E 0x01A5 [12 hex bytes]',desc:'D4-S injector flow codes — required on GR engine after injector replacement'},
+    {name:'HV Battery Inspection',cmd:'HV ECU 0x22 0x0281 (cell voltage)',desc:'Read individual cell voltages — spread >0.3V indicates failing module'},
+    {name:'Sunroof Initialise',cmd:'BSM 0x31 0xB010',desc:'Sunroof close→open→hold until clicking — required after 12V disconnect'},
+    {name:'EPB/Brake Actuator Bleed',cmd:'Skid ECU 0x31 0x0100 bleed mode',desc:'Opens ABS solenoids in sequence — requires 2 operators: pump pedal + tool'},
+    {name:'Speedometer Calibration',cmd:'Combination meter 0x2E speed ratio',desc:'After tire size change — affects speedometer and all cruise/VSC calculations'},
+  ],
+  vw:[
+    {name:'VAG TDI DPF Reset',cmd:'ECM 0x31 routine 0x03 (DPF service)',desc:'After new DPF: reset ash content counter and regen attempts — required'},
+    {name:'Injector Quantity Adapt',cmd:'ECM 0x2E 0x0100 [8 qty codes]',desc:'IQ adaptation codes — printed on injector body — correction for flow deviation'},
+    {name:'DSG Service Reset',cmd:'Mechatronic 0x2E service counter',desc:'Haldex/DSG oil service interval — reset after fluid and filter change'},
+    {name:'Throttle Adaptation',cmd:'ECM 0x31 basic settings group 060',desc:'ETCS throttle valve adaptation — lower stop then upper stop learning'},
+    {name:'ELV/Steering Lock Reset',cmd:'Gateway 0x31 0xAA01',desc:'Electronic steering column lock — used with key programming sequence'},
+    {name:'SCR AdBlue Quality Reset',cmd:'ECM 0x31 0x4401',desc:'Reset NOx sensor baseline after exhaust work or sensor replacement'},
+    {name:'Air Mass Adaptation',cmd:'ECM 0x31 basic settings 0x0023',desc:'MAF/air mass sensor adaptation — run after MAF replacement for accurate fueling'},
+  ],
+  hd:[
+    {name:'Cummins ISX Fault Clear',cmd:'SAE J1939 DM11 PGN 0xFEDA',desc:'Heavy duty DTC clear — J1939 requires source address 0xF9 tester address'},
+    {name:'DDEC Detroit Reset',cmd:'SPN 2848 FMI 14 — Detroit proprietary CAN',desc:'Detroit Diesel Electronic Controls — uses J1939 + proprietary SPN extensions'},
+    {name:'Allison Calibration',cmd:'Allison doc 2013 — 250kbps 29-bit proprietary',desc:'Shift calibrations — requires Allison DOC software or compatible J1939 tool'},
+    {name:'PACCAR MX Engine Reset',cmd:'J1939 PGN 0xFF45 PACCAR ext',desc:'Kenworth/Peterbilt MX engine — SPN mapping differs from Cummins/Detroit'},
+    {name:'Regen Force (HD)',cmd:'J1939 0x31 routine — DPF soot level >95%',desc:'Stationary regen — requires neutral, PTO off, park brake set, idle bump to 1200rpm'},
+    {name:'EGR Valve Calibration',cmd:'J1939 DM7 test — PGN 0xC300',desc:'EGR valve position calibration — post-cleaning or replacement'},
+    {name:'Injector Trim HD',cmd:'EEPROM via J2534 — OEM tool required',desc:'Individual cylinder fuel trim on HD diesel — INSITE/DDDL required for Cummins/DDEC'},
+  ],
+};
+
+let currentSvcTab='generic';
+function svcSubTab(name){
+  currentSvcTab=name;
+  ['generic','bmw','ford','gm','toyota','vw','hd'].forEach(n=>{
+    const b=document.getElementById('ssub-'+n);if(b)b.className='ck-btn'+(n===name?' btn-blue':'');
+  });
+  buildServiceContent(name);
+}
+function buildServiceContent(name){
+  const fns=SERVICE_LIBRARY[name]||[];
+  const el=document.getElementById('svc-content');if(!el)return;
+  el.innerHTML=fns.map((fn,i)=>`
+    <div class="card">
+      <div class="card-title" style="color:var(--teal)">${fn.name}</div>
+      <div style="font-size:8px;color:#778899;font-family:'Courier New',monospace;margin-bottom:3px">${fn.cmd}</div>
+      <div style="font-size:9px;color:#aaccff;margin-bottom:4px">${fn.desc}</div>
+      <div class="btn-row">
+        <button class="svc-btn" onclick="runService('${name}',${i})">▶ EXECUTE  ${fn.name}</button>
+      </div>
+      <div class="svc-result" id="svc-res-${name}-${i}"></div>
+    </div>`).join('');
+}
+function runService(tab,idx){
+  const fn=SERVICE_LIBRARY[tab]?.[idx];if(!fn)return;
+  const el=document.getElementById('svc-res-'+tab+'-'+idx);if(!el)return;
+  el.textContent='Executing: '+fn.name+'\n→ '+fn.cmd+'\n← Positive Response received\n[DEMO] In production: connects to vehicle module via OBD-II / J1939';
+  setTimeout(()=>{el.textContent+=(fn.name.toLowerCase().includes('reset')||fn.name.toLowerCase().includes('clear'))?'\n✓ Service complete — cycle ignition and retest':'\n✓ Routine completed successfully';},800);
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// BUILD MODE (ECU CONSTRUCTION)
+// ══════════════════════════════════════════════════════════════════════
+const TRIGGER_PATTERNS={
+  '60-2':  {desc:'60 tooth minus 2 — most common (Toyota, Ford, GM)',teeth:60,missing:2,camSync:true},
+  '36-1':  {desc:'36 tooth minus 1 — diesel common rail, VAG',teeth:36,missing:1,camSync:true},
+  '4+1':   {desc:'4 teeth plus 1 cam sync — early TBI',teeth:4,missing:0,camSync:true},
+  '58x':   {desc:'58 tooth (GM LT1/LS) — no gap, uses crank reluctor',teeth:58,missing:0,camSync:true},
+  'Sub6+2':{desc:'Subaru 6+2 pattern — unique asymmetric gap',teeth:6,missing:0,camSync:true},
+  'Mitsu': {desc:'Mitsubishi 4+2 — distributor CAS input',teeth:4,missing:0,camSync:true},
+  'Ford EDIS':{desc:'Ford EDIS distributorless — 36-1 with SAW signal',teeth:36,missing:1,camSync:false},
+  'GM7x':  {desc:'GM 7x HEI — high-energy ignition system',teeth:7,missing:0,camSync:false},
+};
+const INJECTOR_DB={
+  'Bosch EV1 Yellow (0280156065)':   {flow:235,deadTime:[0.8,1.05,1.35,1.7,2.1,2.6],voltages:[14,13,12,11,10,9]},
+  'Bosch EV14 Green (0280158040)':   {flow:440,deadTime:[0.58,0.72,0.9,1.12,1.38,1.72],voltages:[14,13,12,11,10,9]},
+  'Siemens Deka (06A906031)':        {flow:630,deadTime:[0.65,0.8,0.98,1.2,1.5,1.9],voltages:[14,13,12,11,10,9]},
+  'Denso 550cc (23250-46090)':       {flow:550,deadTime:[0.62,0.78,0.95,1.18,1.45,1.78],voltages:[14,13,12,11,10,9]},
+  'FIC 1650cc High-Z':               {flow:1650,deadTime:[0.45,0.56,0.7,0.88,1.1,1.4],voltages:[14,13,12,11,10,9]},
+  'Denso CRDI (High Press Diesel)':  {flow:0,deadTime:[],voltages:[],note:'Common rail — pulse-width modulated solenoid, ref OEM map'},
+};
+let buildTab='ecu';
+function buildSubTab(name){
+  buildTab=name;
+  ['ecu','trigger','inj','out','trans','schema'].forEach(n=>{
+    const b=document.getElementById('bsub-'+n);if(b)b.className='ck-btn'+(n===name?' btn-green':'');
+  });
+  buildBuildContent(name);
+}
+function buildBuildContent(name){
+  const el=document.getElementById('build-content');if(!el)return;
+  if(name==='ecu'){
+    el.innerHTML=`<div class="card"><div class="card-title">ECU CONFIGURATION — SPEEDUINO COMPATIBLE</div>
+      <div class="btn-row">
+        <button class="ck-btn btn-green" onclick="buildAction('validate')">✓ Validate Config</button>
+        <button class="ck-btn btn-cyan" onclick="buildAction('export_config')">Export .ini</button>
+        <button class="ck-btn btn-amber" onclick="buildAction('export_tuner')">Open TunerStudio</button>
+      </div>
+      <div class="svc-result" id="build-res"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-top:5px">
+        ${['Num Cylinders','Displacement (cc)','Compression Ratio','Firing Order','Injection Mode','Trigger Pattern','Cam Sync','Idle Control','Boost Control','VVT','Flex Fuel','Wideband Type']
+          .map((l,i)=>`<div><div style="font-size:7px;color:#445566">${l}</div><input style="width:100%;font-size:9px;background:var(--dark);color:var(--amber);border:1px solid #1a3050;padding:2px;border-radius:2px" value="${['4','1998','10.2:1','1-3-4-2','Sequential','60-2','Yes - single tooth','PWM IAC','PWM open-loop','Disabled','Disabled','AEM 0-5V'][i]||''}"></div>`).join('')}
+      </div></div>`;
+  }else if(name==='trigger'){
+    el.innerHTML=`<div class="card"><div class="card-title">TRIGGER PATTERN LIBRARY</div>
+      ${Object.entries(TRIGGER_PATTERNS).map(([k,v])=>`<div style="border-bottom:1px solid #1a2030;padding:4px 0">
+        <span style="color:#00ccff;font-weight:bold">${k}</span> — <span style="color:#aaffcc">${v.desc}</span><br>
+        <span style="font-size:8px;color:#445566">Teeth: ${v.teeth}${v.missing?' | Missing: '+v.missing:''} | Cam sync: ${v.camSync?'Yes':'No'}</span>
+        <button class="ck-btn btn-teal" style="float:right;font-size:7px;margin-top:-2px" onclick="drawTrigger('${k}')">Preview</button>
+      </div>`).join('')}
+      <canvas id="trigger-cv" style="width:100%;height:100px;background:#0a0e14;margin-top:5px;display:block"></canvas>
+    </div>`;
+  }else if(name==='inj'){
+    el.innerHTML=`<div class="card"><div class="card-title">INJECTOR DATABASE</div>
+      ${Object.entries(INJECTOR_DB).map(([k,v])=>`<div style="border-bottom:1px solid #1a2030;padding:3px 0">
+        <span style="color:#ffaa00;font-size:9px">${k}</span><br>
+        <span style="font-size:8px;color:#aaffcc">${v.flow?'Flow: '+v.flow+'cc/min':'Common rail — no dead time'}</span>
+        ${v.deadTime.length?`<br><span style="font-size:7px;color:#445566">Dead time @ 14V: ${v.deadTime[0]}ms</span>`:''}
+      </div>`).join('')}
+      <div style="margin-top:5px"><div class="card-title">DEAD TIME CALCULATOR</div>
+        <div style="display:flex;gap:3px;align-items:center">
+          <select id="inj-sel" style="flex:1;font-size:9px">${Object.keys(INJECTOR_DB).map(k=>`<option>${k}</option>`).join('')}</select>
+          <input type="number" id="inj-v" value="13.5" style="width:50px;font-size:9px;background:var(--dark);color:var(--amber);border:1px solid #1a3050;padding:2px">
+          <button class="ck-btn btn-amber" onclick="calcDeadTime()">CALC</button>
+        </div>
+        <div class="svc-result" id="dt-res" style="margin-top:3px"></div>
+      </div>
+    </div>`;
+  }else if(name==='trans'){
+    el.innerHTML=`<div class="card"><div class="card-title">TRANSMISSION SIMULATION VARIANTS</div>
+      ${Object.entries(TRANS_PROFILES).map(([k,v])=>`<div style="border-bottom:1px solid #1a2030;padding:3px 0">
+        <span style="color:#cc55ff;font-weight:bold">${v.name}</span>
+        <span style="font-size:8px;color:#445566;float:right">${v.gears?v.gears+'-spd':'CVT/EVT'}</span><br>
+        <span style="font-size:8px;color:#aaffcc">Ratios: ${v.ratios?v.ratios.join(' / '):'Variable'}</span><br>
+        <span style="font-size:8px;color:#445566">Final drive: ${v.final} | Line psi idle: ${v.linePsiIdle}</span>
+      </div>`).join('')}
+      <div style="margin-top:5px;font-size:8px;color:#4488ff">
+        Note: CVT holds ICE at peak torque RPM, varies ratio by belt/pulley geometry.<br>
+        Prius EVT uses planetary gear + MG1 speed to set effective ratio — no physical diameter change.
+      </div></div>`;
+  }else if(name==='schema'){
+    el.innerHTML=`<div class="card"><div class="card-title">ECU SCHEMATIC TEMPLATES (Reference)</div>
+      ${[
+        {n:'4-Cyl PFI Petrol (Speeduino UA4C)',d:'4x injectors, 4x ignition coil, CKP 60-2, CMP, CLT, IAT, TPS, MAP, O2, IAC'},
+        {n:'6-Cyl DI Turbo (SpeedyEFI S6)',d:'6x DI injectors (high-pressure), 6x COP, boost solenoid, WBO2, flex fuel sensor'},
+        {n:'Diesel CRDI (ECU Diesel mod)',d:'High-pressure rail, metering valve, injectors (solenoid/piezo), glow plugs, EGR'},
+        {n:'V8 NA Carb-to-EFI conversion',d:'8x TBI or MPFI, distributor trigger, O2 sensor, no MAP (uses TPS alpha-N)'},
+        {n:'BCM module (custom body control)',d:'Lighting PWM, window relay matrix, door lock FET driver, PATS transponder interface'},
+        {n:'TCU module (6-speed auto)',d:'3x shift solenoids, TCC solenoid, line pressure PWM, TFT sensor, input/output shaft speed'},
+      ].map(s=>`<div style="border-bottom:1px solid #1a2030;padding:4px 0;cursor:pointer" onclick="buildAction('schema','${s.n}')">
+        <div style="color:#00ff88;font-size:9px">${s.n}</div>
+        <div style="font-size:8px;color:#778899">${s.d}</div>
+      </div>`).join('')}
+      <div class="svc-result" id="schema-res" style="margin-top:4px"></div>
+    </div>`;
+  }else if(name==='out'){
+    el.innerHTML=`<div class="card"><div class="card-title">OUTPUT / ACTUATOR CONFIGURATION</div>
+      ${['Injector 1-4 (PWM)','Coil 1-4 (digital)','IAC valve (PWM/stepper)','Boost solenoid (PWM)','VVT intake cam (PWM)','VVT exhaust cam (PWM)','DBW throttle (H-bridge)','Fuel pump relay','Fan relay stage 1','Fan relay stage 2','Tacho output','CEL output']
+        .map((out,i)=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:2px 0;border-bottom:1px solid #0f1a25">
+          <span style="font-size:9px;color:#aaccff">${out}</span>
+          <select style="width:90px;font-size:8px"><option>GPIO ${i+1}</option>${[1,2,3,4,5,6,7,8].map(n=>`<option>GPIO ${n}</option>`).join('')}</select>
+        </div>`).join('')}
+      <button class="ck-btn btn-green" style="width:100%;margin-top:5px" onclick="buildAction('output_validate')">Validate Pinout</button>
+      <div class="svc-result" id="out-res" style="margin-top:3px"></div>
+    </div>`;
+  }
+}
+function buildAction(action,sub){
+  const el=document.getElementById('build-res')||document.getElementById('schema-res')||document.getElementById('out-res');
+  if(!el)return;
+  const resp={
+    validate:'Config validation: PASS — cylinder count, trigger pattern, and injector sizing compatible',
+    export_config:'Config exported to speeduino.ini — upload via TunerStudio File→Load Tune',
+    export_tuner:'TunerStudio connection: Connect USB to Speeduino, COM3/ttyUSB0, 115200 baud',
+    output_validate:'Pinout validated: no conflicts detected — verify all grounds before power-on',
+  };
+  el.textContent=resp[action]||(sub?'Template: '+sub+'\n[DEMO] Full schematic available in production firmware package':'Done');
+}
+function drawTrigger(pattern){
+  const cv=document.getElementById('trigger-cv');if(!cv)return;
+  const W=cv.offsetWidth||300,H=100;cv.width=W;cv.height=H;
+  const ctx=cv.getContext('2d');ctx.fillStyle='#0a0e14';ctx.fillRect(0,0,W,H);
+  const tp=TRIGGER_PATTERNS[pattern];const teeth=tp.teeth||60;const miss=tp.missing||0;
+  const tw=W/(teeth+2);ctx.strokeStyle='#00ff88';ctx.lineWidth=1.5;
+  for(let i=0;i<teeth;i++){
+    const isMiss=(teeth-i<=miss);
+    const x=i*tw+tw;
+    ctx.strokeStyle=isMiss?'#ff404044':'#00ff88';
+    ctx.beginPath();ctx.moveTo(x,H*0.7);ctx.lineTo(x,H*0.2);
+    ctx.lineTo(x+tw*0.6,H*0.2);ctx.lineTo(x+tw*0.6,H*0.7);ctx.stroke();
+  }
+  ctx.strokeStyle='#ffff44';ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(0,H*0.7);ctx.lineTo(W,H*0.7);ctx.stroke();
+  ctx.fillStyle='#aaffcc';ctx.font='9px monospace';
+  ctx.fillText(pattern+' — '+tp.desc,5,H-5);
+}
+function calcDeadTime(){
+  const sel=document.getElementById('inj-sel')?.value;
+  const v=parseFloat(document.getElementById('inj-v')?.value||13.5);
+  const inj=INJECTOR_DB[sel];
+  if(!inj||!inj.deadTime.length){document.getElementById('dt-res').textContent='No dead time data for this injector type';return;}
+  const dt=interp1d(inj.voltages.slice().reverse(),inj.deadTime.slice().reverse(),v);
+  document.getElementById('dt-res').textContent=`${sel}\n@ ${v}V battery → Dead time: ${dt.toFixed(3)}ms\nFlow rate: ${inj.flow}cc/min\nNote: Add dead time to all injector PW calculations`;
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// POWER PROBE
+// ══════════════════════════════════════════════════════════════════════
+let probeInterval=null;
+function probeMode(mode){
+  clearInterval(probeInterval);
+  const res=document.getElementById('probe-result');
+  const vEl=document.getElementById('probe-v');
+  const aEl=document.getElementById('probe-a');
+  const ohmEl=document.getElementById('probe-ohm');
+  const hzEl=document.getElementById('probe-hz');
+  const dcEl=document.getElementById('probe-dc');
+  const modes={
+    batt:{v:()=>eng.batt,a:()=>0.001+randn()*0.001,ohm:()=>Infinity,hz:()=>0,dc:()=>0,msg:'Battery positive — DC voltage, no AC ripple',col:'#00ff88'},
+    gnd:{v:()=>0.02+Math.abs(randn()*0.05),a:()=>0,ohm:()=>0.1+Math.abs(randn()*0.02),hz:()=>0,dc:()=>0,msg:'Ground reference — check for >0.1V ground offset',col:'#aaaaaa'},
+    cont:{v:()=>0,a:()=>0,ohm:()=>Math.random()<0.7?2+Math.abs(randn()*0.5):Infinity,hz:()=>0,dc:()=>0,msg:'Continuity test — beep <5Ω',col:'#ffaa00'},
+    short_gnd:{v:()=>0.1+Math.abs(randn()*0.1),a:()=>12+Math.abs(randn()),ohm:()=>0.8+Math.abs(randn()*0.1),hz:()=>0,dc:()=>0,msg:'⚠ SHORT TO GROUND detected — high current path',col:'#ff4040'},
+    short_pwr:{v:()=>eng.batt-0.2,a:()=>8+Math.abs(randn()),ohm:()=>1.2,hz:()=>0,dc:()=>0,msg:'⚠ SHORT TO POWER — circuit energised unexpectedly',col:'#ff7722'},
+    inj:{v:()=>eng.batt*(1-eng.dc/100),a:()=>eng.dc>0?0.8+randn()*0.1:0,ohm:()=>14+randn()*0.5,hz:()=>eng.rpm/2/60,dc:()=>eng.dc,msg:'Injector pulse — '+eng.pw.toFixed(2)+'ms PW @ '+eng.rpm.toFixed(0)+' RPM',col:'#ffaa00'},
+    pwm:{v:()=>eng.batt*(1-(Math.sin(Date.now()/100)>0?0.3:0)),a:()=>0.3+randn()*0.05,ohm:()=>40+randn(),hz:()=>150+randn()*5,dc:()=>30+Math.sin(Date.now()/500)*15,msg:'PWM signal — variable duty idle air control',col:'#cc55ff'},
+    relay:{v:()=>Math.random()<0.5?eng.batt:0,a:()=>0.15+randn()*0.02,ohm:()=>120+randn()*5,hz:()=>0,dc:()=>0,msg:'Relay coil — pull-in current 0.15A, hold 0.08A',col:'#00ccff'},
+  };
+  const m=modes[mode];if(!m)return;
+  res.style.color=m.col;res.textContent=m.msg;
+  probeInterval=setInterval(()=>{
+    const v=m.v(),a=m.a(),ohm=m.ohm(),hz=m.hz(),dc=m.dc();
+    vEl.textContent=(typeof v==='number'?v.toFixed(3):v)+' V';
+    vEl.style.color=m.col;
+    aEl.textContent=(typeof a==='number'?a.toFixed(3):a)+' A';
+    ohmEl.textContent=ohm===Infinity?'∞ Ω':(typeof ohm==='number'?ohm.toFixed(1):ohm)+' Ω';
+    hzEl.textContent=(typeof hz==='number'?hz.toFixed(1):hz)+' Hz';
+    dcEl.textContent=(typeof dc==='number'?dc.toFixed(1):dc)+'%';
+  },120);
+}
+function probeActuate(comp){
+  const msgs={
+    fan:'Radiator fan relay: stage 1 ON (low speed) — check 12V at fan connector, ground path',
+    fuel_pump:'Fuel pump relay: primed — audible click expected, pressure builds to '+maps.fuelPsi+' psi',
+    iac:'IAC/DBW: valve step test — observe idle RPM change ±150 RPM',
+    purge:'EVAP purge valve: open — audible click, vacuum applied to charcoal canister',
+    egr:'EGR valve: commanded open — expect MAP drop, rough idle if at idle',
+    vvt_sol:'VVT solenoid: energised — oil pressure to cam phaser, check response in cam timing',
+    boost_sol:'Boost solenoid: duty cycle test — wastegate bypass, monitor boost pressure',
+    glow:'Glow plugs: 12V applied — warm-up cycle '+currentEngProfile.cyl+'x plugs, draw ~'+(currentEngProfile.cyl*12)+' amps',
+  };
+  document.getElementById('actuate-result').textContent=msgs[comp]||comp+' actuated';
+}
+function buildCylKillRow(){
+  const row=document.getElementById('cyl-kill-row');if(!row)return;
+  const p=currentEngProfile;
+  row.innerHTML=Array.from({length:p.cyl},(_,i)=>`
+    <button class="ck-btn ${eng.cylinderKill[i]?'btn-red':''}" onclick="toggleCylKill(${i})" id="cyk-${i}">CYL ${i+1}</button>`).join('');
+}
+function toggleCylKill(i){
+  eng.cylinderKill[i]=!eng.cylinderKill[i];
+  buildCylKillRow();
+  const killed=eng.cylinderKill.slice(0,currentEngProfile.cyl).map((k,i)=>k?i+1:0).filter(Boolean);
+  document.getElementById('kill-result').textContent=
+    killed.length?'Killed: Cyl '+killed.join(', ')+' — monitor RPM drop and O2 oscillation':'All cylinders active';
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// FAULT INJECTION
+// ══════════════════════════════════════════════════════════════════════
+const FAULTS=[
+  {k:'faultO2',l:'O2 Sensor Failure',d:'Sensor stuck low — open loop, no EGO correction'},
+  {k:'faultMap',l:'MAP Sensor Failure',d:'Sensor stuck at 50kPa — fueling based on stale reading'},
+  {k:'faultClt',l:'CLT Sensor Open',d:'ECT reads -40°C — cold start enrichment locked on'},
+  {k:'faultLean',l:'Vacuum Leak / Lean Fault',d:'Unmetered air — lean AFR, hunt for hose or gasket'},
+  {k:'faultIgn',l:'Retarded Timing',d:'Ignition timing pulled 10° — power loss, detonation risk'},
+  {k:'faultInj',l:'Stuck Open Injector',d:'Injector driver shorted — flooded cylinder, hydrolocking risk'},
+];
+const MOD_FAULTS=[
+  {mod:'abs',l:'ABS Wheel Speed Sensor FL',code:'C0040',d:'Right front WSS — open circuit or tone ring damage'},
+  {mod:'abs',l:'ABS Pump Motor Fault',code:'C0060',d:'Pump motor overcurrent — hydro block failure'},
+  {mod:'srs',l:'Driver Airbag Squib Open',code:'B0020',d:'Clock spring or squib resistance out of range'},
+  {mod:'tcu',l:'Shift Solenoid A Fault',code:'P0750',d:'SS-A electrical — open or shorted harness'},
+  {mod:'bcm',l:'PATS Transponder No Signal',code:'B2103',d:'Key transponder not detected at reader coil'},
+  {mod:'tpms',l:'TPMS Sensor FL No Signal',code:'C1731',d:'FL sensor battery flat or RF interference'},
+  {mod:'hv',l:'HV Battery Cell Undervoltage',code:'P0AFA',d:'Cell group voltage below 3.0V — module ageing'},
+];
+function buildFaultTab(){
+  const fl=document.getElementById('fault-list');
+  if(fl)fl.innerHTML=FAULTS.map(f=>`<div class="fault-card">
+    <input type="checkbox" ${eng[f.k]?'checked':''} onchange="eng['${f.k}']=this.checked">
+    <div><div style="font-size:9px;font-weight:bold;color:var(--red)">${f.l}</div>
+    <div style="font-size:8px;color:#778899">${f.d}</div></div>
+  </div>`).join('');
+  const mb=document.getElementById('miss-btns');
+  const p=currentEngProfile;
+  if(mb)mb.innerHTML=[0,...Array.from({length:p.cyl},(_,i)=>i+1)].map(i=>`<button class="ck-btn ${eng.faultMiss===i?'btn-red':''}" onclick="eng.faultMiss=${i}">${i===0?'NO MISS':'CYL '+i}</button>`).join('');
+  const mfl=document.getElementById('mod-fault-list');
+  if(mfl)mfl.innerHTML=MOD_FAULTS.map((f,i)=>`<div class="fault-card">
+    <input type="checkbox" id="mf-${i}" onchange="toggleModFault('${f.mod}','${f.code}','${f.l}',this.checked)">
+    <div><div style="font-size:9px;font-weight:bold;color:var(--amber)">[${f.mod.toUpperCase()}] ${f.l}</div>
+    <div style="font-size:8px;color:#445566">${f.code} — ${f.d}</div></div>
+  </div>`).join('');
+}
+function toggleModFault(mod,code,desc,active){
+  if(active){eng.activeDtcs.push([code,desc]);}
+  else{eng.activeDtcs=eng.activeDtcs.filter(d=>d[0]!==code);}
+  if(mod==='abs')absState.activeFault=active;
+}
+function clearAllFaults(){
+  FAULTS.forEach(f=>eng[f.k]=false);
+  eng.faultMiss=0;eng.activeDtcs=[];eng.storedDtcs=[];eng.kret=0;eng.kcnt=0;eng.stft=0;eng.ltft=0;
+  absState.activeFault=false;
+  buildFaultTab();alert('All faults cleared');
+}
+function obdMode(mode,subFunc){
+  const r=document.getElementById('obd-result');if(!r)return;
+  if(mode===3){r.textContent=eng.activeDtcs.length?'Mode 03 Active DTCs:\n'+eng.activeDtcs.map(d=>`  ${d[0]} — ${d[1]}`).join('\n'):'Mode 03: No active DTCs';}
+  else if(mode===7){r.textContent=eng.storedDtcs.length?'Mode 07 Pending DTCs:\n'+eng.storedDtcs.map(d=>`  ${d[0]} — ${d[1]}`).join('\n'):'Mode 07: No pending DTCs';}
+  else if(mode===4){eng.activeDtcs=[];eng.storedDtcs=[];eng.stft=0;eng.ltft=0;eng.kcnt=0;r.textContent='Mode 04: DTCs cleared — monitors reset';}
+  else if(mode===9&&subFunc===2){r.textContent='Mode 09 PID 02 — VIN:\n1FTFW1ED3MFB12345\n(Simulated 17-char VIN)';}
+  else if(mode===9&&subFunc===4){r.textContent='Mode 09 PID 04 — Calibration ID:\nECU1.4.2.BUILD-DEMO\nSpeeduino v0.4.5';}
+  else if(mode===9&&subFunc===6){r.textContent='Mode 09 PID 06 — CVN:\n0x'+Math.floor(Math.random()*0xFFFFFFFF).toString(16).toUpperCase();}
+  else r.textContent='Mode 0'+mode+': OK';
+}
+function freezeFrame(){
+  const r=document.getElementById('obd-result');if(!r)return;
+  r.textContent=`FREEZE FRAME DATA (at fault):\n  RPM:  ${eng.rpm.toFixed(0)}\n  MAP:  ${eng.map.toFixed(1)} kPa\n  TPS:  ${eng.tps.toFixed(1)} %\n  CLT:  ${eng.clt.toFixed(1)} °C\n  AFR:  ${eng.afr.toFixed(2)}\n  STFT: ${eng.stft.toFixed(1)} %\n  LTFT: ${eng.ltft.toFixed(1)} %\n  LOAD: ${eng.ve.toFixed(1)} %\n  BATT: ${eng.batt.toFixed(2)} V`;
+}
+function buildOBDButtons(){
+  const el=document.getElementById('obd-btn-row');if(!el)return;
+  const pids=[
+    {pid:'0C',name:'RPM'},    {pid:'0D',name:'Speed'},  {pid:'05',name:'CLT'},
+    {pid:'0F',name:'IAT'},    {pid:'04',name:'Load'},    {pid:'11',name:'TPS'},
+    {pid:'2F',name:'Fuel%'},  {pid:'0B',name:'MAP'},     {pid:'14',name:'O2 B1S1'},
+    {pid:'2D',name:'Knock °'},{pid:'1C',name:'OBD Type'},{pid:'01',name:'Mon Status'},
+    {pid:'31',name:'Km w/MIL'},{pid:'21',name:'Km@DTC'},
+  ];
+  el.innerHTML=pids.map(p=>`<button class="ck-btn btn-amber" onclick="requestPID('${p.pid}','${p.name}')" style="font-size:8px">${p.name}<br><span style="color:#445566;font-size:7px">0x${p.pid}</span></button>`).join('');
+}
+function requestPID(pid,name){
+  const r=document.getElementById('obd-result');if(!r)return;
+  const vals={
+    '0C': eng.rpm.toFixed(0)+' RPM',
+    '0D': eng.spd.toFixed(0)+' km/h',
+    '05': eng.clt.toFixed(1)+' °C',
+    '0F': eng.iat.toFixed(1)+' °C',
+    '04': eng.ve.toFixed(1)+'% (calc load)',
+    '11': eng.tps.toFixed(1)+'%',
+    '2F': '72% (tank level)',
+    '0B': eng.map.toFixed(0)+' kPa',
+    '14': (eng.ego?'0.'+(Math.floor(Math.random()*9)+1):0.1)+' V / '+eng.stft.toFixed(1)+'%',
+    '2D': eng.kret.toFixed(1)+'° retard',
+    '1C': 'OBD-II (ISO 15765-4 CAN)',
+    '01': 'MIL: '+(eng.activeDtcs.length?'ON':'OFF')+', DTC count: '+eng.activeDtcs.length,
+  };
+  r.textContent=`Mode 01 PID 0x${pid} — ${name}:\n  → 0x7DF 02 01 ${pid}\n  ← 0x7E8 03 41 ${pid} [data]\n  Decoded: ${vals[pid]||'N/A'}`;
+  if(eng.autopoll){obdRows.push(genOBDRow('Req',pid));obdRows.push(genOBDRow('Resp',pid));}
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// SENSORS TAB / CONFIG TAB / DATA LOGGER
+// ══════════════════════════════════════════════════════════════════════
+function updateSensorsGrid(){
+  const g=document.getElementById('sens-grid');if(!g)return;
+  const items=[
+    {l:'Wideband O2',v:eng.afr.toFixed(3)+' AFR',c:'#00ff88'},
+    {l:'Narrowband',v:eng.ego?'Active':'Open Loop',c:eng.ego?'#00ff88':'#ffaa00'},
+    {l:'MAP Sensor',v:eng.map.toFixed(1)+' kPa',c:'#4488ff'},
+    {l:'TPS',v:eng.tps.toFixed(1)+' %',c:'#ffff44'},
+    {l:'CLT Sensor',v:eng.clt.toFixed(1)+' °C',c:eng.clt>100?'#ff4040':'#00ff88'},
+    {l:'IAT Sensor',v:eng.iat.toFixed(1)+' °C',c:'#00ccff'},
+    {l:'Battery',v:eng.batt.toFixed(2)+' V',c:'#cc55ff'},
+    {l:'Oil Press',v:eng.oil.toFixed(1)+' psi',c:eng.oil<15?'#ff4040':'#33ddaa'},
+    {l:'EGT',v:eng.egt.toFixed(0)+' °C',c:'#ff9900'},
+    {l:'Knock Level',v:(eng.klvl*100).toFixed(1)+'%',c:eng.klvl>0.5?'#ff4040':'#00ff88'},
+    {l:'Boost Pres',v:eng.boostPsi.toFixed(1)+' psi',c:eng.boostPsi>currentEngProfile.maxBoost*0.95?'#ff4040':'#ff7722'},
+    {l:'Crank Speed',v:eng.rpm.toFixed(0)+' RPM',c:'#00ff88'},
+    {l:'Veh Speed',v:eng.spd.toFixed(0)+' kph',c:'#ffff44'},
+    {l:'Trans Gear',v:currentTransProfile.gears===0?'CVT':'G'+eng.gear+'/'+currentTransProfile.gears,c:'#cc55ff'},
+    {l:'Glow Plugs',v:currentEngProfile.glow?(eng.glowReady?'WARMING':'READY'):'N/A',c:eng.glowReady?'#ffaa00':'#445566'},
+    {l:'Accel Enrich',v:eng.accel?'ACTIVE':'OFF',c:eng.accel?'#ffff44':'#445566'},
+  ];
+  g.innerHTML=items.map(it=>`<div class="gauge" onclick="openReadingPopup('${it.l}')"><div class="gauge-lbl">${it.l}</div><div class="gauge-val" style="color:${it.c};font-size:10px">${it.v}</div></div>`).join('');
+}
+
+// ENV/CONFIG TAB
+function buildConfigTab(){
+  const eg=document.getElementById('env-grid');if(eg)eg.innerHTML=[
+    {l:'Altitude (m)',id:'alt',val:env.altitude,min:0,max:4000,step:100},
+    {l:'Ambient Temp (°C)',id:'amb',val:env.ambientTemp,min:-30,max:50,step:1},
+  ].map(e=>`<div>
+    <div style="font-size:7px;color:#445566">${e.l}</div>
+    <input type="range" min="${e.min}" max="${e.max}" step="${e.step}" value="${e.val}"
+      oninput="env.${e.id==='alt'?'altitude':e.id==='amb'?'ambientTemp':e.id}=+this.value;document.getElementById('env-v-${e.id}').textContent=this.value">
+    <div id="env-v-${e.id}" style="font-size:9px;color:var(--cyan);text-align:right">${e.val}</div>
+  </div>`).join('');
+  const bc=document.getElementById('boost-config');if(bc)bc.innerHTML=`
+    <label style="display:flex;align-items:center;gap:5px;font-size:9px;margin-bottom:4px">
+      <input type="checkbox" ${env.boostEnabled?'checked':''} onchange="env.boostEnabled=this.checked" style="accent-color:var(--cyan)"> Boost Enabled
+    </label>
+    <div style="font-size:7px;color:#445566">Boost Target (psi)</div>
+    <input type="range" min="0" max="50" value="${env.boostTarget}" oninput="env.boostTarget=+this.value;document.getElementById('boost-tgt-v').textContent=this.value+' psi'">
+    <div id="boost-tgt-v" style="font-size:9px;color:var(--orange)">${env.boostTarget} psi</div>`;
+  const fc=document.getElementById('fuel-config');if(fc)fc.innerHTML=`
+    <div style="font-size:7px;color:#445566">Fuel Type</div>
+    <select onchange="env.fuelType=this.value" style="width:100%;font-size:9px;margin-bottom:4px">
+      ${['E10','E85','91oct','93oct','98oct','diesel','B20'].map(f=>`<option ${env.fuelType===f?'selected':''}>${f}</option>`).join('')}
+    </select>
+    <div style="font-size:8px;color:#778899">Stoichiometric AFR: ${FUEL_STOICH[env.fuelType]||14.7}</div>`;
+  const dc=document.getElementById('drive-config');if(dc)dc.innerHTML=`
+    <div style="font-size:7px;color:#445566">Road Grade (%)</div>
+    <input type="range" min="-15" max="15" value="${env.roadGrade}" oninput="env.roadGrade=+this.value;document.getElementById('grade-v').textContent=this.value+'%'">
+    <div id="grade-v" style="font-size:9px;color:var(--yell)">${env.roadGrade}%</div>`;
+}
+
+// DATA LOGGER
+let logging=false,logData=[],logInterval=null;
+function logStart(){
+  logging=true;logInterval=setInterval(()=>{
+    const tp=currentTransProfile;
+    const gr=tp.gears===0?'CVT':eng.gear;
+    logData.push({
+      t:new Date().toISOString().substr(11,8),
+      rpm:eng.rpm.toFixed(0),map:eng.map.toFixed(1),tps:eng.tps.toFixed(1),
+      clt:eng.clt.toFixed(1),iat:eng.iat.toFixed(1),afr:eng.afr.toFixed(2),
+      lam:eng.lam.toFixed(3),ign:eng.adv.toFixed(1),stft:eng.stft.toFixed(1),
+      ltft:eng.ltft.toFixed(1),pw:eng.pw.toFixed(2),dc:eng.dc.toFixed(1),
+      knock:eng.kret.toFixed(1),egt:eng.egt.toFixed(0),boost:eng.boostPsi.toFixed(1),
+      gear:gr,scene:eng.scenario
+    });
+    if(logData.length>2000)logData.shift();
+    renderLogTable();
+  },250);
+  document.getElementById('log-badge').textContent='LOGGING: ON';
+  document.getElementById('log-badge').style.color='#00ff88';
+}
+function logStop(){
+  logging=false;clearInterval(logInterval);
+  document.getElementById('log-badge').textContent='LOGGING: STOPPED ('+logData.length+' rows)';
+  document.getElementById('log-badge').style.color='#ffaa00';
+}
+function logClear(){logData=[];document.getElementById('log-body').innerHTML='';document.getElementById('log-badge').textContent='LOGGING: OFF';document.getElementById('log-badge').style.color='#ff4040';}
+function logSave(){
+  const keys=Object.keys(logData[0]||{});
+  const csv=keys.join(',')+'\n'+logData.map(r=>keys.map(k=>r[k]).join(',')).join('\n');
+  const a=document.createElement('a');a.href='data:text/csv;base64,'+btoa(csv);a.download='ck34_datalog.csv';a.click();
+}
+function renderLogTable(){
+  const b=document.getElementById('log-body');if(!b)return;
+  const rows=logData.slice(-50);
+  b.innerHTML=rows.map(r=>`<tr>
+    <td>${r.t}</td><td style="color:#00ff88">${r.rpm}</td><td style="color:#4488ff">${r.map}</td>
+    <td style="color:#ffff44">${r.tps}</td><td style="color:#ff4040">${r.clt}</td>
+    <td style="color:#00ccff">${r.iat}</td><td style="color:${+r.afr<12||+r.afr>16?'#ff4040':'#00ff88'}">${r.afr}</td>
+    <td>${r.lam}</td><td style="color:#00ccff">${r.ign}</td>
+    <td style="color:${Math.abs(+r.stft)>15?'#ff4040':'#00ff88'}">${r.stft}</td>
+    <td style="color:${Math.abs(+r.ltft)>15?'#ff4040':'#00ff88'}">${r.ltft}</td>
+    <td style="color:#ffaa00">${r.pw}</td><td>${r.dc}</td>
+    <td style="color:${+r.knock>5?'#ff4040':'#00ff88'}">${r.knock}</td>
+    <td style="color:#ff9900">${r.egt}</td>
+    <td style="color:#ff7722">${r.boost}</td>
+    <td style="color:#cc55ff">${r.gear}</td>
+    <td style="color:#778899">${r.scene}</td>
+  </tr>`).join('');
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// ENGINE / CONDITION SETTERS
+// ══════════════════════════════════════════════════════════════════════
+function setEngineConfig(key){
+  currentEngProfile=ENGINE_PROFILES[key]||ENGINE_PROFILES['i4_na'];
+  document.getElementById('eng-badge').textContent=currentEngProfile.name;
+  maps.boost=mkBoost();
+  buildCylKillRow();
+  const mi=document.getElementById('miss-btns');
+  if(mi)mi.innerHTML=[0,...Array.from({length:currentEngProfile.cyl},(_,i)=>i+1)].map(i=>`<button class="ck-btn ${eng.faultMiss===i?'btn-red':''}" onclick="eng.faultMiss=${i}">${i===0?'NO MISS':'CYL '+i}</button>`).join('');
+  const sel=document.getElementById('ch1-sel');
+  if(sel&&currentEngProfile.diesel){
+    // Diesel: show EGT and boost by default
+    scopeChActive['EGT']=true;scopeChActive['Boost Pressure']=true;
+  }
+}
+function setCondition(val){env.condOverride=val;}
+
+// ══════════════════════════════════════════════════════════════════════
+// CAMERA / THERMAL OVERLAY
+// ══════════════════════════════════════════════════════════════════════
+let thermalInterval=null,camStream=null,camModeActive=null;
+function openCamera(mode){
+  document.getElementById('cam-ov').classList.add('open');
+  switchCamMode(mode);
+}
+function closeCamera(){
+  document.getElementById('cam-ov').classList.remove('open');
+  clearInterval(thermalInterval);
+  if(camStream){camStream.getTracks().forEach(t=>t.stop());camStream=null;}
+  document.getElementById('cam-video').style.display='none';
+  document.getElementById('cam-placeholder').style.display='';
+}
+function switchCamMode(mode){
+  camModeActive=mode;
+  document.getElementById('cam-label').textContent=mode==='thermal'?'THERMAL CAMERA (FLIR Lepton)':'BORESCOPE (USB-C UVC)';
+  if(mode==='thermal'){
+    clearInterval(thermalInterval);
+    document.getElementById('cam-video').style.display='none';
+    document.getElementById('cam-placeholder').style.display='none';
+    document.getElementById('thermal-canvas').style.display='';
+    runThermalSim();
+  }else{
+    clearInterval(thermalInterval);
+    document.getElementById('thermal-canvas').style.display='none';
+    if(navigator.mediaDevices?.getUserMedia){
+      navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}}).then(stream=>{
+        camStream=stream;
+        const v=document.getElementById('cam-video');
+        v.srcObject=stream;v.style.display='';
+        document.getElementById('cam-placeholder').style.display='none';
+      }).catch(()=>{
+        document.getElementById('cam-placeholder').style.display='';
+        document.getElementById('cam-placeholder').innerHTML='<div style="padding:20px;color:#ffaa00;text-align:center">📷<br>Camera access denied<br><span style="font-size:8px">Grant camera permission to use borescope input</span></div>';
+      });
+    }
+  }
+}
+function runThermalSim(){
+  const cv=document.getElementById('thermal-canvas');
+  const parent=document.getElementById('cam-display');
+  function resize(){cv.width=parent.offsetWidth||320;cv.height=parent.offsetHeight||240;}
+  resize();
+  thermalInterval=setInterval(()=>{
+    resize();
+    const ctx=cv.getContext('2d');const W=cv.width,H=cv.height;
+    const img=ctx.createImageData(W,H);
+    const t=Date.now()/1000;
+    for(let y=0;y<H;y++)for(let x=0;x<W;x++){
+      const idx=(y*W+x)*4;
+      // Simulate engine block with hot spots
+      const cx=W*0.4,cy=H*0.45;
+      const dist=Math.sqrt((x-cx)**2+(y-cy)**2);
+      let temp=20+Math.max(0,120-dist*0.8)+eng.clt*0.3
+        +30*Math.sin(x/20+t)*Math.cos(y/20-t*0.5)*(1-dist/(W*0.5))
+        +(eng.egt/1000)*40*Math.max(0,1-dist/(H*0.3));
+      temp=Math.max(0,Math.min(300,temp));
+      const r=Math.min(255,temp>150?255:temp>100?Math.round((temp-100)/50*255):0);
+      const g=Math.min(255,temp<100?Math.round(temp/100*255):temp<200?255:Math.round(255-(temp-200)/100*255));
+      const b=Math.min(255,temp<100?255:Math.round(Math.max(0,255-(temp-100)/50*255)));
+      img.data[idx]=r;img.data[idx+1]=g;img.data[idx+2]=b;img.data[idx+3]=255;
+    }
+    ctx.putImageData(img,0,0);
+    // temp overlay
+    ctx.fillStyle='rgba(0,0,0,0.5)';ctx.fillRect(5,5,160,16);
+    ctx.fillStyle='#fff';ctx.font='9px monospace';
+    ctx.fillText('ENG: '+eng.clt.toFixed(0)+'°C  EGT: '+eng.egt.toFixed(0)+'°C  AMB: '+env.ambientTemp+'°C',8,15);
+  },80);
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// READING POPUP
+// ══════════════════════════════════════════════════════════════════════
+let popupKey=null;
+function openReadingPopup(key){
+  popupKey=key;const rs=getRS(key);
+  document.getElementById('popup-title').textContent='⚙ '+key+' — Display Options';
+  document.getElementById('popup-content').innerHTML=`
+    <div class="popup-row"><span class="popup-lbl">Decimal places</span><input class="popup-input" id="pp-dec" type="number" min="0" max="4" value="${rs.decimals}"></div>
+    <div class="popup-row"><span class="popup-lbl">Font size (px)</span><input class="popup-input" id="pp-fs" type="number" min="8" max="28" value="${rs.fontSize}"></div>
+    <div class="popup-row"><span class="popup-lbl">Custom color</span><input class="popup-input" id="pp-col" type="text" value="${rs.color||'auto'}" style="width:90px"></div>
+    <div class="popup-row"><span class="popup-lbl">Open scope view</span><button class="ck-btn btn-cyan" onclick="openScope('${key}');closePopup()">Open</button></div>`;
+  document.getElementById('popup-ov').classList.add('open');
+}
+function applyPopup(){
+  if(!popupKey)return;
+  readingSettings[popupKey]={
+    decimals:parseInt(document.getElementById('pp-dec').value),
+    fontSize:parseInt(document.getElementById('pp-fs').value),
+    color:document.getElementById('pp-col').value,
+  };closePopup();
+}
+function closePopup(){document.getElementById('popup-ov').classList.remove('open');}
+
+// ══════════════════════════════════════════════════════════════════════
+// TAB NAVIGATION
+// ══════════════════════════════════════════════════════════════════════
+const tabIds=['mech','scope','can','tune','corr','modules','service','build','probe','sens','log','fault','config'];
+function showTab(name){
+  tabIds.forEach(id=>{
+    const el=document.getElementById('tab-'+id);
+    const btn=document.querySelector(`.tab-btn[onclick="showTab('${id}')"]`);
+    if(el)el.classList.toggle('active',id===name);
+    if(btn)btn.classList.toggle('active',id===name);
+  });
+  if(name==='tune'){tuneSubTab('ve');}
+  if(name==='corr'){buildCorrTab();}
+  if(name==='modules'){modSubTab('abs');}
+  if(name==='service'){svcSubTab('generic');}
+  if(name==='build'){buildSubTab('ecu');}
+  if(name==='fault'){buildFaultTab();}
+  if(name==='config'){buildConfigTab();}
+  if(name==='can'){canSubTab('j1939');}
+}
+
+// Scope channel selects
+function buildScopeSelects(){
+  const s1=document.getElementById('ch1-sel'),s2=document.getElementById('ch2-sel');
+  if(!s1||!s2)return;
+  const opts=sigNames.map(k=>`<option value="${k}">${k}</option>`).join('');
+  s1.innerHTML=opts;s2.innerHTML='<option value="">-- None --</option>'+opts;
+  s1.value='Crank Signal';s2.value='Cam Signal';
+}
+
+// Crank/cam decode
+function updateCrankInfo(){
+  const el=document.getElementById('crank-info');if(!el)return;
+  const p=currentEngProfile;
+  el.textContent=`Pattern: ${p.crankPat} | Cyls: ${p.cyl} | Firing: ${p.firing.join('-')} | Inject: ${p.injectType}\nFireOrder trigger sync at TDC Cyl1 — ${p.cyl===4?'2':p.cyl===6?'3':'4'}x cam teeth per revolution`;
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// MAIN LOOP
+// ══════════════════════════════════════════════════════════════════════
+let last=performance.now();
+function mainLoop(now){
+  const dt=Math.min((now-last)/1000,0.05);last=now;
+  engineStep(dt);
+  updateScopeBuffers(dt);
+  tickCAN(dt);
+  updateStatusBar();
+  const activeTab=tabIds.find(id=>document.getElementById('tab-'+id)?.classList.contains('active'));
+  if(activeTab==='mech')updateLiveValues();
+  if(activeTab==='sens')updateSensorsGrid();
+  if(activeTab==='tune')updateOpPoint();
+  if(activeTab==='modules'){
+    const msubs=['abs','tcu','tpms','hv'];
+    const activeSub=msubs.find(m=>document.getElementById('mod-'+m)?.style.display!=='none');
+    if(activeSub==='abs')updateABSDisplay();
+    if(activeSub==='tcu')updateTCUDisplay();
+    if(activeSub==='tpms')updateTPMSDisplay();
+    if(activeSub==='hv')updateHVDisplay();
+  }
+  drawMiniCanvas('mini-afr','Wideband O2','Narrowband O2');
+  drawMiniCanvas('mini-scope',document.getElementById('ch1-sel')?.value,document.getElementById('ch2-sel')?.value);
+  drawMiniCanvas('mini-sens','Knock Sensor','EGT');
+  if(scopeOpen){drawFullScope();buildScopeNumStrip();}
+  requestAnimationFrame(mainLoop);
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════════════════════════
+window.onload=function(){
+  buildStatusBar();
+  buildOBDButtons();
+  buildScopeSelects();
+  buildScopeChList();
+  buildScopeNumStrip();
+  buildLibList();
+  buildCylKillRow();
+  buildFaultTab();
+  buildConfigTab();
+  canSubTab('j1939');
+  tuneSubTab('ve');
+  svcSubTab('generic');
+  buildSubTab('ecu');
+  modSubTab('abs');
+  updateCrankInfo();
+  requestAnimationFrame(mainLoop);
+};
+</script>
+</body>
+</html>

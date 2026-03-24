@@ -1,0 +1,830 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="CyberKnife">
+<meta name="theme-color" content="#050804">
+<title>CYBERKNIFE v3.8 // PIP-BOY</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --pg:#00ff41;--pg2:#00cc33;--pg3:#007a1a;--pg4:#003d0d;
+  --pa:#ffb000;--pr:#ff3030;--pc:#00e5e5;--py:#ffe000;
+  --pp:#cc44ff;--pb:#4499ff;--po:#ff6600;--pt:#00ddaa;
+  --bg:#050804;--pan:#0b0f08;--drk:#080c06;--dep:#050803;
+  --brd:#1a3a0a;--brd2:#2a5a12;--gr:#3a6020;--txt:#9abf88;
+  --glow-sm:0 0 8px #00ff4144;--glow-md:0 0 14px #00ff4166;--glow-lg:0 0 24px #00ff4188;
+}
+html,body{height:100%;overflow:hidden}
+body{font-family:"Courier New",monospace;background:var(--bg);color:var(--txt);font-size:12px;display:flex;flex-direction:column;position:relative;overflow:hidden}
+body::before{content:'';position:fixed;top:0;left:0;right:0;bottom:0;background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(0,0,0,0.12) 3px,rgba(0,0,0,0.12) 4px);pointer-events:none;z-index:9998}
+body::after{content:'';position:fixed;top:0;left:0;right:0;bottom:0;background:radial-gradient(ellipse 100% 100% at 50% 50%,transparent 55%,rgba(0,0,0,0.55) 100%);pointer-events:none;z-index:9997}
+#hdr{background:linear-gradient(180deg,#0d1509,#060905);padding:4px 8px;display:flex;flex-wrap:wrap;align-items:center;gap:5px;flex-shrink:0;border-bottom:2px solid var(--brd2);box-shadow:0 2px 16px rgba(0,255,65,0.15);position:relative;z-index:100}
+#hdr h1{color:var(--pg);font-size:15px;letter-spacing:4px;font-weight:bold;text-shadow:0 0 20px #00ff41cc,0 0 40px #00ff4166;white-space:nowrap}
+select.hs{background:var(--dep);color:var(--pg3);border:1px solid var(--brd2);padding:2px 4px;font-family:inherit;font-size:10px;border-radius:1px;max-width:130px}
+.hl{color:var(--gr);font-size:10px;text-transform:uppercase;letter-spacing:.5px}
+#badge{margin-left:auto;font-size:9px;padding:2px 9px;border-radius:1px;background:var(--dep);border:1px solid var(--brd2);white-space:nowrap;letter-spacing:1.5px}
+/* KNOB ZONE */
+#knob-zone{background:linear-gradient(180deg,#0d1509,#080c06);display:flex;align-items:center;padding:5px 10px;gap:12px;flex-shrink:0;border-bottom:1px solid var(--brd2);box-shadow:0 4px 20px rgba(0,0,0,0.6);position:relative;z-index:99}
+#knob-zone::after{content:'';position:absolute;bottom:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--pg3),var(--pg2),var(--pg3),transparent);opacity:.7}
+#knob-wrap{flex-shrink:0;position:relative;touch-action:none;user-select:none;cursor:grab}
+#knob-wrap:active{cursor:grabbing}
+#knob-cv{display:block}
+#knob-info{flex:1;display:flex;flex-direction:column;gap:3px;min-width:0}
+#knob-sublabel{font-size:8px;color:var(--gr);letter-spacing:3px;text-transform:uppercase}
+#knob-modename{font-size:24px;font-weight:bold;color:var(--pg);text-shadow:var(--glow-lg);letter-spacing:3px;text-transform:uppercase;line-height:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#knob-desc{font-size:9px;color:var(--pg3);letter-spacing:.8px;text-transform:uppercase;min-height:11px}
+#knob-nav{display:flex;gap:6px;margin-top:3px;align-items:center}
+.karr{background:var(--dep);border:1px solid var(--brd2);color:var(--pg);padding:3px 12px;cursor:pointer;border-radius:1px;font-family:inherit;font-size:11px;letter-spacing:.5px;transition:background .1s;white-space:nowrap}
+.karr:active{background:var(--brd2);box-shadow:var(--glow-md)}
+#knob-pos{font-size:10px;color:var(--gr);letter-spacing:1px;margin-left:4px;white-space:nowrap}
+/* PINS */
+#pins{display:none;flex-wrap:nowrap;overflow-x:auto;gap:2px;padding:2px 6px;background:var(--dep);border-bottom:1px solid var(--brd);flex-shrink:0;scrollbar-width:none}
+#pins::-webkit-scrollbar{display:none}
+#pins.has{display:flex}
+.pg-pin{background:var(--dep);padding:2px 8px;border-radius:1px;display:flex;gap:5px;align-items:center;flex-shrink:0;border:1px solid var(--brd);cursor:pointer}
+.pg-pin .pl{color:var(--gr);font-size:8px}.pg-pin .pv{font-weight:bold;font-size:12px}
+/* STATUS BAR */
+#sb{background:var(--dep);display:flex;flex-wrap:nowrap;overflow-x:auto;gap:1px;padding:2px;flex-shrink:0;border-bottom:1px solid var(--brd);scrollbar-width:none}
+#sb::-webkit-scrollbar{display:none}
+.sc{background:#060904;padding:2px 5px;display:flex;flex-direction:column;align-items:center;flex-shrink:0;min-width:54px;cursor:pointer;user-select:none;border:1px solid var(--brd);border-radius:1px}
+.sc:active{opacity:.7}
+.sl{color:var(--gr);font-size:8px;white-space:nowrap;letter-spacing:.3px}
+.sv{font-weight:bold;font-size:12px;line-height:1.2}
+/* DTC BAR */
+#db{background:#060904;padding:3px 8px;display:flex;justify-content:space-between;align-items:center;font-size:10px;flex-shrink:0;border-bottom:1px solid var(--brd);letter-spacing:.5px}
+/* HIDDEN TABS */
+#tnav{display:none}
+.tb{background:var(--pan);color:var(--txt);border:none;padding:5px 9px;cursor:pointer;font-family:inherit;font-size:10px;font-weight:bold;white-space:nowrap;flex-shrink:0;letter-spacing:.5px;border-radius:1px}
+.tb.act{background:var(--brd2);color:var(--pg)}
+/* CONTENT */
+#con{flex:1;overflow-y:auto;padding:5px;scrollbar-width:thin;scrollbar-color:var(--brd2) transparent}
+#con::-webkit-scrollbar{width:4px}
+#con::-webkit-scrollbar-thumb{background:var(--brd2);border-radius:2px}
+.tab{display:none}.tab.act{display:block}
+/* PANELS */
+.pan{background:var(--pan);border-radius:2px;padding:8px;margin-bottom:6px;border:1px solid var(--brd);position:relative;box-shadow:inset 0 0 20px rgba(0,0,0,0.3)}
+.pan::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--brd2),transparent)}
+.pt{color:var(--pg);font-size:10px;letter-spacing:2px;margin-bottom:6px;font-weight:bold;text-transform:uppercase;display:flex;justify-content:space-between;align-items:center;text-shadow:var(--glow-sm)}
+/* GAUGES */
+.gg{display:grid;grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:3px}
+.g{background:var(--dep);padding:5px 3px;border-radius:2px;text-align:center;border:1px solid var(--brd);cursor:pointer;user-select:none;transition:border-color .15s}
+.g:active{border-color:var(--pg)}
+.g.sz-s .gv{font-size:11px}.g.sz-s .gl{font-size:7px}
+.g.sz-l{grid-column:span 2}.g.sz-l .gv{font-size:22px}.g.sz-l .gl{font-size:10px}
+.g.pinned{border-color:var(--pg2);background:#061004}
+.gl{color:var(--gr);font-size:8px;letter-spacing:.4px;margin-bottom:1px}
+.gv{font-weight:bold;font-size:14px;line-height:1.2}
+/* BUTTONS */
+button{background:var(--dep);color:var(--pg3);border:1px solid var(--brd2);padding:4px 8px;font-family:inherit;font-size:11px;cursor:pointer;border-radius:1px;white-space:nowrap;letter-spacing:.3px}
+button:active{opacity:.7}
+button.r{background:#1a0000;color:var(--pr);border-color:#4a0000}
+button.g{background:#001a04;color:var(--pg);border-color:var(--brd2)}
+button.a{background:#1a0e00;color:var(--pa);border-color:#503200}
+button.c{background:#001515;color:var(--pc);border-color:#104040}
+button.p{background:#150026;color:var(--pp);border-color:#3a0066}
+button.act{background:var(--brd2);color:var(--pg);border-color:var(--pg)}
+.row{display:flex;gap:4px;flex-wrap:wrap;align-items:center;margin-bottom:5px}
+/* MONO */
+.mono{background:var(--dep);color:var(--pg);padding:6px;font-size:10px;min-height:42px;white-space:pre-wrap;border-radius:1px;margin-top:4px;line-height:1.7;border:1px solid var(--brd);overflow-x:auto}
+/* TABLES */
+.ts{max-height:170px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--brd2) transparent}
+.ct{width:100%;border-collapse:collapse;font-size:10px}
+.ct th{color:var(--pg);background:var(--dep);padding:3px 4px;text-align:left;white-space:nowrap;position:sticky;top:0;z-index:1}
+.ct td{color:var(--txt);padding:2px 4px;border-bottom:1px solid var(--brd);white-space:nowrap;font-size:10px}
+.ct tr:hover td{background:#0c1408}
+/* FAULT ROWS */
+.fr{display:flex;align-items:center;gap:6px;padding:5px;background:var(--dep);border-radius:2px;margin-bottom:3px;flex-wrap:wrap;border:1px solid var(--brd)}
+.fn{color:var(--pa);font-weight:bold;font-size:10px;flex:1;min-width:130px}
+.fd{color:var(--gr);font-size:9px;flex:2;min-width:140px}
+/* SERVICE */
+.sc2{background:var(--dep);border-radius:2px;padding:6px;margin-bottom:4px;border:1px solid var(--brd)}
+.sn{color:var(--pc);font-weight:bold;font-size:11px;margin-bottom:1px}
+.scmd{color:var(--gr);font-size:9px;letter-spacing:.3px}
+.sd{color:var(--txt);font-size:10px;margin-top:2px}
+.sr{color:var(--pg);font-size:10px;margin-top:3px;min-height:12px;white-space:pre-wrap}
+/* BUILD */
+.bc{background:var(--dep);border-radius:2px;padding:5px 6px;margin-bottom:3px;display:flex;gap:8px;border:1px solid var(--brd);flex-wrap:wrap}
+.bt{font-weight:bold;font-size:10px;min-width:80px;color:var(--pg2)}
+.bi{color:var(--gr);font-size:10px;flex:1}
+/* TUNE MAP */
+.tune-wrap{overflow:auto;max-height:260px;border:1px solid var(--brd);border-radius:2px}
+.tmap{border-collapse:collapse;font-size:10px;white-space:nowrap}
+.tmap th{background:var(--dep);color:var(--pg);padding:2px 5px;position:sticky;top:0;z-index:2;border:1px solid var(--brd);font-size:9px}
+.tmap .rhdr{background:var(--dep);color:var(--pg);padding:2px 5px;position:sticky;left:0;z-index:1;border:1px solid var(--brd);font-size:9px}
+.tc{border:1px solid rgba(26,58,10,0.44);padding:0;text-align:center;min-width:36px;cursor:pointer;position:relative}
+.tc input{background:transparent;border:none;color:var(--txt);font-family:inherit;font-size:10px;width:36px;text-align:center;padding:2px;outline:none}
+.tc.op-pt{outline:2px solid var(--pg);outline-offset:-2px;z-index:1}
+/* CORR */
+.corr-pair{display:flex;flex-direction:column;align-items:center;min-width:44px}
+.corr-x{color:var(--gr);font-size:9px;padding:1px 0}
+.corr-y{background:var(--dep);border:1px solid var(--brd2);color:var(--pa);font-family:inherit;font-size:10px;width:42px;text-align:center;padding:2px;border-radius:1px}
+/* MODULE GAUGES */
+.mg{display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:3px;margin-bottom:5px}
+.mc{background:var(--dep);padding:5px;border-radius:2px;text-align:center;border:1px solid var(--brd)}
+.mc .ml{color:var(--gr);font-size:8px}.mc .mv{font-weight:bold;font-size:13px}
+/* PROBE DMM */
+#probe-big{background:var(--dep);color:var(--pg);font-size:36px;font-weight:bold;text-align:center;padding:12px;border-radius:2px;border:1px solid var(--brd2);letter-spacing:4px;margin-bottom:5px;text-shadow:0 0 36px #00ff41aa}
+.pmg{display:grid;grid-template-columns:repeat(4,1fr);gap:3px;margin-bottom:5px}
+.pmc{background:var(--dep);padding:4px;border-radius:2px;text-align:center;border:1px solid var(--brd)}
+.pmc .pml{color:var(--gr);font-size:8px}.pmc .pmv{font-weight:bold;font-size:13px}
+/* SENSORS */
+.sg{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:3px}
+.se{background:var(--dep);padding:5px 7px;border-radius:2px;border:1px solid var(--brd);display:flex;justify-content:space-between;align-items:center}
+.sel2{color:var(--gr);font-size:9px}.sev{font-weight:bold;font-size:12px}
+/* LOG */
+.log-mini{display:grid;grid-template-columns:repeat(auto-fill,minmax(70px,1fr));gap:2px;margin-bottom:5px}
+.lm{background:var(--dep);padding:3px;border-radius:2px;border:1px solid var(--brd)}
+.lml{color:var(--gr);font-size:8px}.lmv{font-weight:bold;font-size:11px}
+/* INPUTS */
+input[type=number],input[type=text]{background:var(--dep);color:var(--pa);border:1px solid var(--brd2);padding:3px 5px;font-family:inherit;font-size:11px;border-radius:1px;width:65px}
+input[type=range]{width:100%;accent-color:var(--pg);height:4px}
+canvas{display:block;border-radius:2px;border:1px solid var(--brd)}
+/* SCOPE OVERLAY */
+#sov{position:fixed;top:0;left:0;right:0;bottom:0;background:var(--bg);z-index:900;display:none;flex-direction:column;padding:7px}
+#sov.open{display:flex}
+#sov canvas{flex:1;width:100%}
+#sov .oc{display:flex;gap:5px;align-items:center;margin-bottom:5px;flex-wrap:wrap}
+#srz{height:8px;cursor:ns-resize;background:linear-gradient(var(--brd),var(--brd2));margin:2px 0;border-radius:2px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+#srz::after{content:'';width:36px;height:2px;background:var(--brd2);border-radius:1px}
+/* CONTEXT MENU */
+#cm{position:fixed;background:var(--pan);border:1px solid var(--pg2);border-radius:2px;padding:8px;z-index:999;display:none;min-width:155px;box-shadow:var(--glow-md),0 4px 24px rgba(0,0,0,0.8)}
+#cm h4{color:var(--pg);font-size:10px;letter-spacing:1px;margin-bottom:6px;padding-bottom:4px;border-bottom:1px solid var(--brd2)}
+#cm .cr{display:flex;gap:3px;margin-bottom:4px;align-items:center}
+#cm .cl{color:var(--gr);font-size:9px;width:30px}
+#sbo{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.75);z-index:900;display:none}
+#sbe{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:var(--pan);border:1px solid var(--pg2);border-radius:2px;padding:10px;z-index:901;min-width:240px;max-width:92vw;max-height:78vh;overflow-y:auto;display:none;box-shadow:var(--glow-md)}
+#sbe h3{color:var(--pg);font-size:10px;letter-spacing:1px;margin-bottom:7px}
+.sbc{display:flex;align-items:center;gap:7px;padding:4px 0;border-bottom:1px solid var(--brd);cursor:pointer}
+.sbc input{accent-color:var(--pg)}.sbc span{color:var(--txt);font-size:10px;flex:1}
+.sbc .sv2{color:var(--gr);font-size:10px;width:48px;text-align:right}
+#toast{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:rgba(10,20,6,0.92);color:var(--pg);padding:5px 16px;border-radius:1px;font-size:10px;z-index:9999;opacity:0;transition:opacity .25s;pointer-events:none;white-space:nowrap;border:1px solid var(--pg2);box-shadow:var(--glow-md);letter-spacing:1.5px}
+.ts::-webkit-scrollbar,.tune-wrap::-webkit-scrollbar{width:3px;height:3px}
+.ts::-webkit-scrollbar-thumb,.tune-wrap::-webkit-scrollbar-thumb{background:var(--brd2);border-radius:2px}
+</style>
+</head>
+<body>
+<!-- HEADER -->
+<div id="hdr">
+  <h1>&#9889; CYBERKNIFE</h1>
+  <span class="hl">ENG:</span><select class="hs" id="es" onchange="setEng(this.value)"></select>
+  <span class="hl">TRANS:</span><select class="hs" id="ts" onchange="E.trans=TP[this.value]||TP['6spd']"></select>
+  <span class="hl">COND:</span>
+  <select class="hs" id="cs" onchange="E.env.cond_override=this.value">
+    <option value="auto">AUTO</option><option value="warmup">WARMUP</option><option value="idle">IDLE</option>
+    <option value="cruise">CRUISE</option><option value="wot">WOT</option><option value="decel">DECEL</option><option value="boost_test">BOOST TEST</option>
+  </select>
+  <span id="badge" style="color:var(--gr)">STARTING</span>
+</div>
+<!-- KNOB MODE SELECTOR -->
+<div id="knob-zone">
+  <div id="knob-wrap"><canvas id="knob-cv" width="116" height="116"></canvas></div>
+  <div id="knob-info">
+    <div id="knob-sublabel">// MODE SELECT //</div>
+    <div id="knob-modename">DASH</div>
+    <div id="knob-desc">LIVE ENGINE GAUGES</div>
+    <div id="knob-nav">
+      <button class="karr" onclick="knobStep(-1)">&#9668; PREV</button>
+      <button class="karr" onclick="knobStep(1)">NEXT &#9658;</button>
+      <span id="knob-pos">01/14</span>
+    </div>
+  </div>
+</div>
+<!-- PINNED -->
+<div id="pins"></div>
+<!-- STATUS BAR -->
+<div id="sb">
+  <div class="sc" data-i="0"><div class="sl">RPM</div><div class="sv" id="s0" style="color:#00ff41">---</div></div>
+  <div class="sc" data-i="1"><div class="sl">MAP kPa</div><div class="sv" id="s1" style="color:#4499ff">---</div></div>
+  <div class="sc" data-i="2"><div class="sl">TPS %</div><div class="sv" id="s2" style="color:#ffe000">---</div></div>
+  <div class="sc" data-i="3"><div class="sl">CLT °C</div><div class="sv" id="s3" style="color:#ff3030">---</div></div>
+  <div class="sc" data-i="4"><div class="sl">IAT °C</div><div class="sv" id="s4" style="color:#00e5e5">---</div></div>
+  <div class="sc" data-i="5"><div class="sl">AFR</div><div class="sv" id="s5" style="color:#00ff41">---</div></div>
+  <div class="sc" data-i="6"><div class="sl">LAMBDA</div><div class="sv" id="s6" style="color:#00ff41">---</div></div>
+  <div class="sc" data-i="7"><div class="sl">STFT %</div><div class="sv" id="s7" style="color:#00ff41">---</div></div>
+  <div class="sc" data-i="8"><div class="sl">LTFT %</div><div class="sv" id="s8" style="color:#00ff41">---</div></div>
+  <div class="sc" data-i="9"><div class="sl">IGN</div><div class="sv" id="s9" style="color:#00e5e5">---</div></div>
+  <div class="sc" data-i="10"><div class="sl">KNOCK</div><div class="sv" id="s10" style="color:#00ff41">---</div></div>
+  <div class="sc" data-i="11"><div class="sl">EGT °C</div><div class="sv" id="s11" style="color:#ff6600">---</div></div>
+  <div class="sc" data-i="12"><div class="sl">PW ms</div><div class="sv" id="s12" style="color:#ffb000">---</div></div>
+  <div class="sc" data-i="13"><div class="sl">DC %</div><div class="sv" id="s13" style="color:#ffb000">---</div></div>
+  <div class="sc" data-i="14"><div class="sl">OIL psi</div><div class="sv" id="s14" style="color:#00ddaa">---</div></div>
+  <div class="sc" data-i="15"><div class="sl">BAT V</div><div class="sv" id="s15" style="color:#cc44ff">---</div></div>
+  <div class="sc" data-i="16"><div class="sl">SPD kph</div><div class="sv" id="s16" style="color:#ffe000">---</div></div>
+  <div class="sc" data-i="17"><div class="sl">BOOST</div><div class="sv" id="s17" style="color:#ff6600">---</div></div>
+  <div class="sc" data-i="18"><div class="sl">GEAR</div><div class="sv" id="s18" style="color:#cc44ff">---</div></div>
+</div>
+<!-- DTC BAR -->
+<div id="db">
+  <div>DTCs: <span id="dtcbar" style="font-weight:bold;color:#00ff41">NO DTCs</span></div>
+  <div>SCENE: <span id="scenebar" style="color:#cc44ff;font-weight:bold">--</span>&nbsp;&nbsp;<span id="egobar" style="color:var(--gr);font-size:9px">EGO:--</span></div>
+</div>
+<!-- HIDDEN TAB NAV -->
+<div id="tnav">
+  <button class="tb act" onclick="showTab('dash',this)">DASH</button>
+  <button class="tb" onclick="showTab('obd',this)">OBD-II</button>
+  <button class="tb" onclick="showTab('scope',this)">SCOPE</button>
+  <button class="tb" onclick="showTab('can',this)">CAN/LIN</button>
+  <button class="tb" onclick="showTab('tune',this)">TUNE</button>
+  <button class="tb" onclick="showTab('corr',this)">CORR</button>
+  <button class="tb" onclick="showTab('mods',this)">MODULES</button>
+  <button class="tb" onclick="showTab('probe',this)">PROBE</button>
+  <button class="tb" onclick="showTab('sens',this)">SENS</button>
+  <button class="tb" onclick="showTab('faults',this)">FAULTS</button>
+  <button class="tb" onclick="showTab('service',this)">SERVICE</button>
+  <button class="tb" onclick="showTab('build',this)">BUILD</button>
+  <button class="tb" onclick="showTab('log',this)">LOG</button>
+  <button class="tb" onclick="showTab('config',this)">CONFIG</button>
+</div>
+<!-- CONTENT -->
+<div id="con">
+<!-- DASH -->
+<div id="tab-dash" class="tab act">
+  <div class="pan"><div class="pt"><span>&#9679; LIVE GAUGES</span><span style="color:var(--gr);font-size:9px;font-weight:normal">HOLD GAUGE &#8594; OPTIONS</span></div><div class="gg" id="gg"></div></div>
+  <div class="pan" id="hv-pan" style="display:none">
+    <div class="pt" style="color:#ff6600">&#9888; HV SYSTEM — QUALIFIED TECHS ONLY</div>
+    <div class="gg">
+      <div class="g"><div class="gl">HV Volts</div><div class="gv" id="hv0" style="color:#ff6600">--</div></div>
+      <div class="g"><div class="gl">SOC %</div><div class="gv" id="hv1" style="color:#00ff41">--</div></div>
+      <div class="g"><div class="gl">HV Amps</div><div class="gv" id="hv2" style="color:#00e5e5">--</div></div>
+      <div class="g"><div class="gl">MG1 RPM</div><div class="gv" id="hv3" style="color:#cc44ff">--</div></div>
+      <div class="g"><div class="gl">MG2 RPM</div><div class="gv" id="hv4" style="color:#cc44ff">--</div></div>
+    </div>
+  </div>
+  <div class="pan"><div class="pt">AFR TRACE</div><canvas id="afr-cv" height="70" style="width:100%"></canvas></div>
+</div>
+<!-- OBD-II -->
+<div id="tab-obd" class="tab">
+  <div class="pan"><div class="pt">OBD-II PID REQUEST</div>
+    <div class="row">
+      <button onclick="obdReq('0C','RPM')">RPM</button><button onclick="obdReq('0D','Speed')">Speed</button>
+      <button onclick="obdReq('05','CLT')">CLT</button><button onclick="obdReq('0F','IAT')">IAT</button>
+      <button onclick="obdReq('04','Load')">Load</button><button onclick="obdReq('11','TPS')">TPS</button>
+      <button onclick="obdReq('0B','MAP')">MAP</button><button onclick="obdReq('14','O2')">O2</button>
+      <button onclick="obdReq('2D','Knock')">Knock</button><button onclick="obdReq('M9','VIN')">VIN</button>
+    </div>
+    <div class="row">
+      <button onclick="dtcRead(3)">Active DTCs (03)</button><button onclick="dtcRead(7)">Pending (07)</button>
+      <button class="r" onclick="clearDTCs()">CLEAR (04)</button><button onclick="freezeFrame()">Freeze Frame</button>
+    </div>
+    <div class="mono" id="obd-out">Ready — select PID or DTC function</div>
+  </div>
+  <div class="pan"><div class="pt">UDS ISO 14229</div>
+    <div class="row">
+      <button onclick="uds('0x10','SessCtrl')">0x10</button><button onclick="uds('0x11','ECUReset')">0x11</button>
+      <button onclick="uds('0x19','ReadDTC')">0x19</button><button onclick="uds('0x22','ReadDID')">0x22</button>
+      <button onclick="uds('0x27','SecAccess')">0x27</button><button onclick="uds('0x2E','WriteData')">0x2E</button>
+      <button onclick="uds('0x31','Routine')">0x31</button><button onclick="uds('0x3E','TesterPres')">0x3E</button>
+    </div>
+    <div class="mono" id="uds-out">Select UDS service</div>
+  </div>
+</div>
+<!-- SCOPE -->
+<div id="tab-scope" class="tab">
+  <div class="pan">
+    <div class="pt"><span>OSCILLOSCOPE</span><button class="g" style="font-size:10px;padding:2px 7px" onclick="openSov()">&#9638; EXPAND</button></div>
+    <div class="row">
+      <label style="color:#00ff41;font-size:10px">CH1:&nbsp;<select id="ch1" class="hs" style="max-width:150px"></select></label>
+      <label style="color:#ffb000;font-size:10px">CH2:&nbsp;<select id="ch2" class="hs" style="max-width:150px"></select></label>
+    </div>
+    <div id="crank-lbl" style="color:#cc44ff;font-size:9px;margin-bottom:3px"></div>
+    <canvas id="scope-cv" height="210" style="width:100%"></canvas>
+    <div id="srz"></div>
+    <div id="scope-leg" style="display:flex;gap:12px;margin-top:4px;font-size:10px;flex-wrap:wrap"></div>
+  </div>
+</div>
+<!-- CAN/LIN -->
+<div id="tab-can" class="tab">
+  <div class="pan"><div class="pt">J1939 — 250kbps 29-bit</div>
+    <div class="ts"><table class="ct"><thead><tr><th>Time</th><th>ID</th><th>PGN</th><th>Name</th><th>Data</th><th>Decoded</th></tr></thead><tbody id="j1-tb"></tbody></table></div>
+  </div>
+  <div class="pan"><div class="pt">OBD-II — 500kbps 11-bit&nbsp;<label style="font-size:10px;color:var(--txt);font-weight:normal"><input type="checkbox" id="ap-cb" onchange="E.can.autopoll=this.checked"> Auto-Poll</label></div>
+    <div class="ts"><table class="ct"><thead><tr><th>Time</th><th>ID</th><th>Dir</th><th>Data</th><th>Decoded</th></tr></thead><tbody id="obd-tb"></tbody></table></div>
+  </div>
+  <div class="pan"><div class="pt">LIN — 9.6kbps Body</div>
+    <div class="ts"><table class="ct"><thead><tr><th>ID</th><th>Node</th><th>Data</th><th>CHK</th></tr></thead><tbody id="lin-tb"></tbody></table></div>
+  </div>
+  <div class="pan"><div class="pt">PROTOCOL ANALYZER&nbsp;<label style="font-size:10px;color:#ffe000;font-weight:normal"><input type="checkbox" id="cap-cb" onchange="E.can.capturing=this.checked"> CAPTURE</label>&nbsp;<button class="a" style="font-size:10px;padding:2px 7px" onclick="exportProto()">Export CSV</button></div>
+    <div class="ts"><table class="ct"><thead><tr><th>ID</th><th>D0</th><th>D1</th><th>D2</th><th>D3</th><th>D4</th><th>D5</th><th>D6</th><th>D7</th><th>Library Match</th></tr></thead><tbody id="proto-tb"></tbody></table></div>
+    <div style="margin-top:4px;font-size:9px;color:var(--gr)">Library: <span style="color:#00ddaa">0x7E8 RPM OBD</span>&nbsp;&nbsp;<span style="color:#00ddaa">0x3B0 Coolant GMLAN</span>&nbsp;&nbsp;<span style="color:#00ddaa">0x540 VVT Position</span>&nbsp;&nbsp;<span style="color:#00ddaa">0x641 Boost Ford MS-CAN</span></div>
+  </div>
+</div>
+<!-- TUNE -->
+<div id="tab-tune" class="tab">
+  <div class="pan">
+    <div class="pt"><span id="tune-title">VE MAP — 9x12 RPM/MAP</span>
+      <span><button onclick="showTune('ve')" id="tb-ve" class="act" style="font-size:10px;padding:2px 6px">VE</button>
+      <button onclick="showTune('ign')" id="tb-ign" style="font-size:10px;padding:2px 6px">IGN</button>
+      <button onclick="showTune('afr')" id="tb-afr" style="font-size:10px;padding:2px 6px">AFR</button>
+      <button onclick="resetMaps()" class="a" style="font-size:10px;padding:2px 6px">RESET</button></span>
+    </div>
+    <div id="op-lbl" style="color:#00ff41;font-size:10px;margin-bottom:4px">Op-point: loading...</div>
+    <div class="tune-wrap"><table class="tmap" id="tune-tbl"></table></div>
+    <div style="margin-top:4px;font-size:9px;color:var(--gr)">Touch cell to edit. Green outline = current operating point.</div>
+  </div>
+</div>
+<!-- CORR -->
+<div id="tab-corr" class="tab">
+  <div class="pan"><div class="pt">CLT ENRICHMENT (% vs °C)</div><div class="row" id="clt-corr-row"></div></div>
+  <div class="pan"><div class="pt">IAT CORRECTION (% vs °C)</div><div class="row" id="iat-corr-row"></div></div>
+  <div class="pan"><div class="pt">INJECTOR DEAD TIME (ms vs Battery V)</div><div class="row" id="dt-corr-row"></div></div>
+  <div class="pan"><div class="pt">IDLE RPM TARGET (RPM vs CLT °C)</div><div class="row" id="idle-corr-row"></div></div>
+  <div style="color:var(--gr);font-size:9px;margin-top:4px">Values update engine physics live. Touch to edit.</div>
+</div>
+<!-- MODULES -->
+<div id="tab-mods" class="tab">
+  <div class="pan"><div class="pt">MODULE SELECT</div><div class="row" id="mod-nav"></div></div>
+  <div id="mod-content"></div>
+</div>
+<!-- PROBE -->
+<div id="tab-probe" class="tab">
+  <div class="pan"><div class="pt">POWER PROBE — DMM</div>
+    <div id="probe-big">12.600 V</div>
+    <div class="pmg">
+      <div class="pmc"><div class="pml">AMPS</div><div class="pmv" id="pm-a" style="color:#00e5e5">---</div></div>
+      <div class="pmc"><div class="pml">OHMS</div><div class="pmv" id="pm-ohm" style="color:#ffb000">---</div></div>
+      <div class="pmc"><div class="pml">Hz</div><div class="pmv" id="pm-hz" style="color:#cc44ff">---</div></div>
+      <div class="pmc"><div class="pml">DUTY %</div><div class="pmv" id="pm-dc" style="color:#ffe000">---</div></div>
+    </div>
+    <div class="row" id="probe-modes-row"></div>
+    <div class="mono" id="probe-out" style="min-height:36px">Select test mode above</div>
+  </div>
+  <div class="pan"><div class="pt">COMPONENT ACTIVATION</div>
+    <div class="row" id="actuator-row"></div>
+    <div class="mono" id="act-out" style="min-height:36px">Select component to actuate</div>
+  </div>
+  <div class="pan"><div class="pt">CYLINDER CONTRIBUTION TEST</div>
+    <div class="row" id="cyl-kill-row"></div>
+    <div id="cyl-kill-lbl" style="color:#00ff41;font-size:10px;margin-top:3px">All cylinders active — RPM baseline established</div>
+  </div>
+</div>
+<!-- SENSORS -->
+<div id="tab-sens" class="tab">
+  <div class="pan"><div class="pt">LIVE SENSOR READOUTS</div><div class="sg" id="sens-grid"></div></div>
+</div>
+<!-- FAULTS -->
+<div id="tab-faults" class="tab">
+  <div class="pan"><div class="pt">ENGINE FAULT INJECTION</div><div id="fault-rows"></div></div>
+  <div class="pan"><div class="pt">MISFIRE INJECTION</div><div class="row" id="miss-row"></div><div style="color:var(--gr);font-size:9px">Kills a cylinder — RPM drop, AFR variance, P030x DTC</div></div>
+  <div class="pan"><div class="pt">ACTIVE DTCs</div><div class="mono" id="active-dtcs" style="color:#ff3030">No active DTCs</div><div class="row" style="margin-top:5px"><button class="r" onclick="clearDTCs()">CLEAR ALL DTCs</button></div></div>
+  <div class="pan"><div class="pt">STORED DTCs</div><div class="mono" id="stored-dtcs" style="color:#ffb000">No stored DTCs</div></div>
+</div>
+<!-- SERVICE -->
+<div id="tab-service" class="tab">
+  <div class="pan"><div class="pt">SERVICE PROCEDURES</div><div class="row" id="svc-nav"></div><div id="svc-content"></div></div>
+</div>
+<!-- BUILD -->
+<div id="tab-build" class="tab">
+  <div class="pan"><div class="pt">ECU SCHEMATICS</div><div id="schema-list"></div></div>
+  <div class="pan"><div class="pt">TRIGGER PATTERNS</div><div id="trig-list"></div></div>
+  <div class="pan"><div class="pt">INJECTOR DATABASE + DEAD TIME CALC</div>
+    <div id="inj-list"></div>
+    <div class="row" style="margin-top:7px">
+      <label style="color:var(--txt);font-size:10px">Inj:&nbsp;<select id="inj-sel" class="hs" style="max-width:190px"></select></label>
+      <label style="color:var(--txt);font-size:10px">V:&nbsp;<input type="number" id="inj-v" value="13.5" step="0.1" style="width:52px"></label>
+      <button class="a" onclick="calcDT()">CALC</button>
+    </div>
+    <div class="mono" id="dt-res" style="min-height:24px"></div>
+  </div>
+  <div class="pan"><div class="pt">TRANSMISSION PROFILES</div><div id="trans-list"></div>
+    <div style="color:#4499ff;font-size:9px;margin-top:4px">Toyota EVT = planetary gearset. Allison = J1939 250kbps.</div>
+  </div>
+  <div class="pan"><div class="pt">CURRENT ENGINE CONFIG</div><div class="mono" id="eng-cfg"></div></div>
+</div>
+<!-- LOG -->
+<div id="tab-log" class="tab">
+  <div class="pan">
+    <div class="pt"><span>DATA LOGGER</span>
+      <span><button id="log-btn" class="g" onclick="toggleLog()" style="font-size:10px;padding:2px 8px">&#9679; START</button>
+      <button class="a" onclick="exportCSV()" style="font-size:10px;padding:2px 8px">CSV</button>
+      <button class="r" onclick="clearLog()" style="font-size:10px;padding:2px 8px">CLEAR</button></span>
+    </div>
+    <div class="log-mini" id="log-mini"></div>
+    <div id="log-count" style="color:var(--gr);font-size:9px;margin-bottom:4px">0 rows logged</div>
+    <div class="ts"><table class="ct" id="log-tbl"><thead><tr id="log-hdr"></tr></thead><tbody id="log-body"></tbody></table></div>
+  </div>
+</div>
+<!-- CONFIG -->
+<div id="tab-config" class="tab">
+  <div class="pan"><div class="pt">ENVIRONMENT</div>
+    <div id="cfg-sliders"></div>
+    <div class="row" style="margin-top:6px"><span style="color:var(--txt);font-size:10px">Fuel:</span><div id="fuel-btns" class="row"></div></div>
+  </div>
+  <div class="pan"><div class="pt">BOOST CONTROL</div>
+    <div class="row">
+      <label style="color:var(--txt);font-size:10px"><input type="checkbox" id="boost-en" checked onchange="E.env.boost_enabled=this.checked?1:0"> Enabled</label>
+      <label style="color:var(--txt);font-size:10px">Target psi:&nbsp;<input type="number" id="boost-tgt" value="14" step="1" style="width:50px;color:#ff6600"></label>
+      <button class="a" onclick="E.env.boost_target=parseFloat(document.getElementById('boost-tgt').value)||14;showToast('Boost: '+E.env.boost_target+'psi')">SET</button>
+    </div>
+  </div>
+  <div class="pan"><div class="pt">ABOUT</div>
+    <div style="color:var(--gr);font-size:10px;line-height:2.2">
+      <span style="color:#00ff41">MECHANIC'S CYBERKNIFE v3.8 — PIP-BOY EDITION</span><br>
+      Single .html — save/share/offline · Add to home screen → app icon<br>
+      Full v3.7 feature parity · Rotary knob mode selector · CRT phosphor aesthetic<br>
+      12 engine profiles · 6 trans · 7 fuel types · Hybrid/HV<br>
+      J1939 · OBD-II · LIN · Protocol Analyzer · Fault injection<br>
+      ECU maps · STFT/LTFT/Knock · Service library 7 makes · Data logger
+    </div>
+  </div>
+</div>
+</div><!-- /con -->
+<!-- SCOPE OVERLAY -->
+<div id="sov">
+  <div class="oc">
+    <button class="r" onclick="closeSov()">&#10005; CLOSE</button>
+    <label style="color:#00ff41;font-size:10px">CH1:&nbsp;<select id="ov-c1" class="hs" style="max-width:145px"></select></label>
+    <label style="color:#ffb000;font-size:10px">CH2:&nbsp;<select id="ov-c2" class="hs" style="max-width:145px"></select></label>
+    <label style="color:#cc44ff;font-size:10px">CH3:&nbsp;<select id="ov-c3" class="hs" style="max-width:145px"></select></label>
+    <button class="a" id="frz-btn" onclick="freezeScope()">&#10074;&#10074; FREEZE</button>
+    <button onclick="snapScope()" style="font-size:10px">SNAP</button>
+    <span id="ov-crank" style="color:#cc44ff;font-size:9px;margin-left:4px"></span>
+  </div>
+  <canvas id="sov-cv"></canvas>
+  <div id="sov-leg" style="display:flex;gap:12px;margin-top:4px;font-size:10px;flex-wrap:wrap"></div>
+</div>
+<!-- GAUGE CONTEXT MENU -->
+<div id="cm">
+  <h4 id="cm-title">GAUGE OPTIONS</h4>
+  <div class="cr"><span class="cl">SIZE</span><button id="cm-s" onclick="setGSz('s')">S</button><button id="cm-m" onclick="setGSz('m')">M</button><button id="cm-l" onclick="setGSz('l')">L</button></div>
+  <div class="cr"><span class="cl">PIN</span><button id="cm-pin" onclick="togglePin()">Pin to top</button></div>
+  <div class="cr" style="justify-content:flex-end"><button onclick="closeCM()">&#10005;</button></div>
+</div>
+<div id="sbo" onclick="closeSBE()"></div>
+<div id="sbe">
+  <h3>&#9881; STATUS BAR — tap to show/hide</h3>
+  <div id="sbe-list"></div>
+  <div class="row" style="margin-top:7px"><button class="g" onclick="closeSBE()">DONE</button><button onclick="sbReset()">RESET ALL</button></div>
+</div>
+<div id="toast"></div>
+<script>
+// ════════════════════════════════════════
+// DATA
+// ════════════════════════════════════════
+const RPM_B=[500,1000,1500,2000,2500,3000,3500,4000,4500,5000,5500,6000];
+const MAP_B=[20,30,40,50,60,70,80,90,100];
+const EP={
+  i4_na:    {name:"I4 NA 2.0L",       cyl:4,disp:2.0,cr:10.2,idle:800,maxr:7200,maxb:0, inj:"PFI", diesel:0,turbo:0,glow:0,oi:25,oc:50,egt:650,pat:"60-2",fir:[1,3,4,2]},
+  v6_na:    {name:"V6 NA 3.5L",        cyl:6,disp:3.5,cr:10.8,idle:700,maxr:6800,maxb:0, inj:"PFI", diesel:0,turbo:0,glow:0,oi:28,oc:55,egt:660,pat:"60-2",fir:[1,2,3,4,5,6]},
+  v8_na:    {name:"V8 NA 5.7L",        cyl:8,disp:5.7,cr:9.5, idle:650,maxr:6500,maxb:0, inj:"SFI", diesel:0,turbo:0,glow:0,oi:25,oc:45,egt:680,pat:"58x", fir:[1,8,4,3,6,5,7,2]},
+  i4_turbo: {name:"I4 Turbo 2.0T",     cyl:4,disp:2.0,cr:9.0, idle:800,maxr:6800,maxb:18,inj:"DI",  diesel:0,turbo:1,glow:0,oi:30,oc:60,egt:720,pat:"60-2",fir:[1,3,4,2]},
+  v6_turbo: {name:"V6 BiTurbo 3.0T",   cyl:6,disp:3.0,cr:9.3, idle:700,maxr:6500,maxb:16,inj:"DI",  diesel:0,turbo:1,glow:0,oi:35,oc:65,egt:750,pat:"60-2",fir:[1,4,2,5,3,6]},
+  v8_turbo: {name:"V8 SC 6.2L",        cyl:8,disp:6.2,cr:9.1, idle:650,maxr:6200,maxb:9, inj:"SFI", diesel:0,turbo:1,glow:0,oi:30,oc:55,egt:760,pat:"58x", fir:[1,8,4,3,6,5,7,2]},
+  i4_diesel:{name:"I4 Diesel 2.2L",    cyl:4,disp:2.2,cr:16.5,idle:850,maxr:4800,maxb:22,inj:"CRDI",diesel:1,turbo:1,glow:1,oi:35,oc:65,egt:580,pat:"36-1",fir:[1,3,4,2]},
+  v6_diesel:{name:"V6 TDI 3.0L",       cyl:6,disp:3.0,cr:16.8,idle:800,maxr:4500,maxb:24,inj:"CRDI",diesel:1,turbo:1,glow:1,oi:40,oc:70,egt:590,pat:"36-1",fir:[1,4,2,5,3,6]},
+  i6_hd:    {name:"I6 HD Diesel 6.7L", cyl:6,disp:6.7,cr:17.3,idle:700,maxr:3400,maxb:35,inj:"CRDI",diesel:1,turbo:1,glow:1,oi:45,oc:80,egt:540,pat:"36-1",fir:[1,5,3,6,2,4]},
+  v8_hd:    {name:"V8 HD Diesel 6.6L", cyl:8,disp:6.6,cr:17.5,idle:750,maxr:3200,maxb:30,inj:"CRDI",diesel:1,turbo:1,glow:1,oi:45,oc:80,egt:545,pat:"58x", fir:[1,8,4,3,6,5,7,2]},
+  i6_semi:  {name:"I6 Semi 15L",        cyl:6,disp:15, cr:18.0,idle:600,maxr:2100,maxb:45,inj:"CRDI",diesel:1,turbo:1,glow:0,oi:50,oc:90,egt:510,pat:"36-1",fir:[1,5,3,6,2,4]},
+  i6_cat:   {name:"I6 Cat 13L",         cyl:6,disp:13, cr:17.5,idle:600,maxr:2100,maxb:42,inj:"CRDI",diesel:1,turbo:1,glow:0,oi:50,oc:88,egt:515,pat:"36-1",fir:[1,5,3,6,2,4]},
+};
+const TP={
+  "6spd":   {name:"6L80 Auto",    gears:6,ratios:[4.03,2.36,1.53,1.15,0.85,0.67],final:3.42,li:70,ld:140},
+  "8spd":   {name:"8HP Auto",     gears:8,ratios:[4.71,3.14,2.11,1.67,1.29,1.0,0.84,0.67],final:3.15,li:75,ld:145},
+  "cvt":    {name:"CVT Belt",     gears:0,ratios:[2.5,1.0,0.45],final:4.1,li:50,ld:200},
+  "dct":    {name:"DCT 7-spd",    gears:7,ratios:[3.9,2.7,1.93,1.45,1.17,0.95,0.81],final:3.06,li:80,ld:160},
+  "allison":{name:"Allison 1000", gears:6,ratios:[3.51,1.9,1.42,1.0,0.75,0.64],final:3.73,li:90,ld:175},
+  "prius":  {name:"Toyota EVT",   gears:0,ratios:[2.4,1.0,0.4],final:3.267,li:0,ld:0},
+};
+const FS_={E10:14.5,E85:9.8,"91oct":14.7,"93oct":14.7,"98oct":14.7,diesel:14.5,B20:14.1};
+const SIGS=["Wideband O2","Narrowband O2","MAP Sensor","TPS","CLT","IAT","Battery","Injector PW","Crank Signal","Cam Signal","Ignition Pri","Knock Sensor","EGT","Oil Pressure","Boost Pressure"];
+const SCOL={"Wideband O2":"#00ff41","Narrowband O2":"#ff8844","MAP Sensor":"#4499ff","TPS":"#ffe000","CLT":"#ff3030","IAT":"#00e5e5","Battery":"#cc44ff","Injector PW":"#ffb000","Crank Signal":"#00ff41","Cam Signal":"#aaffcc","Ignition Pri":"#ff6644","Knock Sensor":"#ff4488","EGT":"#ff9900","Oil Pressure":"#33ddaa","Boost Pressure":"#dd88ff"};
+const SVC={
+  generic:[["Oil Reset","0x31 0xA100","Resets oil life 100% — key cycle after"],["Throttle Relearn","Disconnect bat 10min idle 10min","IAC/DBW adaptation"],["EVAP Test","Mode01 PID 41","Leak readiness — cold soak needed"],["DPF Regen","0x31 0xBF00",">60kph sustained EGT 550-650 C"],["AdBlue Reset","0x2E 0xD003","Reset DEF timer after fill"],["Steering Cal","0x31 0xF0A1","Level ground, steering centered"],["EPB Service","0x31 0x0206","Retract calipers for pad swap"],["Idle Relearn","Warm idle 10min, drive 30min","Relearns fueling LTFT windows"]],
+  bmw:[["CBS Reset","Kombi 0x31 service cat","BMW Condition Based Service"],["Trans Svc","ZGM 0x31 0x6020 01 00","Change at 80k, not lifetime"],["Injector Coding","DME 0x2E 0x12AB 8-byte","8-digit flow code on injector"],["DME Adapt Clear","0x31 0xFF01 01","Clear fuel/idle/misfire adapts"],["VANOS Adapt","0x31 0x9000","Cam phaser relearn after timing"],["Battery Reg","BMS 0x2E 0xC840","Register Ah and chemistry into BMS"],["EGS Adapt","EGS 0x31 0xE100","Shift adapts — new fluid or component"]],
+  ford:[["KAM Reset","PCM 0x11 01","Clear KAM — 40min idle relearn"],["PATS Key","PCM 0x27 + 0x2E","Needs 2 existing keys or override"],["MS-CAN Actuator","BCM 0x31 at 125kbps","Ford body separate 125kbps bus"],["Injector Char","0x2E 0xF00A 4B/cyl","Flow offset codes per cylinder"],["ETC Throttle","0x31 0xF080 01","Idle hot, no loads, 10 min"],["DPS6 Clutch","TCM 0x31 0x0600","PowerShift kiss-point 10 slow engagements"]],
+  gm:[["KAM Reset","0x27 seed+key 0x11 03","Clear idle/fuel/trans adapts"],["CASE Relearn","Fixed idle, throttle cycles","CKP pattern after crank/sensor"],["AFM Check","PCM 0x22 0xB003","Active Fuel Mgmt P3400/P3401"],["Allison Reset","TCM 0x2E 0x4501","TranSynd interval — J1939 250kbps"],["TPMS Relearn","Drive>25kph 10min","Schrader 315MHz FL-FR-RL-RR"],["Inj Balance","PCM 0x31 0xA105 01","Per-cyl fuel trim — all cyls needed"]],
+  toyota:[["Throttle Relearn","IGN ON-OFF-5sec idle 10min","Sub-throttle valve relearn"],["VSC Cal","Chassis 0x31 0x0234","Yaw/lateral G — level stationary"],["D4-S Injector","ECM 0x2E 0x01A5 12 bytes","GR engine injector flow codes"],["HV Inspect","HV ECU 0x22 0x0281","Cell spread >0.3V = failing pack"],["EPB Bleed","Skid ECU 0x31 0x0100","ABS open — 2 operators needed"],["Speedo Cal","Combo meter 0x2E ratio","Required after tire size change"]],
+  vw:[["TDI DPF Reset","ECM 0x31 routine 0x03","After new DPF — reset ash counter"],["Injector IQ","ECM 0x2E 0x0100 8 codes","IQ codes on injector body"],["DSG Reset","Mechatronic 0x2E counter","After fluid+filter change"],["Throttle Adapt","Basic settings group 060","Lower stop then upper stop"],["AdBlue Quality","ECM 0x31 0x4401","NOx sensor baseline after exhaust"],["Air Mass Adapt","Basic settings 0x0023","MAF adaptation after replacement"]],
+  hd:[["Cummins Clear","J1939 DM11 PGN 0xFEDA","HD DTC clear tester addr 0xF9"],["DDEC Reset","SPN 2848 FMI 14","Detroit Diesel J1939 proprietary SPNs"],["Allison Cal","Allison DOC 250kbps 29-bit","Shift cals — DOC or J1939 tool"],["Regen Force","J1939 0x31 DPF >95% soot","Neutral PTO-off park-brake 1200rpm"],["EGR Cal","J1939 DM7 PGN 0xC300","EGR valve cal after cleaning"],["Inj Trim HD","EEPROM via J2534","INSITE/DDDL — individual cyl trim"]],
+};
+const TRIGGERS={"60-2":"Toyota/Ford/GM — most common petrol","36-1":"Diesel CRDI / VAG TDI","58x":"GM LS/LT reluctor wheel","4+1":"Early TBI — distributor","Sub6+2":"Subaru EJ series","36-1+1":"Mitsubishi CAS","EDIS36-1":"Ford EDIS distributorless","GM7x":"HEI distributor"};
+const INJ={"Bosch EV1 Yellow (0280156065)":{flow:235,dt14:.80},"Bosch EV14 Green (0280158040)":{flow:440,dt14:.58},"Siemens Deka (06A906031)":{flow:630,dt14:.65},"Denso 550cc (23250-46090)":{flow:550,dt14:.62},"FIC 1650cc High-Z":{flow:1650,dt14:.45},"Denso CRDI Common Rail":{flow:0,dt14:0}};
+const SCHEMAS=[["4-Cyl PFI Petrol (Speeduino UA4C)","4x inj, 4x coil, CKP 60-2, CMP, CLT, IAT, TPS, MAP, O2, IAC"],["6-Cyl DI Turbo","6x DI hi-press, 6x COP, boost sol, WBO2, flex fuel"],["Diesel CRDI","Hi-press rail, metering valve, inj solenoid/piezo, glow, EGR"],["V8 NA Carb-to-EFI","8x MPFI, distributor trigger, O2, alpha-N TPS map"],["TCU 6-speed Auto","3x shift sol, TCC sol, line press PWM, TFT sensor, shaft speeds"]];
+const FD=[["fault_o2","O2 SENSOR FAIL","Stuck low — open loop, no EGO, lean undetected"],["fault_map","MAP SENSOR FAIL","Stuck 50kPa — wrong VE lookup, stale fueling"],["fault_clt","CLT SENSOR OPEN","Reads -40 C — locked in cold start enrichment"],["fault_lean","VACUUM LEAK","Unmetered air — lean AFR, STFT chases positive"],["fault_ign","RETARDED TIMING","10 pulled — power loss, detonation risk at WOT"],["fault_inj","STUCK OPEN INJECTOR","Shorted driver — flooding, hydrolocking risk"]];
+const J1939P={"F004":["EEC1","Engine Speed"],"FEFF":["EEC2","Throttle"],"FEF5":["CCVS","Veh Speed"],"FEEE":["ET1","Eng Temps"],"FEEF":["EFL","Fluid/Press"],"FEF6":["LFC","Fuel Rate"]};
+const COMMUNITY=[{id:"0x7E8",name:"RPM OBD"},{id:"0x3B0",name:"Coolant GMLAN"},{id:"0x540",name:"VVT Position"},{id:"0x641",name:"Boost Ford MS-CAN"}];
+const LINNODES={"0x01":"HVAC","0x02":"Mirror","0x10":"Window","0x20":"Seat","0x3C":"Lighting"};
+const GAUGEDEFS=[
+  {lbl:"RPM",attr:"rpm",col:"#00ff41",fmt:v=>Math.round(v)},
+  {lbl:"MAP kPa",attr:"map_kpa",col:"#4499ff",fmt:v=>v.toFixed(1)},
+  {lbl:"TPS %",attr:"tps",col:"#ffe000",fmt:v=>v.toFixed(1)},
+  {lbl:"CLT C",attr:"clt",col:"#ff3030",fmt:v=>v.toFixed(1)},
+  {lbl:"IAT C",attr:"iat",col:"#00e5e5",fmt:v=>v.toFixed(1)},
+  {lbl:"AFR",attr:"afr",col:"#00ff41",fmt:v=>v.toFixed(2)},
+  {lbl:"Lambda",attr:"lam",col:"#00ff41",fmt:v=>v.toFixed(3)},
+  {lbl:"STFT %",attr:"stft",col:"#00ff41",fmt:v=>v.toFixed(1)},
+  {lbl:"LTFT %",attr:"ltft",col:"#00ff41",fmt:v=>v.toFixed(1)},
+  {lbl:"IGN deg",attr:"adv",col:"#00e5e5",fmt:v=>v.toFixed(1)},
+  {lbl:"KNOCK deg",attr:"kret",col:"#00ff41",fmt:v=>v.toFixed(1)},
+  {lbl:"EGT C",attr:"egt",col:"#ff6600",fmt:v=>Math.round(v)},
+  {lbl:"PW ms",attr:"pw",col:"#ffb000",fmt:v=>v.toFixed(2)},
+  {lbl:"DC %",attr:"dc",col:"#ffb000",fmt:v=>v.toFixed(1)},
+  {lbl:"VE %",attr:"ve_live",col:"#4499ff",fmt:v=>v.toFixed(1)},
+  {lbl:"OIL psi",attr:"oil",col:"#00ddaa",fmt:v=>v.toFixed(1)},
+  {lbl:"BAT V",attr:"batt",col:"#cc44ff",fmt:v=>v.toFixed(2)},
+  {lbl:"SPEED kph",attr:"spd",col:"#ffe000",fmt:v=>v.toFixed(1)},
+  {lbl:"BOOST psi",attr:"boost_psi",col:"#ff6600",fmt:v=>v.toFixed(1)},
+  {lbl:"GEAR",attr:"gear",col:"#cc44ff",fmt:v=>E.trans.gears===0?"CVT":String(v)},
+  {lbl:"DWELL ms",attr:"dwell",col:"#00e5e5",fmt:v=>v.toFixed(2)},
+  {lbl:"KNOCK CNT",attr:"kcnt",col:"#ff3030",fmt:v=>String(v)},
+];
+// ════════════════════════════════════════
+// MATH + MAPS
+// ════════════════════════════════════════
+function rn(){let u=0,v=0;while(!u)u=Math.random();while(!v)v=Math.random();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);}
+function i1(xs,ys,v){if(v<=xs[0])return ys[0];if(v>=xs[xs.length-1])return ys[ys.length-1];for(let i=0;i<xs.length-1;i++)if(xs[i]<=v&&v<=xs[i+1]){const t=(v-xs[i])/(xs[i+1]-xs[i]);return ys[i]+t*(ys[i+1]-ys[i]);}return ys[ys.length-1];}
+function ib_(bins,v){for(let i=0;i<bins.length;i++)if(v<=bins[i])return i;return bins.length-1;}
+function i2(tbl,rpm,kpa){const ri=ib_(RPM_B,rpm),mi=ib_(MAP_B,kpa),r0=Math.max(0,ri-1),r1=Math.min(11,ri),m0=Math.max(0,mi-1),m1=Math.min(8,mi);const rx=Math.max(0,Math.min(1,(rpm-RPM_B[r0])/Math.max(RPM_B[r1]-RPM_B[r0],1)));const mx2=Math.max(0,Math.min(1,(kpa-MAP_B[m0])/Math.max(MAP_B[m1]-MAP_B[m0],1)));return tbl[m0][r0]*(1-rx)*(1-mx2)+tbl[m0][r1]*rx*(1-mx2)+tbl[m1][r0]*(1-rx)*mx2+tbl[m1][r1]*rx*mx2;}
+function cl(v,lo,hi){return Math.max(lo,Math.min(hi,v));}
+function h2(n){return n.toString(16).padStart(2,'0').toUpperCase();}
+const M={};
+function buildMaps(){
+  M.ve=[];M.ign=[];M.afr=[];
+  for(let mi=0;mi<9;mi++){M.ve[mi]=[];M.ign[mi]=[];M.afr[mi]=[];
+    for(let ri=0;ri<12;ri++){
+      M.ve[mi][ri]=cl(Math.round(38+62*(mi/8)*(0.55+0.45*Math.exp(-0.5*((ri-6)/3.2)**2))+rn()),20,108);
+      M.ign[mi][ri]=cl(Math.round(8+ri*1.9*(1-(mi/8)*0.5)+rn()*0.3),0,45);
+      M.afr[mi][ri]=mi/8>.85?+(12.5+(ri/11)*0.8).toFixed(2):mi/8<.25?+(15.2+(ri/11)*0.4).toFixed(2):+(14.7+rn()*.1).toFixed(2);
+    }
+  }
+  M.req_fuel=7.2;M.soft_cut=6800;M.hard_cut=7200;M.accel_mult=1.6;M.knock_step=2.5;M.knock_max=12;M.knock_rec=0.3;M.fuel_psi=43.5;
+  M.clt_ax=[-40,-20,0,20,40,60,80,90,100];M.clt_corr=[185,162,142,122,111,105,100,100,98];
+  M.iat_ax=[-40,-20,0,20,40,60,80,100];M.iat_corr=[114,109,105,100,96,91,85,78];
+  M.dt_v=[8,9,10,11,12,13,14,15];M.dt_ms=[1.9,1.6,1.35,1.1,0.9,0.8,0.7,0.65];
+  M.idle_ax=[0,20,40,60,80,90];M.idle_rpm=[1500,1300,1050,900,850,800];
+}
+function bBoost(p){const mb=p.maxb;M.boost=[];for(let mi=0;mi<9;mi++){M.boost[mi]=[];for(let ri=0;ri<12;ri++)M.boost[mi][ri]=cl(mb*(0.2+ri/11*0.8)*(0.3+mi/8*0.7)+rn()*0.3,0,mb);}}
+// ════════════════════════════════════════
+// ENGINE STATE
+// ════════════════════════════════════════
+const E={profile:EP.i4_na,trans:TP["6spd"],env:{altitude:0,ambient_temp:20,fuel_type:"E10",boost_enabled:1,boost_target:14,cond_override:"auto",road_grade:0},rpm:800,map_kpa:35,tps:0,clt:20,iat:20,batt:12.6,gear:1,spd:0,afr:14.7,lam:1,pw:3,dc:0,dwell:3.5,adv:10,egt:600,oil:45,stft:0,ltft:0,ego:0,kret:0,klvl:0,kcnt:0,at_:0,ptps:0,ptt:Date.now(),rtgt:800,st:0,scenario:"warmup",active_dtcs:[],stored_dtcs:[],fault_o2:0,fault_map:0,fault_clt:0,fault_miss:0,fault_lean:0,fault_ign:0,fault_inj:0,cyl_kill:new Array(8).fill(0),ve_live:0,ign_live:0,afr_tgt:14.7,accel:0,boost_psi:0,glow_ready:0,hv_soc:68,hv_voltage:201.6,hv_current:0,mg1_rpm:0,mg2_rpm:0,can:{j1939:[],obd:[],lin:[],proto:[],autopoll:0,capturing:0,_jt:0,_ot:0,_lt:0},scope:{bufs:{},t:0}};
+SIGS.forEach(k=>E.scope.bufs[k]=[]);
+function resetE(){const p=E.profile;Object.assign(E,{rpm:p.idle,map_kpa:35,tps:0,clt:20,iat:20,batt:12.6,gear:1,spd:0,afr:14.7,lam:1,pw:3,dc:0,dwell:3.5,adv:10,egt:600,oil:45,stft:0,ltft:0,ego:0,kret:0,klvl:0,kcnt:0,at_:0,ptps:0,ptt:Date.now(),rtgt:p.idle,st:0,scenario:"warmup",active_dtcs:[],stored_dtcs:[],fault_o2:0,fault_map:0,fault_clt:0,fault_miss:0,fault_lean:0,fault_ign:0,fault_inj:0,cyl_kill:new Array(8).fill(0),ve_live:0,ign_live:0,afr_tgt:14.7,accel:0,boost_psi:0,glow_ready:0,hv_soc:68,hv_voltage:201.6,hv_current:0,mg1_rpm:0,mg2_rpm:0});bBoost(p);SIGS.forEach(k=>E.scope.bufs[k]=[]);}
+// ════════════════════════════════════════
+// PHYSICS
+// ════════════════════════════════════════
+function autoScen(dt){const p=E.profile,c=E.st%150;if(c<20){E.scenario="warmup";E.tps=Math.max(0,.5+rn()*.3);E.gear=1;}else if(c<40){E.scenario="cruise";E.tps=Math.max(0,22+Math.sin(E.st*.1)*5);E.gear=3;E.rtgt=2200+Math.sin(E.st*.08)*200;}else if(c<60){E.scenario="wot";E.tps=Math.min(100,98+rn()*.5);E.gear=2;E.rtgt=Math.min(p.maxr*.9,E.rtgt+40);}else if(c<80){E.scenario="decel";E.tps=0;E.gear=4;E.rtgt=Math.max(p.idle,E.rtgt-70);}else if(c<100){E.scenario="hwy";E.tps=Math.max(0,35+rn()*2);E.gear=4;E.rtgt=p.diesel?1800:3000+rn()*100;}else{E.scenario="idle";E.tps=Math.max(0,.2+rn()*.2);E.gear=1;E.rtgt=p.idle;}if(E.env.road_grade>0)E.rtgt+=E.env.road_grade*30;}
+function applyCond(cond,dt){const p=E.profile,c={warmup:[.5,1,p.idle*1.3],idle:[.2,1,p.idle],cruise:[25,4,2200],wot:[100,2,Math.min(p.maxr*.9,E.rtgt+30)],decel:[0,4,Math.max(p.idle,E.rtgt-50)],boost_test:[85,2,Math.min(p.maxr*.85,E.rtgt+20)]};if(c[cond]){E.tps=c[cond][0];E.gear=c[cond][1];E.rtgt=c[cond][2];E.scenario=cond;}else autoScen(dt);}
+function updDTCs(){const chk=[[E.batt<11,"P0562","Battery Voltage Low"],[E.oil<8&&E.rpm>500,"P0520","Oil Pressure Low"],[E.ltft>20,"P0171","Fuel Trim Lean B1"],[E.ltft<-20,"P0172","Fuel Trim Rich B1"],[E.kcnt>50,"P0325","Knock Sensor Circuit"],[E.fault_o2,"P0131","O2 Sensor Low B1S1"],[E.fault_miss>0,"P030"+E.fault_miss,"Cyl "+E.fault_miss+" Misfire"],[E.fault_clt,"P0117","ECT Sensor Low"],[E.fault_inj,"P0201","Injector Circuit Cyl1"]];const codes=E.active_dtcs.map(d=>d[0]);for(const[cond,code,desc]of chk)if(cond&&!codes.includes(code)){E.active_dtcs.push([code,desc]);if(!E.stored_dtcs.find(d=>d[0]===code))E.stored_dtcs.push([code,desc]);}}
+function step(dt){const p=E.profile,t=E.trans;E.st+=dt;E.env.cond_override!=="auto"?applyCond(E.env.cond_override,dt):autoScen(dt);if(E.tps<1)E.rtgt=i1(M.idle_ax,M.idle_rpm,E.clt)+rn()*15;const rm=p.maxr*(p.diesel?.85:1);E.rpm+=(E.rtgt-E.rpm)*3*dt+rn()*E.rpm*.003;E.rpm=cl(E.rpm,0,rm);const baro=Math.max(.6,1-(E.env.altitude/10000)*.12);let mt=cl(20+E.tps*.78-(E.rpm/rm)*8,15,105);if(E.fault_map)mt=50;if(E.fault_lean)mt+=8;mt*=baro;E.map_kpa+=(mt-E.map_kpa)*5*dt;E.map_kpa=cl(E.map_kpa,15,105);if(p.turbo&&E.env.boost_enabled){let tgt=Math.min(p.maxb,E.env.boost_target)*(E.tps/100);if(E.rpm<p.maxr*.3)tgt*=E.rpm/Math.max(p.maxr*.3,1);E.boost_psi+=(tgt-E.boost_psi)*2*dt;E.boost_psi=Math.max(0,E.boost_psi);E.map_kpa=Math.min(105,E.map_kpa+E.boost_psi*6.895*.1);}else E.boost_psi=0;E.ve_live=i2(M.ve,E.rpm,E.map_kpa);const stoich=FS_[E.env.fuel_type]||14.7;E.afr_tgt=i2(M.afr,E.rpm,E.map_kpa)*(stoich/14.7);E.ign_live=i2(M.ign,E.rpm,E.map_kpa);const cu=E.fault_clt?-40:E.clt,cc=i1(M.clt_ax,M.clt_corr,cu)/100,ic=i1(M.iat_ax,M.iat_corr,E.iat)/100,dead=i1(M.dt_v,M.dt_ms,E.batt);const now=Date.now(),rate=(E.tps-E.ptps)/Math.max((now-E.ptt)/1000,.001)*.1;E.ptps=E.tps;E.ptt=now;if(rate>M.accel_mult)E.at_=.35;E.accel=E.at_>0;const am=1+(E.at_>0)*(M.accel_mult-1)*(E.at_/.35);if(E.at_>0)E.at_=Math.max(0,E.at_-dt);const killed=E.cyl_kill.slice(0,p.cyl).filter(k=>k).length,ac=Math.max(1,p.cyl-killed),cf=p.cyl/ac;if(E.fault_inj){E.pw=99;E.dc=100;}else{const et=1+(E.stft+E.ltft)/100;E.pw=M.req_fuel*(E.ve_live/100)*(stoich/E.afr_tgt)*cc*ic*am*et*cf+dead;if(E.rpm>=M.hard_cut)E.pw=0;else if(E.rpm>=M.soft_cut&&Math.random()<.5)E.pw=0;const cy=120000/Math.max(E.rpm,100);E.dc=Math.min(100,(E.pw/cy)*100);}let ib=E.ign_live;if(E.fault_ign)ib=Math.max(0,ib-10);const risk=Math.max(0,(ib-25)/15)*(E.map_kpa/100)*(E.rpm/rm),mr=(E.fault_miss>0&&Math.random()<.15)?.4:0;if(Math.random()<(risk+mr)*.08){E.kret=Math.min(E.kret+M.knock_step,M.knock_max);E.klvl=Math.min(1,E.klvl+.4);E.kcnt++;}else{E.kret=Math.max(0,E.kret-M.knock_rec*dt*10);E.klvl=Math.max(0,E.klvl-.05);}E.adv=Math.max(0,ib-E.kret);E.dwell=Math.max(1.5,3.8*(13.5/Math.max(E.batt,8))-E.rpm*.0001);const ln=E.fault_lean?1.5:0;if(E.fault_o2){E.afr=E.afr_tgt+ln+rn()*.3;E.ego=0;}else if(E.fault_inj){E.afr=10.2+Math.random()*1.3;E.ego=0;}else E.afr=cl(E.afr_tgt+ln+rn()*.08,8,22);E.lam=E.afr/stoich;if(!E.fault_o2&&E.clt>75&&E.tps<80&&E.rpm<4500){E.ego=1;E.stft+=(E.afr_tgt-E.afr)*.8*dt;E.stft=cl(E.stft,-25,25);E.ltft+=E.stft*.003*dt;E.ltft=cl(E.ltft,-25,25);}else if(!E.fault_o2){E.stft*=.95;E.ego=0;}E.egt=cl(p.egt+(E.rpm/rm)*280+(E.map_kpa/100)*180+(E.lam-1)*100+rn()*5,200,1050);if(E.fault_clt)E.clt=-40+rn()*.5;else if(E.clt<90)E.clt+=((E.rpm/rm)*.35+(E.map_kpa/100)*.18)*dt;else E.clt=87+rn();E.iat+=(E.env.ambient_temp+E.rpm*.003-E.iat)*.01*dt+rn()*.1;const tv=E.rpm>900?14.2:12;E.batt=cl(E.batt+(tv-E.batt)*dt+rn()*.02,10,15);const gr=t.gears>0?t.ratios[cl(E.gear-1,0,t.gears-1)]:t.ratios[1];E.spd=Math.max(0,E.rpm/(gr*t.final)*p.disp/2*60/1000*.8);E.oil=cl(E.rpm<100?0:p.oi+(E.rpm/rm)*(p.oc-p.oi)+rn(),0,p.oc+15);E.glow_ready=p.glow&&E.clt<40;if(t.name==="Toyota EVT"){E.hv_soc=cl(E.hv_soc+(Math.random()-.5)*.2,20,80);E.hv_voltage=201.6*(E.hv_soc/80)*.9+rn();E.hv_current=(E.tps/100)*50+rn()*2;E.mg1_rpm=E.rpm*.4+rn()*10;E.mg2_rpm=E.spd*45+rn()*5;}updDTCs();}
+// ════════════════════════════════════════
+// SCOPE + CAN SIMULATION
+// ════════════════════════════════════════
+function scopeStep(dt){const sc=E.scope;sc.t+=dt;const f=Math.max(E.rpm/60,.1);const NP=180;const v={"Wideband O2":E.afr+Math.sin(sc.t*.3)*.4+rn()*.06,"Narrowband O2":E.lam<1?.15+Math.random()*.15:.8+Math.random()*.15,"MAP Sensor":E.map_kpa+Math.sin(sc.t*f*Math.PI*2)*3+rn()*.5,"TPS":E.tps+rn()*.2,"CLT":E.clt+rn()*.1,"IAT":E.iat+rn()*.1,"Battery":E.batt+Math.sin(sc.t*1.2)*.08+rn()*.01,"Injector PW":E.pw+rn()*.03,"Crank Signal":(Math.floor(sc.t*f*60)%60<58&&Math.sin(sc.t*f*2*Math.PI*30)>.2)?3.3:.1,"Cam Signal":Math.sin(sc.t*(f/2)*2*Math.PI)>.4?5:0,"Ignition Pri":(sc.t*f/2*2*Math.PI%(2*Math.PI))<(E.dwell/1000*Math.max(f/2,.01)*2*Math.PI)?12:0,"Knock Sensor":E.klvl*Math.sin(sc.t*800+rn())*2.5+rn()*.08,"EGT":E.egt+rn()*4,"Oil Pressure":E.oil+rn()*1.5,"Boost Pressure":E.boost_psi+rn()*.3};for(const k of SIGS){sc.bufs[k].push(v[k]);if(sc.bufs[k].length>NP)sc.bufs[k].shift();}}
+const JPGN=Object.keys(J1939P),LKEYS=Object.keys(LINNODES);
+function canStep(dt){const c=E.can;c._jt+=dt;c._ot+=dt;c._lt+=dt;const ts=((Date.now()/1000)%10000).toFixed(2),rb=()=>Array.from({length:8},()=>h2(~~(Math.random()*256))).join(' ');if(c._jt>.2){c._jt=0;const pgn=JPGN[~~(Math.random()*JPGN.length)],[nm,desc]=J1939P[pgn];c.j1939.push({t:ts,id:"0CF"+pgn+"00",pgn,name:nm,data:rb(),decoded:desc+" "+~~E.rpm});if(c.j1939.length>80)c.j1939.shift();}if(c._ot>.4&&c.autopoll){c._ot=0;const pids=["0C","0D","05","0F","04","11"],pid=pids[~~(Math.random()*pids.length)];c.obd.push({t:ts,id:"0x7DF",dir:"Req",data:"02 01 "+pid+" 00 00 00 00 00",decoded:""});c.obd.push({t:ts,id:"0x7E8",dir:"Resp",data:"04 41 "+pid+" "+h2(~~(Math.random()*256))+" 00 00",decoded:"PID "+pid});if(c.obd.length>80)c.obd.shift();}if(c._lt>.3){c._lt=0;const lid=LKEYS[~~(Math.random()*LKEYS.length)];c.lin.push({id:lid,node:LINNODES[lid],data:Array.from({length:4},()=>h2(~~(Math.random()*256))).join(' '),chk:h2(~~(Math.random()*256))});if(c.lin.length>30)c.lin.shift();}if(c.capturing){const lid="0x"+~~(Math.random()*0x7FF).toString(16).padStart(3,'0').toUpperCase(),data=Array.from({length:8},()=>h2(~~(Math.random()*256)));const match=(COMMUNITY.find(x=>x.id.toLowerCase()===lid.toLowerCase())||{}).name||"";c.proto.push({id:lid,data,match});if(c.proto.length>200)c.proto.shift();}}
+// ════════════════════════════════════════
+// GAUGE GRID
+// ════════════════════════════════════════
+const GS={};let gTarget=null;
+function buildGaugeGrid(){const gg=document.getElementById('gg');gg.innerHTML='';GAUGEDEFS.forEach((def,i)=>{const el=document.createElement('div');el.className='g';el.dataset.i=i;el.innerHTML=`<div class="gl">${def.lbl}</div><div class="gv" id="g${i}" style="color:${def.col}">--</div>`;let ht=null;const sh=e=>{ht=setTimeout(()=>{ht=null;showCM(i,el,e);},480);};const ch=()=>{if(ht){clearTimeout(ht);ht=null;}};el.addEventListener('mousedown',sh);el.addEventListener('touchstart',sh,{passive:true});el.addEventListener('mouseup',ch);el.addEventListener('touchend',ch);el.addEventListener('mouseleave',ch);gg.appendChild(el);});}
+function showCM(i,el,e){gTarget={i,el};const cm=document.getElementById('cm');document.getElementById('cm-title').textContent=GAUGEDEFS[i].lbl;const gs=GS[i]||{size:'m',pinned:false};['s','m','l'].forEach(s=>{const b=document.getElementById('cm-'+s);if(b)b.classList.toggle('act',gs.size===s);});document.getElementById('cm-pin').textContent=gs.pinned?'Unpin':'Pin to top';const x=e.touches?e.touches[0].clientX:e.clientX,y=e.touches?e.touches[0].clientY:e.clientY;cm.style.left=Math.min(x,window.innerWidth-165)+'px';cm.style.top=Math.min(y+8,window.innerHeight-130)+'px';cm.style.display='block';setTimeout(()=>document.addEventListener('click',outCM,{once:true}),10);}
+function outCM(e){if(!document.getElementById('cm').contains(e.target))closeCM();}
+function closeCM(){document.getElementById('cm').style.display='none';gTarget=null;}
+function setGSz(sz){if(!gTarget)return;const{i,el}=gTarget;if(!GS[i])GS[i]={size:'m',pinned:false};GS[i].size=sz;el.classList.remove('sz-s','sz-l');if(sz==='s')el.classList.add('sz-s');if(sz==='l')el.classList.add('sz-l');['s','m','l'].forEach(s=>{const b=document.getElementById('cm-'+s);if(b)b.classList.toggle('act',s===sz);});showToast('Gauge: '+sz.toUpperCase());}
+function togglePin(){if(!gTarget)return;const{i,el}=gTarget;if(!GS[i])GS[i]={size:'m',pinned:false};GS[i].pinned=!GS[i].pinned;el.classList.toggle('pinned',GS[i].pinned);document.getElementById('cm-pin').textContent=GS[i].pinned?'Unpin':'Pin to top';rebuildPins();showToast(GS[i].pinned?'Pinned':'Unpinned');}
+function rebuildPins(){const row=document.getElementById('pins');row.innerHTML='';const pins=GAUGEDEFS.filter((_,i)=>GS[i]&&GS[i].pinned);if(pins.length){row.classList.add('has');pins.forEach(def=>{const d=document.createElement('div');d.className='pg-pin';d.innerHTML=`<span class="pl">${def.lbl}</span><span class="pv" id="pin-${def.attr}" style="color:${def.col}">--</span>`;row.appendChild(d);});}else row.classList.remove('has');}
+function updPins(){GAUGEDEFS.forEach((def,i)=>{if(GS[i]&&GS[i].pinned){const el=document.getElementById('pin-'+def.attr);if(el)el.textContent=def.fmt(E[def.attr]??0);}});}
+// ════════════════════════════════════════
+// STATUS BAR
+// ════════════════════════════════════════
+const SB_DEFS=['RPM','MAP kPa','TPS %','CLT C','IAT C','AFR','LAMBDA','STFT %','LTFT %','IGN','KNOCK','EGT C','PW ms','DC %','OIL psi','BAT V','SPD kph','BOOST','GEAR'];
+let sbCfg=new Array(19).fill(1);
+function initSB(){document.querySelectorAll('#sb .sc').forEach((el,i)=>{let ht=null;const sh=()=>{ht=setTimeout(()=>{ht=null;openSBE();},600);};const ch=()=>{if(ht){clearTimeout(ht);ht=null;}};el.addEventListener('mousedown',sh);el.addEventListener('touchstart',sh,{passive:true});el.addEventListener('mouseup',ch);el.addEventListener('touchend',ch);el.addEventListener('mouseleave',ch);el.style.display=sbCfg[i]?'':'none';});}
+function openSBE(){const list=document.getElementById('sbe-list');list.innerHTML='';SB_DEFS.forEach((lbl,i)=>{const d=document.createElement('div');d.className='sbc';const v=document.getElementById('s'+i);d.innerHTML=`<input type="checkbox" ${sbCfg[i]?'checked':''} onchange="setSBC(${i},this.checked)"><span>${lbl}</span><span class="sv2">${v?v.textContent:'--'}</span>`;list.appendChild(d);});document.getElementById('sbo').style.display='block';document.getElementById('sbe').style.display='block';}
+function setSBC(i,v){sbCfg[i]=v?1:0;const el=document.querySelector(`#sb .sc[data-i="${i}"]`);if(el)el.style.display=v?'':'none';}
+function closeSBE(){document.getElementById('sbo').style.display='none';document.getElementById('sbe').style.display='none';}
+function sbReset(){sbCfg=new Array(19).fill(1);document.querySelectorAll('#sb .sc').forEach(el=>el.style.display='');openSBE();}
+// ════════════════════════════════════════
+// TUNE
+// ════════════════════════════════════════
+let activeTuneMap='ve';
+function showTune(k){activeTuneMap=k;const titles={ve:'VE MAP — 9x12 RPM/MAP',ign:'IGNITION MAP — 9x12 RPM/MAP',afr:'AFR TARGET MAP — 9x12'};const t=document.getElementById('tune-title');if(t)t.textContent=titles[k]||k;['ve','ign','afr'].forEach(b=>{const el=document.getElementById('tb-'+b);if(el)el.classList.toggle('act',b===k);});buildTuneTable(k);}
+function mapCellBg(v,k){if(k==='ve'){const n=cl(v/100,0,1);return`rgb(${~~(n*20)},${~~(30+n*60)},${~~(n*20)})`;}if(k==='ign'){const n=cl(v/45,0,1);return`rgb(0,${~~(n*50)},${~~(n*60)})`;}if(k==='afr'){if(v<12.5)return'#3a0010';if(v>15.2)return'#001a3a';if(v>14.4&&v<15.0)return'#003310';return'#1a0e00';}return'#050803';}
+function buildTuneTable(k){const tbl=document.getElementById('tune-tbl');tbl.innerHTML='';const data=M[k]||M.ve;let hrow='<thead><tr><th class="rhdr">MAP/RPM</th>';RPM_B.forEach(r=>hrow+=`<th>${r}</th>`);hrow+='</tr></thead>';tbl.innerHTML=hrow;const tbody=document.createElement('tbody');MAP_B.forEach((kpa,mi)=>{const tr=document.createElement('tr');let td=`<td class="rhdr">${kpa}</td>`;for(let ri=0;ri<12;ri++){const v=data[mi][ri];td+=`<td class="tc" style="background:${mapCellBg(v,k)}" id="tc-${k}-${mi}-${ri}"><input type="text" value="${v}" onchange="cellEdit('${k}',${mi},${ri},this.value)" onfocus="this.select()"></td>`;}tr.innerHTML=td;tbody.appendChild(tr);});tbl.appendChild(tbody);}
+function cellEdit(k,mi,ri,val){const v=parseFloat(val);if(isNaN(v))return;M[k][mi][ri]=v;const cell=document.getElementById(`tc-${k}-${mi}-${ri}`);if(cell)cell.style.background=mapCellBg(v,k);}
+function resetMaps(){buildMaps();showTune(activeTuneMap);showToast('Maps reset');}
+function updOpPoint(){const ri=ib_(RPM_B,E.rpm),mi=ib_(MAP_B,E.map_kpa);document.querySelectorAll('.tc.op-pt').forEach(el=>el.classList.remove('op-pt'));const cell=document.getElementById(`tc-${activeTuneMap}-${Math.min(mi,8)}-${Math.min(ri,11)}`);if(cell)cell.classList.add('op-pt');const op=document.getElementById('op-lbl');if(op)op.textContent=`Op-point: RPM=${RPM_B[Math.min(ri,11)]}  MAP=${MAP_B[Math.min(mi,8)]}kPa  VE=${E.ve_live.toFixed(1)}%  IGN=${E.ign_live.toFixed(1)} deg  PW=${E.pw.toFixed(2)}ms`;}
+// ════════════════════════════════════════
+// CORRECTIONS
+// ════════════════════════════════════════
+function buildCorrRows(){const tables=[['clt-corr-row',M.clt_ax,M.clt_corr,'clt_corr'],['iat-corr-row',M.iat_ax,M.iat_corr,'iat_corr'],['dt-corr-row',M.dt_v,M.dt_ms,'dt_ms'],['idle-corr-row',M.idle_ax,M.idle_rpm,'idle_rpm']];tables.forEach(([id,ax,data,mkey])=>{const row=document.getElementById(id);if(!row)return;row.innerHTML='';ax.forEach((x,i)=>{const d=document.createElement('div');d.className='corr-pair';d.innerHTML=`<div class="corr-x">${x}</div><input class="corr-y" type="number" value="${data[i]}" onchange="M.${mkey}[${i}]=parseFloat(this.value)||${data[i]};showToast('Correction updated')">`;row.appendChild(d);});});}
+// ════════════════════════════════════════
+// MODULES
+// ════════════════════════════════════════
+const MODS=[['abs','ABS','#ff3030'],['srs','SRS','#ff3030'],['tcu','TCU','#cc44ff'],['bcm','BCM','#ffb000'],['tpms','TPMS','#00e5e5'],['hv','HV','#ff6600']];
+let activeMod='abs';
+function buildModNav(){const nav=document.getElementById('mod-nav');nav.innerHTML='';MODS.forEach(([k,lbl,col])=>{const b=document.createElement('button');b.textContent=lbl;b.style.borderColor=col;b.style.color=col;b.onclick=()=>showMod(k);nav.appendChild(b);});}
+function showMod(k){activeMod=k;const c=document.getElementById('mod-content');c.innerHTML='';if(k==='abs')buildModABS(c);else if(k==='srs')buildModSRS(c);else if(k==='tcu')buildModTCU(c);else if(k==='bcm')buildModBCM(c);else if(k==='tpms')buildModTPMS(c);else buildModGeneric(c,k);}
+function modGaugeHTML(items){return`<div class="mg">${items.map(([lbl,id,col])=>`<div class="mc"><div class="ml">${lbl}</div><div class="mv" id="mod-${id}" style="color:${col}">--</div></div>`).join('')}</div>`;}
+function buildModABS(c){c.innerHTML=`<div class="pan"><div class="pt" style="color:#ff3030">ABS</div>${modGaugeHTML([['WS FL','abs-fl','#00ff41'],['WS FR','abs-fr','#00ff41'],['WS RL','abs-rl','#00ff41'],['WS RR','abs-rr','#00ff41'],['Pressure','abs-pres','#4499ff'],['Fault','abs-flt','#00ff41']])}<div class="row"><button onclick="modDTC('abs')" class="r">Read DTCs</button><button onclick="modClr()" class="g">Clear DTCs</button><button onclick="modAct('abs','bleed')">ABS Bleed</button><button onclick="modAct('abs','pump')">Pump Test</button></div><div class="mono" id="mod-out" style="min-height:30px">Select action</div></div>`;}
+function buildModSRS(c){c.innerHTML=`<div class="pan"><div class="pt" style="color:#ff3030">SRS — AIRBAG</div><div style="color:#ff3030;font-size:10px;background:#1a0000;padding:4px;border-radius:2px;margin-bottom:5px">DISCONNECT BATTERY BEFORE SERVICING</div><div class="row"><button onclick="modDTC('srs')" class="r">Read DTCs</button><button onclick="modClr()" class="g">Clear</button><button onclick="modAct('srs','squib')">Squib Resist</button><button onclick="modAct('srs','crash')">Crash Data</button></div><div class="mono" id="mod-out" style="min-height:30px">Select action</div></div>`;}
+function buildModTCU(c){c.innerHTML=`<div class="pan"><div class="pt" style="color:#cc44ff">TCU — TRANSMISSION</div>${modGaugeHTML([['Gear','tcu-gear','#cc44ff'],['Ratio','tcu-ratio','#ffb000'],['TCC','tcu-tcc','#00ff41'],['Line PSI','tcu-line','#4499ff'],['Temp C','tcu-temp','#ff3030'],['Slip RPM','tcu-slip','#ffe000']])}<div class="row"><button onclick="modDTC('tcu')" style="color:#cc44ff;border-color:#cc44ff">Read DTCs</button><button onclick="modClr()" class="g">Clear</button><button onclick="modAct('tcu','shift1')">Force 1-2</button><button onclick="modAct('tcu','tcc')">TCC Lock</button><button onclick="modAct('tcu','adapt')">Adapt Clear</button></div><div class="mono" id="mod-out" style="min-height:30px">Select action</div></div>`;}
+function buildModBCM(c){c.innerHTML=`<div class="pan"><div class="pt" style="color:#ffb000">BCM — BODY CONTROL</div><div class="row"><button onclick="modDTC('bcm')" class="a">Read DTCs</button><button onclick="modClr()" class="g">Clear</button><button onclick="modAct('bcm','horn')">Horn</button><button onclick="modAct('bcm','wipers')">Wipers</button><button onclick="modAct('bcm','fan')">Fan</button><button onclick="modAct('bcm','pats')">PATS</button></div><div class="mono" id="mod-out" style="min-height:30px">Select action</div></div>`;}
+function buildModTPMS(c){c.innerHTML=`<div class="pan"><div class="pt" style="color:#00e5e5">TPMS</div>${modGaugeHTML([['FL psi','tpms-fl','#00ff41'],['FR psi','tpms-fr','#00ff41'],['RL psi','tpms-rl','#00ff41'],['RR psi','tpms-rr','#00ff41']])}<div class="row"><button onclick="modDTC('tpms')" style="color:#00e5e5;border-color:#00e5e5">Read DTCs</button><button onclick="modAct('tpms','relearn')">Relearn</button><button onclick="modAct('tpms','ids')">Sensor IDs</button></div><div class="mono" id="mod-out" style="min-height:30px">Select action</div></div>`;}
+function buildModGeneric(c,k){c.innerHTML=`<div class="pan"><div class="pt">${k.toUpperCase()}</div><div class="row"><button onclick="modDTC('${k}')">Read DTCs</button><button onclick="modClr()" class="g">Clear DTCs</button></div><div class="mono" id="mod-out">Select action</div></div>`;}
+function updModules(){if(activeMod==='abs'){const spd=E.spd*1000/3600;['fl','fr','rl','rr'].forEach(w=>{const el=document.getElementById('mod-abs-'+w);if(el)el.textContent=(spd+rn()*.05).toFixed(2)+'m/s';});const ep=document.getElementById('mod-abs-pres');if(ep)ep.textContent=~~(E.map_kpa*1.1)+'bar';const ef=document.getElementById('mod-abs-flt');if(ef){ef.textContent='OK';ef.style.color='#00ff41';}}if(activeMod==='tcu'){const t=E.trans,g=Math.max(1,Math.min(t.gears||1,E.gear)),r=t.gears>0?t.ratios[Math.min(g-1,t.ratios.length-1)]:'CVT';const lp=t.li+(E.tps/100)*(t.ld-t.li),tcc=E.spd>45&&E.tps<80;[['tcu-gear',t.gears===0?'CVT':g+'/'+t.gears],['tcu-ratio',typeof r==='number'?r.toFixed(3):r],['tcu-tcc',tcc?'LOCKED':'OPEN'],['tcu-line',~~lp+'psi'],['tcu-temp',~~(E.clt-5)+' C'],['tcu-slip',~~Math.abs(rn()*(tcc?30:80))+'RPM']].forEach(([id,v])=>{const el=document.getElementById('mod-'+id);if(el)el.textContent=v;});}if(activeMod==='tpms'){[['fl',32.0],['fr',32.0],['rl',31.0],['rr',31.0]].forEach(([w,p])=>{const v=p+rn()*.05;const el=document.getElementById('mod-tpms-'+w);if(el){el.textContent=v.toFixed(1);el.style.color=v<28?'#ff3030':v<30?'#ffb000':'#00ff41';}});}}
+function modDTC(mod){const pfx={'abs':'C','srs':'B'};const pre=pfx[mod]||'P';const rel=E.active_dtcs.filter(d=>d[0].startsWith(pre));const out=document.getElementById('mod-out');if(out)out.textContent=rel.length?rel.map(d=>d[0]+': '+d[1]).join('\n'):mod.toUpperCase()+' — No DTCs';}
+function modClr(){const out=document.getElementById('mod-out');if(out)out.textContent='DTCs cleared — retest to confirm';}
+function modAct(mod,act){const resp={abs_bleed:'Bleed: FL-FR-RL-RR, pump cycling 50Hz',abs_pump:'Pump test: 12V applied, current 3.2A',srs_squib:'Squib resistance: Drv 2.8 Ohm Pass 2.9 Ohm (spec 1.5-5 Ohm)',srs_crash:'Crash data: No events recorded',tcu_shift1:'SS-A energised — 1-2 shift forced',tcu_tcc:'TCC lock commanded — >45kph required',tcu_adapt:'Shift adapts cleared — 20 gentle cycles to relearn',bcm_horn:'Horn relay: 200ms pulse sent',bcm_wipers:'Wiper: full sweep cycle',bcm_fan:'Fan relay: stage1 ON > stage2 ON > OFF',bcm_pats:'PATS: transponder present — key programmed',tpms_relearn:'Relearn active — drive >25kph 10 min\nFL-FR-RL-RR sequence, 433MHz RF',tpms_ids:'FL: 0xA3B2C1 — 32.0psi\nFR: 0xA3B2C2 — 32.0psi\nRL: 0xB4C3D1 — 31.0psi\nRR: 0xB4C3D2 — 31.0psi'};const out=document.getElementById('mod-out');if(out)out.textContent=resp[mod+'_'+act]||'['+act+'] sent to '+mod.toUpperCase();}
+// ════════════════════════════════════════
+// PROBE + SENSORS + FAULTS + OBD
+// ════════════════════════════════════════
+let probeMode=null,probeTmr=null;
+const PROBE_MODES=[['BAT+','batt','#001a04','#00ff41'],['GND','gnd','#0d0f0b','#3a6020'],['Cont','cont','#1a0e00','#ffb000'],['Short-GND','sgnd','#1a0000','#ff3030'],['Short-PWR','spwr','#1a0a00','#ff6600'],['Injector','inj','#001a1a','#00e5e5'],['PWM','pwm','#120020','#cc44ff'],['Relay','relay','#001510','#00ddaa']];
+const PROBE_ACTS=[['Rad Fan','fan'],['Fuel Pump','fuel_pump'],['IAC','iac'],['EVAP','purge'],['EGR','egr'],['VVT','vvt'],['Boost Sol','boost_sol'],['Glows','glow']];
+function buildProbe(){const mr=document.getElementById('probe-modes-row');mr.innerHTML='';PROBE_MODES.forEach(([lbl,mode,bg,fg])=>{const b=document.createElement('button');b.textContent=lbl;b.style.background=bg;b.style.color=fg;b.style.borderColor=fg+'66';b.id='pb-'+mode;b.onclick=()=>setProbeMode(mode);mr.appendChild(b);});const ar=document.getElementById('actuator-row');ar.innerHTML='';PROBE_ACTS.forEach(([lbl,comp])=>{const b=document.createElement('button');b.textContent=lbl;b.style.color='#00ddaa';b.style.borderColor='#00ddaa44';b.onclick=()=>probeActuate(comp);ar.appendChild(b);});}
+function setProbeMode(mode){probeMode=mode;if(probeTmr)clearInterval(probeTmr);PROBE_MODES.forEach(([,m])=>{const b=document.getElementById('pb-'+m);if(b)b.classList.toggle('act',m===mode);});const msgs={batt:'Battery positive — '+E.batt.toFixed(3)+'V DC',gnd:'Ground ref — check offset >0.1V for bad ground',cont:'Continuity — <5 Ohm connected / open circuit',sgnd:'SHORT TO GROUND — high current path detected',spwr:'SHORT TO POWER — circuit energised',inj:'Injector pulse — PW '+E.pw.toFixed(2)+'ms @ '+E.rpm.toFixed(0)+' RPM',pwm:'PWM output — variable duty IAC/boost signal',relay:'Relay coil — pull-in 12V, hold ~0.15A'};document.getElementById('probe-out').textContent=msgs[mode]||mode;probeTmr=setInterval(()=>{const v={"batt":[E.batt,.001,999,0,0],"gnd":[.02,0,.1+Math.abs(rn()*.05),0,0],"cont":[0,0,2+Math.abs(rn()*.5),0,0],"sgnd":[.1,12+Math.abs(rn()),.8,0,0],"spwr":[E.batt-.2,8+Math.abs(rn()),1.2,0,0],"inj":[E.batt*(1-E.dc/100),.8+rn()*.1,14+rn()*.5,E.rpm/120,E.dc],"pwm":[E.batt*.7,.3,40+rn(),150+rn()*5,30+Math.sin(Date.now()/1000)*15],"relay":[Math.random()>.5?12:0,.15,120+rn()*5,0,0]}[mode]||[0,0,0,0,0];document.getElementById('probe-big').textContent=v[0].toFixed(3)+' V';document.getElementById('pm-a').textContent=v[1].toFixed(3);document.getElementById('pm-ohm').textContent=v[2]>500?'inf':v[2].toFixed(1);document.getElementById('pm-hz').textContent=v[3].toFixed(1);document.getElementById('pm-dc').textContent=v[4].toFixed(1);},100);}
+function probeActuate(comp){const msgs={fan:'Rad fan relay: stage1 ON — check 12V at connector',fuel_pump:'Fuel pump prime — building to '+~~M.fuel_psi+'psi',iac:'IAC/DBW step test — observe idle RPM +/-150',purge:'EVAP purge: open — audible click, vacuum to canister',egr:'EGR: commanded open — MAP drop, rough idle expected',vvt:'VVT solenoid: oil pressure to phaser — cam advance +10 deg',boost_sol:'Boost solenoid duty test — target '+E.env.boost_target+'psi',glow:'Glow plugs: '+E.profile.cyl+'x — '+E.profile.cyl*12+'A draw'};document.getElementById('act-out').textContent=msgs[comp]||comp+' actuated';}
+function buildCylKill(){const row=document.getElementById('cyl-kill-row');if(!row)return;row.innerHTML='';for(let i=0;i<E.profile.cyl;i++){const b=document.createElement('button');b.textContent='CYL '+(i+1);b.className=E.cyl_kill[i]?'r':'';b.onclick=(n=>()=>{E.cyl_kill[n]=E.cyl_kill[n]?0:1;buildCylKill();const kl=E.cyl_kill.map((k,j)=>k?j+1:0).filter(Boolean);document.getElementById('cyl-kill-lbl').textContent=kl.length?'Killed: Cyl '+kl.join(', ')+' — watch RPM drop':'All cylinders active — RPM baseline established';})(i);row.appendChild(b);}}
+const SENSOR_DEFS=[["Wideband O2",()=>E.afr.toFixed(3)+" AFR","#00ff41"],["Narrowband O2",()=>E.ego?"Closed Loop":"Open Loop","#00ff41"],["MAP kPa",()=>E.map_kpa.toFixed(1),"#4499ff"],["TPS %",()=>E.tps.toFixed(1),"#ffe000"],["CLT C",()=>E.clt.toFixed(1),"#ff3030"],["IAT C",()=>E.iat.toFixed(1),"#00e5e5"],["Batt V",()=>E.batt.toFixed(2),"#cc44ff"],["Oil psi",()=>E.oil.toFixed(1),"#00ddaa"],["EGT C",()=>~~E.egt,"#ff6600"],["Knock %",()=>~~(E.klvl*100),"#00ff41"],["Boost psi",()=>E.boost_psi.toFixed(1),"#ff6600"],["RPM",()=>~~E.rpm,"#00ff41"],["Speed kph",()=>E.spd.toFixed(1),"#ffe000"],["Gear",()=>E.trans.gears===0?"CVT":E.gear,"#cc44ff"],["Glow",()=>E.glow_ready?"PREHEAT":E.profile.glow?"WARM":"N/A","#ff6600"],["STFT %",()=>E.stft.toFixed(1),"#00ff41"],["LTFT %",()=>E.ltft.toFixed(1),"#00ff41"],["Lambda",()=>E.lam.toFixed(3),"#00ff41"],["IGN deg",()=>E.adv.toFixed(1),"#00e5e5"],["VE %",()=>E.ve_live.toFixed(1),"#4499ff"],["PW ms",()=>E.pw.toFixed(2),"#ffb000"],["DC %",()=>E.dc.toFixed(1),"#ffb000"]];
+function buildSensGrid(){const g=document.getElementById('sens-grid');g.innerHTML='';SENSOR_DEFS.forEach(([lbl,,col],i)=>{const el=document.createElement('div');el.className='se';el.innerHTML=`<span class="sel2">${lbl}</span><span class="sev" id="sv${i}" style="color:${col}">--</span>`;g.appendChild(el);});}
+function updSens(){SENSOR_DEFS.forEach(([,fn,],i)=>{const el=document.getElementById('sv'+i);if(el)el.textContent=fn();});}
+function buildFaultRows(){const c=document.getElementById('fault-rows');c.innerHTML='';FD.forEach(([key,label,desc])=>{const d=document.createElement('div');d.className='fr';d.innerHTML=`<span class="fn">${label}</span><span class="fd">${desc}</span>`;const btn=document.createElement('button');btn.id='fb-'+key;btn.textContent='OFF';btn.className='g';btn.onclick=()=>{E[key]=E[key]?0:1;btn.textContent=E[key]?'ACTIVE':'OFF';btn.className=E[key]?'r':'g';};d.appendChild(btn);c.appendChild(d);});}
+function buildMissRow(){const row=document.getElementById('miss-row');if(!row)return;row.innerHTML='';const off=document.createElement('button');off.textContent='OFF';off.className=E.fault_miss===0?'g':'';off.onclick=()=>{E.fault_miss=0;buildMissRow();};row.appendChild(off);for(let i=1;i<=E.profile.cyl;i++){const b=document.createElement('button');b.textContent='CYL '+i;b.className=E.fault_miss===i?'r':'';b.onclick=(n=>()=>{E.fault_miss=n;buildMissRow();})(i);row.appendChild(b);}}
+function obdReq(pid,name){const v={"0C":~~E.rpm+" RPM","0D":E.spd.toFixed(1)+" km/h","05":E.clt.toFixed(1)+" C","0F":E.iat.toFixed(1)+" C","04":E.ve_live.toFixed(1)+"% calc load","11":E.tps.toFixed(1)+"%","0B":E.map_kpa.toFixed(1)+" kPa","14":E.ego?"Closed Loop":"Open Loop","2D":E.kret.toFixed(1)+" deg retard","M9":"VIN: 1FTFW1ED3MFB12345"};document.getElementById('obd-out').textContent="TX 0x7DF: 02 01 "+pid+"\nRX 0x7E8: Positive Response\n  "+name+": "+v[pid];}
+function dtcRead(mode){const dtcs=mode===3?E.active_dtcs:E.stored_dtcs;document.getElementById('obd-out').textContent="Mode 0"+mode+": "+(dtcs.length?dtcs.map(d=>d[0]).join(' '):'No DTCs')+(dtcs.length?'\n'+dtcs.map(d=>"  "+d[0]+" - "+d[1]).join('\n'):'');}
+function freezeFrame(){document.getElementById('obd-out').textContent="FREEZE FRAME (DTC: "+(E.active_dtcs[0]?E.active_dtcs[0][0]:'N/A')+"):\n  RPM: "+~~E.rpm+"  MAP: "+E.map_kpa.toFixed(1)+"kPa  TPS: "+E.tps.toFixed(1)+"%\n  CLT: "+E.clt.toFixed(1)+" C  AFR: "+E.afr.toFixed(2)+"  STFT: "+E.stft.toFixed(1)+"%\n  VE: "+E.ve_live.toFixed(1)+"% load  BATT: "+E.batt.toFixed(2)+"V\n  IGN: "+E.adv.toFixed(1)+" deg  KNOCK: "+E.kret.toFixed(1)+" deg  EGT: "+~~E.egt+" C";}
+function clearDTCs(){E.active_dtcs=[];E.stft=0;E.ltft=0;E.kcnt=0;document.getElementById('obd-out').textContent="Mode 04: DTCs cleared\nCycle ignition and retest";}
+function uds(sid,name){const r={"0x10":"Session changed to Extended Diagnostic","0x11":"ECU hard reset — 5s power cycle","0x19":"Active DTCs: "+(E.active_dtcs.map(d=>d[0]).join(' ')||'None'),"0x22":"DID 0xF190: "+~~E.rpm+" RPM / "+E.map_kpa.toFixed(1)+" kPa / "+E.clt.toFixed(1)+" C CLT","0x27":"Seed: 0x4A2B  Key: 0x8F1C  Security access granted","0x2E":"Write DID: Positive [0x6E]","0x31":"Routine 0xA100: Positive [0x71]","0x3E":"TesterPresent acknowledged"};document.getElementById('uds-out').textContent="TX: "+sid+" ("+name+")\nRX: "+r[sid];}
+// ════════════════════════════════════════
+// SERVICE + BUILD + LOG + CONFIG
+// ════════════════════════════════════════
+function buildSvcNav(){const nav=document.getElementById('svc-nav');nav.innerHTML='';[['generic','GENERIC'],['bmw','BMW'],['ford','FORD'],['gm','GM'],['toyota','TOYOTA'],['vw','VW/AUDI'],['hd','HD']].forEach(([k,lbl])=>{const b=document.createElement('button');b.textContent=lbl;b.onclick=()=>loadSvc(k);nav.appendChild(b);});}
+function loadSvc(k){const c=document.getElementById('svc-content');c.innerHTML='';for(const[name,cmd,desc]of SVC[k]||[]){const card=document.createElement('div');card.className='sc2';const res=document.createElement('div');res.className='sr';card.innerHTML=`<div class="sn">${name}</div><div class="scmd">${cmd}</div><div class="sd">${desc}</div>`;card.appendChild(res);const btn=document.createElement('button');btn.className='c';btn.textContent='EXECUTE';btn.onclick=(()=>{const r=res,n=name,c2=cmd;return()=>{r.textContent='Executing: '+n+'\n> '+c2+'\n< Positive Response [DEMO]';setTimeout(()=>r.textContent+='\n[OK] Cycle ignition and retest',800);}})();card.appendChild(btn);c.appendChild(card);}}
+function buildBuild(){const sl=document.getElementById('schema-list');sl.innerHTML='';SCHEMAS.forEach(([n,d])=>{sl.innerHTML+=`<div class="bc"><span class="bt" style="color:#00ff41">${n}</span><span class="bi">${d}</span></div>`;});const tl=document.getElementById('trig-list');tl.innerHTML='';Object.entries(TRIGGERS).forEach(([p,d])=>{tl.innerHTML+=`<div class="bc"><span class="bt" style="color:#00e5e5">${p}</span><span class="bi">${d}</span></div>`;});const il=document.getElementById('inj-list');il.innerHTML='';Object.entries(INJ).forEach(([n,d])=>{const info=d.flow?`Flow: ${d.flow}cc/min  Dead time @14V: ${d.dt14}ms`:'Common rail — pressure-based control';il.innerHTML+=`<div class="bc"><span class="bt" style="color:#ffb000;min-width:190px;font-size:9px">${n}</span><span class="bi">${info}</span></div>`;});const isel=document.getElementById('inj-sel');isel.innerHTML='';Object.keys(INJ).forEach(n=>isel.innerHTML+=`<option>${n}</option>`);const trl=document.getElementById('trans-list');trl.innerHTML='';Object.entries(TP).forEach(([,t])=>{trl.innerHTML+=`<div class="bc"><span class="bt" style="color:#cc44ff;min-width:110px">${t.name}</span><span class="bi">Gears: ${t.gears||'CVT'}  Ratios: ${t.ratios.join(' / ')}  Final: ${t.final}</span></div>`;});}
+function calcDT(){const n=document.getElementById('inj-sel').value,v=parseFloat(document.getElementById('inj-v').value)||13.5,inj=INJ[n];if(!inj||!inj.flow){document.getElementById('dt-res').textContent='Common rail — pressure-based control';return;}const dt=inj.dt14+(14-v)*0.08;document.getElementById('dt-res').textContent=`${n}\n@ ${v}V  Dead time: ${dt.toFixed(3)}ms  Flow: ${inj.flow}cc/min`;}
+let logging=false,logData=[],logFields=["Time","RPM","MAP","TPS","CLT","IAT","AFR","STFT","LTFT","IGN","KNOCK","EGT","PW","BOOST","GEAR","SCENE"];
+function buildLogHeader(){const hdr=document.getElementById('log-hdr');hdr.innerHTML=logFields.map(f=>`<th>${f}</th>`).join('');const mini=document.getElementById('log-mini');mini.innerHTML=logFields.filter(f=>f!=='Time'&&f!=='SCENE'&&f!=='GEAR').map(f=>`<div class="lm"><div class="lml">${f}</div><div class="lmv" id="lm-${f}" style="color:#00ff41">--</div></div>`).join('');}
+function toggleLog(){logging=!logging;const btn=document.getElementById('log-btn');btn.textContent=logging?'STOP':'&#9679; START';btn.className=logging?'r':'g';if(logging)showToast('Logging started');}
+function logRow(){if(!logging)return;const row={Time:new Date().toTimeString().slice(0,8),RPM:~~E.rpm,MAP:E.map_kpa.toFixed(1),TPS:E.tps.toFixed(1),CLT:E.clt.toFixed(1),IAT:E.iat.toFixed(1),AFR:E.afr.toFixed(2),STFT:E.stft.toFixed(1),LTFT:E.ltft.toFixed(1),IGN:E.adv.toFixed(1),KNOCK:E.kret.toFixed(1),EGT:~~E.egt,PW:E.pw.toFixed(2),BOOST:E.boost_psi.toFixed(1),GEAR:E.trans.gears===0?'CVT':E.gear,SCENE:E.scenario};logData.push(row);if(logData.length>2000)logData.shift();Object.entries(row).forEach(([k,v])=>{const el=document.getElementById('lm-'+k);if(el)el.textContent=v;});document.getElementById('log-count').textContent=logData.length+' rows logged';if(AT==='log'){const tb=document.getElementById('log-body');const tr=document.createElement('tr');tr.innerHTML=logFields.map(f=>`<td>${row[f]}</td>`).join('');tb.appendChild(tr);if(tb.children.length>200)tb.removeChild(tb.firstChild);}}
+function exportCSV(){if(!logData.length){showToast('No data to export');return;}const csv=[logFields.join(','),...logData.map(r=>logFields.map(f=>r[f]).join(','))].join('\n');const a=document.createElement('a');a.href='data:text/csv,'+encodeURIComponent(csv);a.download='cyberknife_log_'+Date.now()+'.csv';a.click();showToast('CSV: '+logData.length+' rows');}
+function clearLog(){logData=[];document.getElementById('log-body').innerHTML='';document.getElementById('log-count').textContent='0 rows logged';}
+function exportProto(){const data=E.can.proto;if(!data.length){showToast('No capture data');return;}const csv=[['ID','D0','D1','D2','D3','D4','D5','D6','D7','Match'].join(','),...data.map(f=>[f.id,...f.data,f.match].join(','))].join('\n');const a=document.createElement('a');a.href='data:text/csv,'+encodeURIComponent(csv);a.download='proto_'+Date.now()+'.csv';a.click();showToast('Protocol CSV exported');}
+function buildConfig(){const c=document.getElementById('cfg-sliders');c.innerHTML='';[['Altitude (m)','altitude',0,4000,100,'m'],['Ambient Temp','ambient_temp',-30,50,1,' C'],['Road Grade','road_grade',-15,15,1,'%'],['Boost Target','boost_target',0,50,1,' psi']].forEach(([lbl,key,mn,mx,step,unit])=>{const val=E.env[key]||0;const row=document.createElement('div');row.style.cssText='margin-bottom:8px';row.innerHTML=`<div style="display:flex;justify-content:space-between;margin-bottom:2px"><span style="color:var(--txt);font-size:10px">${lbl}</span><span id="cfg-lbl-${key}" style="color:var(--pc);font-size:10px">${val}${unit}</span></div><input type="range" min="${mn}" max="${mx}" step="${step}" value="${val}" oninput="E.env['${key}']=parseFloat(this.value);document.getElementById('cfg-lbl-${key}').textContent=this.value+'${unit}'">`;c.appendChild(row);});const fb=document.getElementById('fuel-btns');fb.innerHTML='';Object.keys(FS_).forEach(ft=>{const b=document.createElement('button');b.textContent=ft;b.className=E.env.fuel_type===ft?'act':'';b.onclick=()=>{E.env.fuel_type=ft;fb.querySelectorAll('button').forEach(x=>x.classList.remove('act'));b.classList.add('act');showToast('Fuel: '+ft);};fb.appendChild(b);});}
+// ════════════════════════════════════════
+// SCOPE DRAWING
+// ════════════════════════════════════════
+let scopeFrozen=false,frozenBufs={},snapBufs=[];
+function drawCv(cv,c1,c2,c3,overlay){if(!cv)return;const W=cv.parentElement?cv.parentElement.offsetWidth-(overlay?16:12):300;const H=parseInt(cv.style.height)||parseInt(cv.getAttribute('height'))||210;cv.width=W;cv.height=H;const ctx=cv.getContext('2d');ctx.fillStyle='#060905';ctx.fillRect(0,0,W,H);ctx.strokeStyle='#1a3a0a';ctx.lineWidth=.5;for(let x=0;x<W;x+=W/10){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}for(let y=0;y<H;y+=H/5){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}const bufs=scopeFrozen?frozenBufs:E.scope.bufs;const chs=[[c1,SCOL[c1]||'#00ff41'],[c2,SCOL[c2]||'#ffb000'],[c3||'--',SCOL[c3]||'#cc44ff']].filter(c=>c[0]&&c[0]!=='--');let li=0;for(const[ch,col]of chs){const buf=bufs[ch];if(!buf||buf.length<2)continue;const mn=Math.min(...buf),mx=Math.max(...buf),rng=Math.max(mx-mn,.001);ctx.strokeStyle=col;ctx.lineWidth=overlay?2:1.5;ctx.beginPath();buf.forEach((v,i)=>{const x=i*(W/(buf.length-1)),y=H-((v-mn)/rng)*(H-20)-10;i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);});ctx.stroke();if(buf.length){ctx.fillStyle=col;ctx.font='bold 10px Courier New';ctx.fillText(`${ch}: ${(buf[buf.length-1]).toFixed(2)}`,5,li*13+12);}li++;}const leg=document.getElementById(overlay?'sov-leg':'scope-leg');if(leg){leg.innerHTML='';chs.forEach(([ch,col])=>{const sp=document.createElement('span');sp.style.color=col;sp.textContent='- '+ch;leg.appendChild(sp);});}const ci=document.getElementById(overlay?'ov-crank':'crank-lbl');if(ci){const p=E.profile;ci.textContent='Pat: '+p.pat+' | Cyl: '+p.cyl+' | Fire: '+p.fir.join('-')+' | '+p.inj;}}
+function openSov(){document.getElementById('sov').classList.add('open');const c1=document.getElementById('ch1'),c2=document.getElementById('ch2');[document.getElementById('ov-c1'),document.getElementById('ov-c2'),document.getElementById('ov-c3')].forEach(s=>{s.innerHTML='<option value="--">-- None --</option>';SIGS.forEach(sig=>s.innerHTML+=`<option>${sig}</option>`);});if(c1)document.getElementById('ov-c1').value=c1.value;if(c2)document.getElementById('ov-c2').value=c2.value;scopeFrozen=false;document.getElementById('frz-btn').textContent='FREEZE';}
+function closeSov(){document.getElementById('sov').classList.remove('open');scopeFrozen=false;}
+function freezeScope(){scopeFrozen=!scopeFrozen;document.getElementById('frz-btn').textContent=scopeFrozen?'LIVE':'FREEZE';if(scopeFrozen){frozenBufs={};SIGS.forEach(k=>frozenBufs[k]=[...E.scope.bufs[k]]);}showToast(scopeFrozen?'Frozen':'Live');}
+function snapScope(){const snap=SIGS.map(k=>[k,[...(E.scope.bufs[k]||[])]]);snapBufs.push(snap);if(snapBufs.length>3)snapBufs.shift();showToast('Snapshot '+snapBufs.length+' saved');}
+function initScopeResize(){const h=document.getElementById('srz'),cv=document.getElementById('scope-cv');if(!h||!cv)return;let drag=0,sy=0,sh=0;const s=e=>{drag=1;sy=e.touches?e.touches[0].clientY:e.clientY;sh=parseInt(cv.getAttribute('height'))||210;e.preventDefault();};const m=e=>{if(!drag)return;const y=e.touches?e.touches[0].clientY:e.clientY;cv.setAttribute('height',Math.max(70,Math.min(500,sh+(y-sy))));cv.style.height=cv.getAttribute('height')+'px';};const end=()=>{if(drag){drag=0;showToast('Scope: '+cv.getAttribute('height')+'px');}};h.addEventListener('mousedown',s);h.addEventListener('touchstart',s,{passive:false});document.addEventListener('mousemove',m);document.addEventListener('touchmove',m,{passive:true});document.addEventListener('mouseup',end);document.addEventListener('touchend',end);}
+function drawAFR(){const cv=document.getElementById('afr-cv');if(!cv)return;const W=cv.parentElement?.offsetWidth-14||300;cv.width=W;cv.height=70;const ctx=cv.getContext('2d');ctx.fillStyle='#060905';ctx.fillRect(0,0,W,70);const buf=E.scope.bufs["Wideband O2"];if(!buf||buf.length<2)return;const mn=12,mx=16,rng=mx-mn;ctx.strokeStyle='#2a5010';ctx.lineWidth=.5;ctx.setLineDash([4,4]);const y147=70-((14.7-mn)/rng)*60-5;ctx.beginPath();ctx.moveTo(0,y147);ctx.lineTo(W,y147);ctx.stroke();ctx.setLineDash([]);ctx.strokeStyle='#00ff41';ctx.lineWidth=1.5;ctx.beginPath();buf.forEach((v,i)=>{const x=i*(W/(buf.length-1)),y=70-((cl(v,mn,mx)-mn)/rng)*60-5;i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);});ctx.stroke();ctx.fillStyle='#2a5010';ctx.font='9px Courier New';ctx.fillText('14.7 stoich',4,y147-2);ctx.fillStyle='#00ff41';ctx.fillText('AFR: '+E.afr.toFixed(2),4,10);}
+
+// ════════════════════════════════════════════════════════════
+// ROTARY KNOB SYSTEM
+// ════════════════════════════════════════════════════════════
+const KNOB_TABS=[
+  {id:'dash',   name:'DASH',    desc:'LIVE ENGINE GAUGES'},
+  {id:'obd',    name:'OBD-II',  desc:'OBD-II / UDS DIAGNOSTICS'},
+  {id:'scope',  name:'SCOPE',   desc:'OSCILLOSCOPE'},
+  {id:'can',    name:'CAN/LIN', desc:'J1939 - OBD - LIN - PROTOCOL'},
+  {id:'tune',   name:'TUNE',    desc:'ECU VE / IGN / AFR MAPS'},
+  {id:'corr',   name:'CORR',    desc:'CORRECTION TABLES'},
+  {id:'mods',   name:'MODULES', desc:'ABS - SRS - TCU - BCM - TPMS'},
+  {id:'probe',  name:'PROBE',   desc:'POWER PROBE / DMM'},
+  {id:'sens',   name:'SENS',    desc:'LIVE SENSOR READOUTS'},
+  {id:'faults', name:'FAULTS',  desc:'FAULT AND MISFIRE INJECTION'},
+  {id:'service',name:'SERVICE', desc:'OEM SERVICE PROCEDURES'},
+  {id:'build',  name:'BUILD',   desc:'ECU SCHEMATICS AND INJECTORS'},
+  {id:'log',    name:'LOG',     desc:'DATA LOGGER / CSV EXPORT'},
+  {id:'config', name:'CONFIG',  desc:'ENVIRONMENT AND SETTINGS'},
+];
+const N_TABS=KNOB_TABS.length;
+let kIdx=0,kAnimAngle=0,kTargetAngle=0,kAnimRAF=null;
+const K_START=-Math.PI*(150/180);
+const K_ARC=Math.PI*(300/180);
+function kTabAngle(idx){return K_START+(idx/(N_TABS-1))*K_ARC;}
+function kAngleToIdx(angle){let best=0,bestD=1e9;for(let i=0;i<N_TABS;i++){const d=Math.abs(angle-kTabAngle(i));if(d<bestD){bestD=d;best=i;}}return best;}
+
+function drawKnob(){
+  const cv=document.getElementById('knob-cv');if(!cv)return;
+  const ctx=cv.getContext('2d');const W=cv.width,H=cv.height;
+  const cx=W/2,cy=H/2,OR=W/2-3,TR=OR-5,TI=TR-10,KR=TI-6;
+  ctx.clearRect(0,0,W,H);
+  // Outer bezel
+  const bg=ctx.createRadialGradient(cx,cy,KR*.3,cx,cy,OR);
+  bg.addColorStop(0,'#0c1809');bg.addColorStop(1,'#060a05');
+  ctx.beginPath();ctx.arc(cx,cy,OR,0,Math.PI*2);ctx.fillStyle=bg;ctx.fill();
+  ctx.strokeStyle='#2a5a12';ctx.lineWidth=1.5;ctx.stroke();
+  ctx.beginPath();ctx.arc(cx,cy,OR+1,0,Math.PI*2);ctx.strokeStyle='rgba(0,255,65,0.12)';ctx.lineWidth=2;ctx.stroke();
+  // Arc track
+  const aS=K_START-Math.PI/2,aE=aS+K_ARC;
+  ctx.beginPath();ctx.arc(cx,cy,(TR+TI)/2,aS,aE);ctx.strokeStyle='#1a3a0a';ctx.lineWidth=TI-TR+12;ctx.stroke();
+  // Active arc
+  if(kIdx>0){const aAE=aS+(kIdx/(N_TABS-1))*K_ARC;const ag=ctx.createLinearGradient(cx+Math.cos(aS)*KR,cy+Math.sin(aS)*KR,cx+Math.cos(aAE)*KR,cy+Math.sin(aAE)*KR);ag.addColorStop(0,'rgba(0,180,30,0.4)');ag.addColorStop(1,'rgba(0,255,65,0.7)');ctx.beginPath();ctx.arc(cx,cy,(TR+TI)/2,aS,aAE);ctx.strokeStyle=ag;ctx.lineWidth=TI-TR+8;ctx.stroke();}
+  // Ticks
+  for(let i=0;i<N_TABS;i++){const ta=kTabAngle(i)-Math.PI/2,s=Math.sin(ta),co=Math.cos(ta),isAct=(i===kIdx);ctx.beginPath();ctx.moveTo(cx+TR*co,cy+TR*s);ctx.lineTo(cx+TI*co,cy+TI*s);ctx.strokeStyle=isAct?'#00ff41':'#2a5a12';ctx.lineWidth=isAct?2.5:1;ctx.stroke();if(isAct){ctx.beginPath();ctx.arc(cx+TI*co,cy+TI*s,2.5,0,Math.PI*2);ctx.fillStyle='#00ff41';ctx.fill();}}
+  // Knob body
+  const kb=ctx.createRadialGradient(cx-KR*.3,cy-KR*.3,1,cx,cy,KR);
+  kb.addColorStop(0,'#1e3015');kb.addColorStop(.4,'#0f1f0a');kb.addColorStop(1,'#060a04');
+  ctx.beginPath();ctx.arc(cx,cy,KR,0,Math.PI*2);ctx.fillStyle=kb;ctx.fill();ctx.strokeStyle='#3a6a1a';ctx.lineWidth=1.5;ctx.stroke();
+  // Knob ridges
+  ctx.save();ctx.translate(cx,cy);ctx.rotate(kAnimAngle-Math.PI/2);
+  for(let r=0;r<8;r++){const ra=(r/8)*Math.PI*2;ctx.beginPath();ctx.moveTo(Math.cos(ra)*KR*.5,Math.sin(ra)*KR*.5);ctx.lineTo(Math.cos(ra)*KR*.84,Math.sin(ra)*KR*.84);ctx.strokeStyle='rgba(0,100,20,0.35)';ctx.lineWidth=0.8;ctx.stroke();}
+  ctx.restore();
+  // Pointer
+  const pA=kAnimAngle-Math.PI/2;const px=cx+Math.cos(pA)*(KR-3),py=cy+Math.sin(pA)*(KR-3);
+  const pbx=cx+Math.cos(pA)*(KR*.3),pby=cy+Math.sin(pA)*(KR*.3);
+  ctx.save();ctx.shadowColor='#00ff41';ctx.shadowBlur=10;
+  ctx.beginPath();ctx.moveTo(pbx,pby);ctx.lineTo(px,py);ctx.strokeStyle='#00ff41';ctx.lineWidth=3;ctx.lineCap='round';ctx.stroke();ctx.restore();
+  // Center hub
+  const hub=ctx.createRadialGradient(cx-2,cy-2,1,cx,cy,8);hub.addColorStop(0,'#2a5018');hub.addColorStop(1,'#0c1808');
+  ctx.beginPath();ctx.arc(cx,cy,8,0,Math.PI*2);ctx.fillStyle=hub;ctx.fill();ctx.strokeStyle='#4a8a22';ctx.lineWidth=1;ctx.stroke();
+  ctx.beginPath();ctx.arc(cx,cy,3,0,Math.PI*2);ctx.fillStyle='rgba(0,255,65,0.6)';ctx.fill();
+  // End markers
+  ctx.fillStyle='rgba(0,180,40,0.5)';ctx.font='bold 8px Courier New';ctx.textAlign='center';
+  const fa=kTabAngle(0)-Math.PI/2;ctx.fillText('1',cx+Math.cos(fa)*(TR+5),cy+Math.sin(fa)*(TR+5)+3);
+  const la=kTabAngle(N_TABS-1)-Math.PI/2;ctx.fillText(''+N_TABS,cx+Math.cos(la)*(TR+5),cy+Math.sin(la)*(TR+5)+3);
+  ctx.textAlign='left';
+}
+
+function animKnob(){const diff=kTargetAngle-kAnimAngle;if(Math.abs(diff)>0.001){kAnimAngle+=diff*0.18;drawKnob();kAnimRAF=requestAnimationFrame(animKnob);}else{kAnimAngle=kTargetAngle;drawKnob();kAnimRAF=null;}}
+function setKnobTarget(idx){kIdx=Math.max(0,Math.min(N_TABS-1,idx));kTargetAngle=kTabAngle(kIdx);if(kAnimRAF)cancelAnimationFrame(kAnimRAF);kAnimRAF=requestAnimationFrame(animKnob);document.getElementById('knob-modename').textContent=KNOB_TABS[kIdx].name;document.getElementById('knob-desc').textContent=KNOB_TABS[kIdx].desc;document.getElementById('knob-pos').textContent=String(kIdx+1).padStart(2,'0')+'/'+String(N_TABS).padStart(2,'0');}
+function knobStep(dir){const ni=((kIdx+dir)+N_TABS)%N_TABS;setKnobTarget(ni);routeKnob(ni);}
+function routeKnob(idx){const tab=KNOB_TABS[idx];document.querySelectorAll('#tnav .tb').forEach(b=>{if(b.getAttribute('onclick')&&b.getAttribute('onclick').includes("'"+tab.id+"'"))b.click();});}
+// Drag interaction
+(function(){
+  const cv=document.getElementById('knob-cv');if(!cv)return;
+  let dragging=false,dragStartA=0,dragStartKA=0;
+  function getA(e){const r=cv.getBoundingClientRect(),cx2=r.left+r.width/2,cy2=r.top+r.height/2;const x=(e.touches?e.touches[0].clientX:e.clientX)-cx2,y=(e.touches?e.touches[0].clientY:e.clientY)-cy2;return Math.atan2(x,-y);}
+  function onStart(e){e.preventDefault();dragging=true;dragStartA=getA(e);dragStartKA=kAnimAngle;if(kAnimRAF){cancelAnimationFrame(kAnimRAF);kAnimRAF=null;}}
+  function onMove(e){if(!dragging)return;e.preventDefault();let d=getA(e)-dragStartA;if(d>Math.PI)d-=Math.PI*2;if(d<-Math.PI)d+=Math.PI*2;kAnimAngle=Math.max(K_START,Math.min(K_START+K_ARC,dragStartKA+d));kTargetAngle=kAnimAngle;drawKnob();}
+  function onEnd(){if(!dragging)return;dragging=false;const ni=kAngleToIdx(kAnimAngle);setKnobTarget(ni);routeKnob(ni);}
+  cv.addEventListener('mousedown',onStart);cv.addEventListener('touchstart',onStart,{passive:false});
+  document.addEventListener('mousemove',onMove);document.addEventListener('touchmove',onMove,{passive:false});
+  document.addEventListener('mouseup',onEnd);document.addEventListener('touchend',onEnd);
+})();
+
+// ════════════════════════════════════════
+// TAB ROUTING + MAIN UI UPDATE
+// ════════════════════════════════════════
+let AT='dash';
+function showTab(n,btn){document.querySelectorAll('.tab').forEach(t=>t.classList.remove('act'));document.querySelectorAll('.tb').forEach(b=>b.classList.remove('act'));document.getElementById('tab-'+n).classList.add('act');if(btn)btn.classList.add('act');AT=n;if(n==='tune')showTune(activeTuneMap);if(n==='corr')buildCorrRows();if(n==='build'){buildBuild();updEngCfg();}if(n==='config')buildConfig();const ni=KNOB_TABS.findIndex(t=>t.id===n);if(ni>=0&&ni!==kIdx)setKnobTarget(ni);}
+function updEngCfg(){const p=E.profile,t=E.trans,el=document.getElementById('eng-cfg');if(el)el.textContent=`Engine:       ${p.name}\nCylinders:    ${p.cyl}\nDisplacement: ${p.disp}L (${~~(p.disp*1000)}cc)\nComp Ratio:   ${p.cr}:1\nFiring Order: ${p.fir.join('-')}\nTrigger:      ${p.pat}\nInjection:    ${p.inj}\nTurbo/Boost:  ${p.turbo?'YES — max '+p.maxb+'psi':'N/A'}\nDiesel/Glow:  ${p.diesel?'YES':'NO'} / ${p.glow?'YES':'NO'}\nIdle:         ${p.idle}RPM  Rev Limit: ${p.maxr}\n\nTrans:        ${t.name}\nGears:        ${t.gears||'CVT'}\nRatios:       ${t.ratios.join(' / ')}\nFinal Drive:  ${t.final}`;}
+function setEng(k){E.profile=EP[k]||EP.i4_na;bBoost(E.profile);resetE();buildCylKill();buildMissRow();}
+let toastTmr=null;
+function showToast(msg){const t=document.getElementById('toast');if(!t)return;t.textContent=msg;t.style.opacity='1';if(toastTmr)clearTimeout(toastTmr);toastTmr=setTimeout(()=>t.style.opacity='0',1800);}
+
+function updUI(){
+  const afrC=E.afr<12.5||E.afr>15.5?'#ff3030':E.afr<13.5||E.afr>15.2?'#ffb000':'#00ff41';
+  const stC=Math.abs(E.stft)>15?'#ff3030':Math.abs(E.stft)>8?'#ffb000':'#00ff41';
+  const ltC=Math.abs(E.ltft)>15?'#ff3030':Math.abs(E.ltft)>8?'#ffb000':'#00ff41';
+  const knkC=E.kret>6?'#ff3030':E.kret>2?'#ffb000':'#00ff41';
+  const oilC=E.oil<10?'#ff3030':E.oil<20?'#ffb000':'#00ddaa';
+  const batC=E.batt<11.5?'#ff3030':E.batt<12.2?'#ffb000':'#cc44ff';
+  const g=E.trans.gears===0?'CVT':String(E.gear);
+  const SBV=[~~E.rpm,E.map_kpa.toFixed(1),E.tps.toFixed(1),E.clt.toFixed(1),E.iat.toFixed(1),E.afr.toFixed(2),E.lam.toFixed(3),E.stft.toFixed(1),E.ltft.toFixed(1),E.adv.toFixed(1),E.kret.toFixed(1),~~E.egt,E.pw.toFixed(2),E.dc.toFixed(1),E.oil.toFixed(1),E.batt.toFixed(2),E.spd.toFixed(1),E.boost_psi.toFixed(1),g];
+  SBV.forEach((v,i)=>{const el=document.getElementById('s'+i);if(el)el.textContent=v;});
+  const s5=document.getElementById('s5');if(s5)s5.style.color=afrC;
+  const s7=document.getElementById('s7');if(s7)s7.style.color=stC;
+  const s8=document.getElementById('s8');if(s8)s8.style.color=ltC;
+  const db=document.getElementById('dtcbar');
+  if(E.active_dtcs.length){db.textContent=E.active_dtcs.map(d=>d[0]).join(' ');db.style.color='#ff3030';}else{db.textContent='NO DTCs';db.style.color='#00ff41';}
+  document.getElementById('scenebar').textContent=E.scenario.toUpperCase();
+  const ego=document.getElementById('egobar');if(ego){ego.textContent=E.ego?'EGO:CL':'EGO:OL';ego.style.color=E.ego?'#00ff41':'#ffb000';}
+  updPins();
+  if(AT==='dash'){
+    GAUGEDEFS.forEach((def,i)=>{const el=document.getElementById('g'+i);if(el)el.textContent=def.fmt(E[def.attr]??0);});
+    document.getElementById('g5').style.color=afrC;document.getElementById('g7').style.color=stC;document.getElementById('g8').style.color=ltC;document.getElementById('g10').style.color=knkC;document.getElementById('g15').style.color=oilC;document.getElementById('g16').style.color=batC;
+    const hvp=document.getElementById('hv-pan');if(hvp){const isHV=E.trans.name==="Toyota EVT";hvp.style.display=isHV?'block':'none';if(isHV){[[E.hv_voltage.toFixed(1),'hv0'],[E.hv_soc.toFixed(1),'hv1'],[E.hv_current.toFixed(1),'hv2'],[~~E.mg1_rpm,'hv3'],[~~E.mg2_rpm,'hv4']].forEach(([v,id])=>{const el=document.getElementById(id);if(el)el.textContent=v;});}}
+    drawAFR();
+  }
+  if(AT==='scope'){drawCv(document.getElementById('scope-cv'),document.getElementById('ch1')?.value,document.getElementById('ch2')?.value,null,false);}
+  if(AT==='can'){
+    const j=document.getElementById('j1-tb');if(j){j.innerHTML='';E.can.j1939.slice(-14).forEach(f=>{j.innerHTML+=`<tr><td>${f.t}</td><td>${f.id}</td><td>${f.pgn}</td><td>${f.name}</td><td>${f.data}</td><td>${f.decoded}</td></tr>`;});}
+    const o=document.getElementById('obd-tb');if(o&&E.can.autopoll){o.innerHTML='';E.can.obd.slice(-14).forEach(f=>{o.innerHTML+=`<tr><td>${f.t}</td><td>${f.id}</td><td style="color:${f.dir==='Req'?'#ffb000':'#00ff41'}">${f.dir}</td><td>${f.data}</td><td>${f.decoded}</td></tr>`;});}
+    const l=document.getElementById('lin-tb');if(l){l.innerHTML='';E.can.lin.slice(-10).forEach(f=>{l.innerHTML+=`<tr><td>${f.id}</td><td style="color:#00e5e5">${f.node}</td><td>${f.data}</td><td>${f.chk}</td></tr>`;});}
+    const pt=document.getElementById('proto-tb');if(pt&&E.can.capturing){pt.innerHTML='';E.can.proto.slice(-18).forEach(f=>{const mc=f.match?'style="color:#00ff41"':'';pt.innerHTML+=`<tr ${mc}><td>${f.id}</td>${f.data.map(d=>`<td>${d}</td>`).join('')}<td style="color:#00ddaa">${f.match}</td></tr>`;});}
+  }
+  if(AT==='tune')updOpPoint();if(AT==='mods')updModules();if(AT==='sens')updSens();
+  if(AT==='faults'){const ad=document.getElementById('active-dtcs');if(ad)ad.textContent=E.active_dtcs.length?E.active_dtcs.map(d=>d[0]+': '+d[1]).join('\n'):'No active DTCs';const sd=document.getElementById('stored-dtcs');if(sd)sd.textContent=E.stored_dtcs.length?E.stored_dtcs.map(d=>d[0]+': '+d[1]).join('\n'):'No stored DTCs';}
+  if(document.getElementById('sov').classList.contains('open')){const ovcv=document.getElementById('sov-cv');ovcv.style.height=(window.innerHeight-80)+'px';ovcv.setAttribute('height',window.innerHeight-80);drawCv(ovcv,document.getElementById('ov-c1')?.value,document.getElementById('ov-c2')?.value,document.getElementById('ov-c3')?.value,true);}
+}
+
+// ════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════
+function init(){
+  const es=document.getElementById('es');Object.entries(EP).forEach(([k,p])=>es.innerHTML+=`<option value="${k}">${p.name}</option>`);
+  const ts=document.getElementById('ts');Object.entries(TP).forEach(([k,t])=>ts.innerHTML+=`<option value="${k}">${t.name}</option>`);
+  [document.getElementById('ch1'),document.getElementById('ch2')].forEach((s,i)=>{s.innerHTML=i===1?'<option value="--">-- None --</option>':'';SIGS.forEach((sig,j)=>s.innerHTML+=`<option${(i===0&&j===0)||(i===1&&j===2)?' selected':''}>${sig}</option>`);});
+  buildGaugeGrid();buildFaultRows();buildMissRow();buildCylKill();buildSvcNav();loadSvc('generic');buildProbe();buildSensGrid();buildModNav();showMod('abs');buildLogHeader();buildBuild();bBoost(E.profile);buildMaps();showTune('ve');initSB();initScopeResize();
+  // Initial knob draw
+  kAnimAngle=kTabAngle(0);kTargetAngle=kTabAngle(0);drawKnob();
+  const b=document.getElementById('badge');b.textContent='RUNNING';b.style.color='#00ff41';b.style.borderColor='#2a5a12';
+  showToast('CyberKnife v3.8 Pip-Boy ready');
+}
+const DT=0.08;let logTickN=0;
+function tick(){step(DT);scopeStep(DT);canStep(DT);updUI();logTickN++;if(logTickN%5===0)logRow();}
+init();setInterval(tick,80);
+</script>
+</body>
+</html>

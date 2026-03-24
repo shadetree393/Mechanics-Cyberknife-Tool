@@ -1,0 +1,1258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="CyberKnife">
+<meta name="theme-color" content="#0d1117">
+<title>CYBERKNIFE v3.6</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#0d1117;--panel:#161b22;--dark:#0a0e14;--deep:#070c14;
+  --green:#00ff88;--amber:#ffaa00;--red:#ff4040;--blue:#4488ff;
+  --cyan:#00ccff;--yell:#ffff44;--purp:#cc55ff;--white:#ddeeff;
+  --gray:#445566;--dim:#223344;--orange:#ff7722;--teal:#00ddaa;
+}
+html,body{height:100%;overflow:hidden}
+body{font-family:"Courier New",monospace;background:var(--bg);color:var(--white);font-size:12px;display:flex;flex-direction:column}
+
+/* ── HEADER ── */
+#hdr{background:#050a0f;padding:5px 8px;display:flex;flex-wrap:wrap;align-items:center;gap:6px;flex-shrink:0;border-bottom:1px solid #0f1a28}
+#hdr h1{color:var(--green);font-size:13px;letter-spacing:3px;white-space:nowrap;text-shadow:0 0 12px #00ff8866}
+.hsel{background:var(--dark);color:#aaccff;border:1px solid #0f3460;padding:2px 5px;font-family:inherit;font-size:10px;border-radius:2px;max-width:140px}
+.hlbl{color:var(--gray);font-size:10px}
+#connbadge{margin-left:auto;font-size:10px;padding:2px 8px;border-radius:10px;background:#001828;border:1px solid #0f3460}
+
+/* ── STATUS BAR ── */
+#sb{background:#050a0f;display:flex;flex-wrap:nowrap;overflow-x:auto;gap:1px;padding:2px;flex-shrink:0;border-bottom:1px solid #0f1a28;scrollbar-width:none}
+#sb::-webkit-scrollbar{display:none}
+.sc{background:var(--deep);padding:3px 5px;display:flex;flex-direction:column;align-items:center;flex-shrink:0;min-width:60px}
+.sl{color:var(--gray);font-size:8px;white-space:nowrap;letter-spacing:.5px}
+.sv{font-weight:bold;font-size:12px;line-height:1.3}
+
+/* ── DTC BAR ── */
+#db{background:#0a0505;padding:3px 8px;display:flex;justify-content:space-between;align-items:center;font-size:10px;flex-shrink:0;border-bottom:1px solid #1a0505}
+.dtcc{font-weight:bold}
+.scn{color:var(--purp);font-weight:bold}
+
+/* ── TAB NAV ── */
+#tnav{background:#050a0f;display:flex;overflow-x:auto;gap:1px;padding:3px;flex-shrink:0;border-bottom:1px solid #0f1a28;scrollbar-width:none}
+#tnav::-webkit-scrollbar{display:none}
+.tb{background:var(--panel);color:#aaccff;border:none;padding:5px 10px;cursor:pointer;font-family:inherit;font-size:11px;font-weight:bold;white-space:nowrap;flex-shrink:0;letter-spacing:.5px;border-radius:2px}
+.tb.act{background:#0f3460;color:var(--cyan)}
+
+/* ── CONTENT AREA ── */
+#con{flex:1;overflow-y:auto;padding:6px;scrollbar-width:thin;scrollbar-color:#1a2a3a transparent}
+#con::-webkit-scrollbar{width:4px}
+#con::-webkit-scrollbar-track{background:transparent}
+#con::-webkit-scrollbar-thumb{background:#1a2a3a;border-radius:2px}
+.tab{display:none}.tab.act{display:block}
+
+/* ── PANELS ── */
+.pan{background:var(--panel);border-radius:4px;padding:7px;margin-bottom:7px;border:1px solid #0f1a28}
+.pt{color:var(--green);font-size:10px;letter-spacing:1.5px;margin-bottom:6px;font-weight:bold;text-transform:uppercase}
+
+/* ── GAUGE GRID ── */
+.gg{display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:3px}
+.g{background:var(--deep);padding:5px 4px;border-radius:3px;text-align:center;border:1px solid #0f1a28}
+.gl{color:var(--gray);font-size:8px;letter-spacing:.5px;margin-bottom:1px}
+.gv{font-weight:bold;font-size:15px;line-height:1.2}
+
+/* ── BUTTONS ── */
+button{background:#001828;color:#aaccff;border:1px solid #0f3460;padding:4px 9px;font-family:inherit;font-size:11px;cursor:pointer;border-radius:2px;letter-spacing:.3px;white-space:nowrap}
+button:hover,button:active{background:#0f3460}
+button.r{background:#2a0000;color:var(--red);border-color:#550000}
+button.r:hover{background:#3d0000}
+button.g{background:#002a0e;color:var(--green);border-color:#005522}
+button.g:hover{background:#003d14}
+button.a{background:#2a1800;color:var(--amber);border-color:#553300}
+button.p{background:#1a0030;color:var(--purp);border-color:#440066}
+
+/* ── ROW ── */
+.row{display:flex;gap:5px;flex-wrap:wrap;align-items:center;margin-bottom:5px}
+
+/* ── MONO OUTPUT ── */
+.mono{background:var(--dark);color:var(--cyan);padding:7px;font-size:10px;min-height:48px;white-space:pre-wrap;overflow-x:auto;border-radius:2px;margin-top:4px;line-height:1.6;border:1px solid #0f1a28}
+
+/* ── TABLES ── */
+.tscroll{max-height:180px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:#1a2a3a transparent}
+.ctbl{width:100%;border-collapse:collapse;font-size:10px}
+.ctbl th{color:var(--cyan);background:var(--dark);padding:3px 5px;text-align:left;white-space:nowrap;position:sticky;top:0}
+.ctbl td{color:#aaccff;padding:2px 5px;border-bottom:1px solid #0f1a28;white-space:nowrap;font-size:10px}
+.ctbl tr:hover td{background:#0f1f30}
+
+/* ── FAULT ROWS ── */
+.fr{display:flex;align-items:center;gap:8px;padding:5px 6px;background:var(--dark);border-radius:3px;margin-bottom:3px;flex-wrap:wrap;border:1px solid #0f1a28}
+.fn{color:var(--amber);font-weight:bold;font-size:10px;min-width:140px;letter-spacing:.5px}
+.fd{color:#667788;font-size:9px;flex:1;min-width:150px}
+
+/* ── SERVICE ── */
+.scard{background:var(--dark);border-radius:3px;padding:6px;margin-bottom:4px;border:1px solid #0f1a28}
+.sn{color:var(--teal);font-weight:bold;font-size:11px;margin-bottom:2px}
+.scmd{color:var(--gray);font-size:9px;margin:1px 0;letter-spacing:.3px}
+.sd{color:#aaccff;font-size:10px;margin-bottom:4px}
+.sr{color:var(--green);font-size:10px;margin-top:3px;min-height:12px;white-space:pre-wrap}
+
+/* ── BUILD ── */
+.bcard{background:var(--dark);border-radius:3px;padding:5px 7px;margin-bottom:3px;display:flex;gap:10px;border:1px solid #0f1a28;flex-wrap:wrap}
+.bt{font-weight:bold;font-size:10px;min-width:80px}
+.bi{color:#667788;font-size:10px;flex:1}
+
+/* ── INPUTS ── */
+input[type=number],input[type=text]{background:var(--dark);color:var(--amber);border:1px solid #0f3460;padding:3px 5px;font-family:inherit;font-size:11px;border-radius:2px;width:70px}
+
+/* ── CANVAS ── */
+canvas{display:block;border-radius:3px;border:1px solid #0f1a28}
+
+/* ── GAUGE SIZES ── */
+.g.sz-s{padding:2px 3px}.g.sz-s .gv{font-size:11px}.g.sz-s .gl{font-size:7px}
+.g.sz-l{padding:8px 6px;grid-column:span 2}.g.sz-l .gv{font-size:24px}.g.sz-l .gl{font-size:10px}
+.g.pinned{border:1px solid #00ff8844;background:#051a0e}
+.g.dragging{opacity:.5;cursor:grabbing}
+.g[draggable=true]{cursor:grab}
+
+/* ── GAUGE CONTEXT MENU ── */
+#gmenu{position:fixed;background:#0a0e14;border:1px solid #00ff8866;border-radius:4px;padding:6px;z-index:999;display:none;min-width:160px;box-shadow:0 4px 20px #000a}
+#gmenu .gm-title{color:#00ff88;font-size:10px;letter-spacing:1px;margin-bottom:6px;border-bottom:1px solid #0f3460;padding-bottom:4px}
+#gmenu .gm-row{display:flex;gap:4px;margin-bottom:5px;align-items:center}
+#gmenu .gm-lbl{color:#445566;font-size:9px;width:36px;flex-shrink:0}
+#gmenu button{padding:3px 8px;font-size:10px}
+#gmenu button.act{background:#0f3460;color:#00ccff;border-color:#00ccff}
+
+/* ── SCOPE OVERLAY (FULLSCREEN) ── */
+#scope-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:#0d1117;z-index:900;display:none;flex-direction:column;padding:8px}
+#scope-overlay.open{display:flex}
+#scope-overlay canvas{flex:1;width:100%;height:100%}
+#scope-overlay .ov-ctrl{display:flex;gap:6px;align-items:center;margin-bottom:6px;flex-wrap:wrap}
+
+/* ── SCOPE RESIZE HANDLE ── */
+#scope-resize{height:8px;cursor:ns-resize;background:linear-gradient(#0f1a28,#1a2a3a);margin:2px 0;border-radius:2px;display:flex;align-items:center;justify-content:center}
+#scope-resize::after{content:'';width:40px;height:2px;background:#445566;border-radius:1px}
+
+/* ── STATUS BAR EDIT ── */
+#sb-edit-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:#000a;z-index:800;display:none}
+#sb-edit-overlay.open{display:block}
+#sb-edit-panel{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#0a0e14;border:1px solid #0f3460;border-radius:6px;padding:12px;z-index:801;min-width:260px;max-width:90vw;max-height:80vh;overflow-y:auto}
+#sb-edit-panel h3{color:#00ff88;font-size:11px;letter-spacing:1px;margin-bottom:8px}
+.sb-check{display:flex;align-items:center;gap:8px;padding:4px 0;border-bottom:1px solid #0f1a28;cursor:pointer}
+.sb-check input{accent-color:#00ff88}
+.sb-check span{color:#aaccff;font-size:10px;flex:1}
+.sb-check .sb-cv{color:#445566;font-size:10px;width:50px;text-align:right}
+
+/* ── PINNED GAUGES ROW ── */
+#pinned-row{display:none;flex-wrap:nowrap;overflow-x:auto;gap:3px;padding:3px 6px;background:#051a0e;border-bottom:1px solid #00ff8822;scrollbar-width:none;flex-shrink:0}
+#pinned-row::-webkit-scrollbar{display:none}
+#pinned-row.has-pins{display:flex}
+.pin-g{background:#070c14;padding:3px 8px;border-radius:3px;display:flex;gap:6px;align-items:center;flex-shrink:0;border:1px solid #00ff8833}
+.pin-g .pl{color:#445566;font-size:8px}
+.pin-g .pv{font-weight:bold;font-size:13px}
+
+/* ── HINT TOAST ── */
+#toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#0f3460;color:#aaccff;padding:6px 16px;border-radius:20px;font-size:10px;z-index:999;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div id="hdr">
+
+<!-- PINNED GAUGES ROW -->
+<div id="pinned-row"></div>
+
+<!-- GAUGE CONTEXT MENU -->
+<div id="gmenu">
+  <div class="gm-title" id="gm-label">GAUGE OPTIONS</div>
+  <div class="gm-row"><span class="gm-lbl">SIZE</span>
+    <button id="gm-s" onclick="setGaugeSize('s')">S</button>
+    <button id="gm-m" onclick="setGaugeSize('m')">M</button>
+    <button id="gm-l" onclick="setGaugeSize('l')">L</button>
+  </div>
+  <div class="gm-row"><span class="gm-lbl">PIN</span>
+    <button id="gm-pin" onclick="toggleGaugePin()">Pin to Top</button>
+  </div>
+  <div class="gm-row" style="justify-content:flex-end">
+    <button onclick="closeGMenu()">✕ Close</button>
+  </div>
+</div>
+
+<!-- STATUS BAR EDIT PANEL -->
+<div id="sb-edit-overlay" onclick="closeSbEdit()"></div>
+<div id="sb-edit-panel" style="display:none">
+  <h3>&#9881; STATUS BAR — HOLD TO SHOW/HIDE</h3>
+  <div id="sb-checks"></div>
+  <div style="margin-top:8px;display:flex;gap:6px">
+    <button class="g" onclick="closeSbEdit()">DONE</button>
+    <button onclick="sbResetAll()">RESET</button>
+  </div>
+</div>
+
+<!-- SCOPE FULLSCREEN OVERLAY -->
+<div id="scope-overlay">
+  <div class="ov-ctrl">
+    <button onclick="closeScopeOverlay()" class="r">✕ CLOSE</button>
+    <label style="color:#00ff88;font-size:10px">CH1:&nbsp;<select id="ov-ch1" class="hsel" style="max-width:150px"></select></label>
+    <label style="color:#ffaa00;font-size:10px">CH2:&nbsp;<select id="ov-ch2" class="hsel" style="max-width:150px"></select></label>
+    <label style="color:#cc55ff;font-size:10px">CH3:&nbsp;<select id="ov-ch3" class="hsel" style="max-width:150px"></select></label>
+    <button onclick="freezeScope()" class="a" id="freeze-btn">❚❚ FREEZE</button>
+    <span id="ov-crank" style="color:#cc55ff;font-size:9px;margin-left:4px"></span>
+  </div>
+  <canvas id="scope-ov-cv"></canvas>
+  <div id="ov-leg" style="display:flex;gap:14px;margin-top:5px;font-size:10px;flex-wrap:wrap"></div>
+</div>
+
+<!-- TOAST -->
+<div id="toast"></div>
+  <h1>&#9889; CYBERKNIFE v3.6</h1>
+  <span class="hlbl">ENGINE:</span>
+  <select class="hsel" id="eng-sel" onchange="setEngine(this.value)"></select>
+  <span class="hlbl">TRANS:</span>
+  <select class="hsel" id="trans-sel" onchange="setTrans(this.value)"></select>
+  <span class="hlbl">COND:</span>
+  <select class="hsel" id="cond-sel" onchange="E.env.cond_override=this.value">
+    <option value="auto">AUTO</option><option value="warmup">WARMUP</option>
+    <option value="idle">IDLE</option><option value="cruise">CRUISE</option>
+    <option value="wot">WOT</option><option value="decel">DECEL</option>
+    <option value="boost_test">BOOST TEST</option>
+  </select>
+  <span id="connbadge" style="color:#445566">STARTING</span>
+</div>
+
+<!-- STATUS BAR -->
+<div id="sb">
+  <div class="sc"><div class="sl">RPM</div><div class="sv" id="s0" style="color:#00ff88">---</div></div>
+  <div class="sc"><div class="sl">MAP kPa</div><div class="sv" id="s1" style="color:#4488ff">---</div></div>
+  <div class="sc"><div class="sl">TPS %</div><div class="sv" id="s2" style="color:#ffff44">---</div></div>
+  <div class="sc"><div class="sl">CLT °C</div><div class="sv" id="s3" style="color:#ff4040">---</div></div>
+  <div class="sc"><div class="sl">IAT °C</div><div class="sv" id="s4" style="color:#00ccff">---</div></div>
+  <div class="sc"><div class="sl">AFR</div><div class="sv" id="s5" style="color:#00ff88">---</div></div>
+  <div class="sc"><div class="sl">LAMBDA</div><div class="sv" id="s6" style="color:#00ff88">---</div></div>
+  <div class="sc"><div class="sl">STFT %</div><div class="sv" id="s7" style="color:#00ff88">---</div></div>
+  <div class="sc"><div class="sl">LTFT %</div><div class="sv" id="s8" style="color:#00ff88">---</div></div>
+  <div class="sc"><div class="sl">IGN deg</div><div class="sv" id="s9" style="color:#00ccff">---</div></div>
+  <div class="sc"><div class="sl">KNOCK</div><div class="sv" id="s10" style="color:#00ff88">---</div></div>
+  <div class="sc"><div class="sl">EGT °C</div><div class="sv" id="s11" style="color:#ff7722">---</div></div>
+  <div class="sc"><div class="sl">PW ms</div><div class="sv" id="s12" style="color:#ffaa00">---</div></div>
+  <div class="sc"><div class="sl">OIL psi</div><div class="sv" id="s13" style="color:#00ddaa">---</div></div>
+  <div class="sc"><div class="sl">BAT V</div><div class="sv" id="s14" style="color:#cc55ff">---</div></div>
+  <div class="sc"><div class="sl">SPD kph</div><div class="sv" id="s15" style="color:#ffff44">---</div></div>
+  <div class="sc"><div class="sl">BOOST psi</div><div class="sv" id="s16" style="color:#ff7722">---</div></div>
+  <div class="sc"><div class="sl">GEAR</div><div class="sv" id="s17" style="color:#cc55ff">---</div></div>
+</div>
+
+<!-- DTC BAR -->
+<div id="db">
+  <div>DTCs: <span class="dtcc" id="dtcbar">NO DTCs</span></div>
+  <div>SCENE: <span class="scn" id="scenebar">--</span>&nbsp;&nbsp;<span id="egobar" style="color:#445566;font-size:9px">EGO:--</span></div>
+</div>
+
+<!-- TAB NAV -->
+<div id="tnav">
+  <button class="tb act" onclick="showTab('dash',this)">DASH</button>
+  <button class="tb" onclick="showTab('obd',this)">OBD-II</button>
+  <button class="tb" onclick="showTab('scope',this)">SCOPE</button>
+  <button class="tb" onclick="showTab('can',this)">CAN/LIN</button>
+  <button class="tb" onclick="showTab('faults',this)">FAULTS</button>
+  <button class="tb" onclick="showTab('service',this)">SERVICE</button>
+  <button class="tb" onclick="showTab('build',this)">BUILD</button>
+  <button class="tb" onclick="showTab('config',this)">CONFIG</button>
+</div>
+
+<!-- CONTENT -->
+<div id="con">
+
+<!-- DASH -->
+<div id="tab-dash" class="tab act">
+  <div class="pan">
+    <div class="pt">&#9679; Live Gauges</div>
+    <div class="gg">
+      <div class="g"><div class="gl">RPM</div><div class="gv" id="g0" style="color:#00ff88">--</div></div>
+      <div class="g"><div class="gl">MAP kPa</div><div class="gv" id="g1" style="color:#4488ff">--</div></div>
+      <div class="g"><div class="gl">TPS %</div><div class="gv" id="g2" style="color:#ffff44">--</div></div>
+      <div class="g"><div class="gl">CLT °C</div><div class="gv" id="g3" style="color:#ff4040">--</div></div>
+      <div class="g"><div class="gl">IAT °C</div><div class="gv" id="g4" style="color:#00ccff">--</div></div>
+      <div class="g"><div class="gl">AFR</div><div class="gv" id="g5" style="color:#00ff88">--</div></div>
+      <div class="g"><div class="gl">Lambda λ</div><div class="gv" id="g6" style="color:#00ff88">--</div></div>
+      <div class="g"><div class="gl">STFT %</div><div class="gv" id="g7" style="color:#00ff88">--</div></div>
+      <div class="g"><div class="gl">LTFT %</div><div class="gv" id="g8" style="color:#00ff88">--</div></div>
+      <div class="g"><div class="gl">IGN deg</div><div class="gv" id="g9" style="color:#00ccff">--</div></div>
+      <div class="g"><div class="gl">KNOCK deg</div><div class="gv" id="g10" style="color:#00ff88">--</div></div>
+      <div class="g"><div class="gl">EGT °C</div><div class="gv" id="g11" style="color:#ff7722">--</div></div>
+      <div class="g"><div class="gl">PW ms</div><div class="gv" id="g12" style="color:#ffaa00">--</div></div>
+      <div class="g"><div class="gl">DC %</div><div class="gv" id="g13" style="color:#ffaa00">--</div></div>
+      <div class="g"><div class="gl">VE %</div><div class="gv" id="g14" style="color:#4488ff">--</div></div>
+      <div class="g"><div class="gl">OIL psi</div><div class="gv" id="g15" style="color:#00ddaa">--</div></div>
+      <div class="g"><div class="gl">BAT V</div><div class="gv" id="g16" style="color:#cc55ff">--</div></div>
+      <div class="g"><div class="gl">SPEED kph</div><div class="gv" id="g17" style="color:#ffff44">--</div></div>
+      <div class="g"><div class="gl">BOOST psi</div><div class="gv" id="g18" style="color:#ff7722">--</div></div>
+      <div class="g"><div class="gl">GEAR</div><div class="gv" id="g19" style="color:#cc55ff">--</div></div>
+      <div class="g"><div class="gl">DWELL ms</div><div class="gv" id="g20" style="color:#00ccff">--</div></div>
+      <div class="g"><div class="gl">KNOCK CNT</div><div class="gv" id="g21" style="color:#ff4040">--</div></div>
+    </div>
+  </div>
+  <div class="pan" id="hv-pan" style="display:none">
+    <div class="pt" style="color:#ff7722">&#9888; HV System — Orange Cables — Qualified Techs Only</div>
+    <div class="gg">
+      <div class="g"><div class="gl">HV Volts</div><div class="gv" id="hv0" style="color:#ff7722">--</div></div>
+      <div class="g"><div class="gl">SOC %</div><div class="gv" id="hv1" style="color:#00ff88">--</div></div>
+      <div class="g"><div class="gl">HV Amps</div><div class="gv" id="hv2" style="color:#00ccff">--</div></div>
+      <div class="g"><div class="gl">MG1 RPM</div><div class="gv" id="hv3" style="color:#cc55ff">--</div></div>
+      <div class="g"><div class="gl">MG2 RPM</div><div class="gv" id="hv4" style="color:#cc55ff">--</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- OBD-II -->
+<div id="tab-obd" class="tab">
+  <div class="pan">
+    <div class="pt">OBD-II PID Request</div>
+    <div class="row">
+      <button onclick="obdReq('0C','RPM')">RPM</button>
+      <button onclick="obdReq('0D','Speed')">Speed</button>
+      <button onclick="obdReq('05','CLT')">CLT</button>
+      <button onclick="obdReq('0F','IAT')">IAT</button>
+      <button onclick="obdReq('04','Load')">Load</button>
+      <button onclick="obdReq('11','TPS')">TPS</button>
+      <button onclick="obdReq('0B','MAP')">MAP</button>
+      <button onclick="obdReq('14','O2')">O2</button>
+      <button onclick="obdReq('2D','Knock')">Knock</button>
+      <button onclick="obdReq('M9','VIN')">VIN</button>
+    </div>
+    <div class="row">
+      <button onclick="dtcRead(3)">Active DTCs (Mode 03)</button>
+      <button onclick="dtcRead(7)">Pending (Mode 07)</button>
+      <button class="r" onclick="clearDTCs()">CLEAR DTCs (Mode 04)</button>
+      <button onclick="freezeFrame()">Freeze Frame</button>
+    </div>
+    <div class="mono" id="obd-out">Ready — select a PID or DTC function above</div>
+  </div>
+  <div class="pan">
+    <div class="pt">UDS ISO 14229 — Unified Diagnostic Services</div>
+    <div class="row">
+      <button onclick="uds('0x10','SessCtrl')">0x10 SessCtrl</button>
+      <button onclick="uds('0x11','ECUReset')">0x11 ECUReset</button>
+      <button onclick="uds('0x19','ReadDTC')">0x19 ReadDTC</button>
+      <button onclick="uds('0x22','ReadDID')">0x22 ReadDID</button>
+      <button onclick="uds('0x27','SecAccess')">0x27 SecAccess</button>
+      <button onclick="uds('0x2E','WriteData')">0x2E WriteData</button>
+      <button onclick="uds('0x31','Routine')">0x31 Routine</button>
+      <button onclick="uds('0x3E','TesterPres')">0x3E TesterPres</button>
+    </div>
+    <div class="mono" id="uds-out">Select a UDS service above</div>
+  </div>
+</div>
+
+<!-- SCOPE -->
+<div id="tab-scope" class="tab">
+  <div class="pan">
+    <div class="pt">Oscilloscope <button onclick="openScopeOverlay()" style="float:right;padding:2px 8px;font-size:10px" class="g">⛶ EXPAND</button></div>
+    <div class="row">
+      <label style="color:#00ff88;font-size:10px">CH1:&nbsp;<select id="ch1" class="hsel" style="max-width:160px"></select></label>
+      <label style="color:#ffaa00;font-size:10px">CH2:&nbsp;<select id="ch2" class="hsel" style="max-width:160px"></select></label>
+    </div>
+    <div id="crank-info" style="color:#cc55ff;font-size:9px;margin-bottom:4px;letter-spacing:.5px"></div>
+    <canvas id="scope-cv" height="220" style="width:100%"></canvas>
+    <div id="scope-resize"></div>
+    <div id="scope-leg" style="display:flex;gap:14px;margin-top:5px;font-size:10px;flex-wrap:wrap"></div>
+  </div>
+</div>
+
+<!-- CAN/LIN -->
+<div id="tab-can" class="tab">
+  <div class="pan">
+    <div class="pt">J1939 — 250kbps 29-bit Extended ID (Heavy Duty)</div>
+    <div class="tscroll"><table class="ctbl"><thead><tr><th>Time</th><th>ID</th><th>PGN</th><th>Name</th><th>Data</th><th>Decoded</th></tr></thead><tbody id="j1939-tb"></tbody></table></div>
+  </div>
+  <div class="pan">
+    <div class="pt">OBD-II — 500kbps 11-bit Standard ID &nbsp;<label style="font-size:10px;color:#aaccff;font-weight:normal"><input type="checkbox" id="autopoll-cb" onchange="E.can.autopoll=this.checked"> Auto-Poll</label></div>
+    <div class="tscroll"><table class="ctbl"><thead><tr><th>Time</th><th>ID</th><th>Dir</th><th>Data</th><th>Decoded</th></tr></thead><tbody id="obd-tb"></tbody></table></div>
+  </div>
+  <div class="pan">
+    <div class="pt">LIN Bus — 9.6/19.2kbps Body Modules</div>
+    <div class="tscroll"><table class="ctbl"><thead><tr><th>ID</th><th>Node</th><th>Data</th><th>CHK</th></tr></thead><tbody id="lin-tb"></tbody></table></div>
+  </div>
+</div>
+
+<!-- FAULTS -->
+<div id="tab-faults" class="tab">
+  <div class="pan">
+    <div class="pt">Fault Injection — Engine</div>
+    <div id="fault-rows"></div>
+  </div>
+  <div class="pan">
+    <div class="pt">Misfire Injection</div>
+    <div class="row" id="miss-row"></div>
+    <div style="color:#667788;font-size:9px;margin-top:2px">Kills a cylinder — drop in RPM, AFR variance, misfire DTC P030x</div>
+  </div>
+  <div class="pan">
+    <div class="pt">Cylinder Kill Test (contribution test)</div>
+    <div class="row" id="cyl-kill-row"></div>
+    <div id="cyl-kill-lbl" style="color:#00ff88;font-size:10px;margin-top:4px">All cylinders active</div>
+  </div>
+  <div class="pan">
+    <div class="pt">Active DTCs</div>
+    <div class="mono" id="active-dtcs" style="color:#ff4040">No active DTCs</div>
+    <div class="row" style="margin-top:5px"><button class="r" onclick="clearDTCs()">CLEAR ALL DTCs</button></div>
+  </div>
+  <div class="pan">
+    <div class="pt">Stored DTCs</div>
+    <div class="mono" id="stored-dtcs" style="color:#ffaa00">No stored DTCs</div>
+  </div>
+</div>
+
+<!-- SERVICE -->
+<div id="tab-service" class="tab">
+  <div class="pan">
+    <div class="pt">Service Procedures</div>
+    <div class="row" id="svc-nav"></div>
+    <div id="svc-content"></div>
+  </div>
+</div>
+
+<!-- BUILD -->
+<div id="tab-build" class="tab">
+  <div class="pan">
+    <div class="pt">Trigger Pattern Library</div>
+    <div id="trig-list"></div>
+  </div>
+  <div class="pan">
+    <div class="pt">Injector Database + Dead Time Calculator</div>
+    <div id="inj-list"></div>
+    <div class="row" style="margin-top:8px">
+      <label style="color:#aaccff;font-size:10px">Injector:&nbsp;<select id="inj-sel" class="hsel" style="max-width:200px"></select></label>
+      <label style="color:#aaccff;font-size:10px">Voltage:&nbsp;<input type="number" id="inj-v" value="13.5" step="0.1" style="width:58px"></label>
+      <button class="a" onclick="calcDT()">CALC</button>
+    </div>
+    <div class="mono" id="dt-res" style="min-height:26px"></div>
+  </div>
+  <div class="pan">
+    <div class="pt">Transmission Profiles</div>
+    <div id="trans-list"></div>
+  </div>
+  <div class="pan">
+    <div class="pt">Current Engine Config</div>
+    <div class="mono" id="eng-cfg"></div>
+  </div>
+</div>
+
+<!-- CONFIG -->
+<div id="tab-config" class="tab">
+  <div class="pan">
+    <div class="pt">Environment</div>
+    <div class="row">
+      <label style="color:#aaccff;font-size:10px">Altitude (m):&nbsp;<input type="number" id="cfg-alt" value="0" style="width:65px"></label>
+      <label style="color:#aaccff;font-size:10px">Ambient (°C):&nbsp;<input type="number" id="cfg-amb" value="20" style="width:55px"></label>
+      <label style="color:#aaccff;font-size:10px">Fuel:&nbsp;<select id="cfg-fuel" class="hsel"><option>E10</option><option>E85</option><option>91oct</option><option>93oct</option><option>98oct</option><option>diesel</option><option>B20</option></select></label>
+      <label style="color:#aaccff;font-size:10px">Grade %:&nbsp;<input type="number" id="cfg-grade" value="0" step="1" style="width:50px"></label>
+      <button class="g" onclick="applyEnv()">APPLY</button>
+    </div>
+    <div id="env-res" style="color:#00ff88;font-size:10px;margin-top:3px"></div>
+  </div>
+  <div class="pan">
+    <div class="pt">Boost Control (Turbo Engines)</div>
+    <div class="row">
+      <label style="color:#aaccff;font-size:10px"><input type="checkbox" id="boost-en" checked onchange="applyBoost()"> Enabled</label>
+      <label style="color:#aaccff;font-size:10px">Target psi:&nbsp;<input type="number" id="boost-tgt" value="14" step="1" style="width:55px;color:#ff7722"></label>
+      <button class="a" onclick="applyBoost()">SET</button>
+    </div>
+  </div>
+  <div class="pan">
+    <div class="pt">About</div>
+    <div style="color:#667788;font-size:10px;line-height:2.2">
+      <span style="color:#00ff88">MECHANIC'S CYBERKNIFE v3.6</span><br>
+      Single HTML file — save and share, works offline<br>
+      Add to home screen → opens like a native app (iOS &amp; Android)<br>
+      Full ECU physics: 2D VE/IGN/AFR table interpolation (12×9 cells)<br>
+      Knock retard with recovery · STFT/LTFT closed-loop fuel trim<br>
+      Baro correction · CLT/IAT enrichment · Accel enrichment · Dead time<br>
+      12 engine profiles · 6 trans profiles · 7 fuel types · EGO switching<br>
+      J1939 (29-bit) · OBD-II (11-bit) · LIN bus simulation<br>
+      Fault injection: O2 · MAP · CLT · vacuum leak · timing · injector · misfire<br>
+      Service procedures: Generic · BMW · Ford · GM · Toyota · VW/Audi · HD<br>
+      Injector dead time calculator · Trigger pattern library
+    </div>
+  </div>
+</div>
+
+</div><!-- /con -->
+
+<script>
+// ══════════════════════════════════════════════════════════════════
+// DATA — ENGINE / TRANS / FUEL
+// ══════════════════════════════════════════════════════════════════
+const RPM_B=[500,1000,1500,2000,2500,3000,3500,4000,4500,5000,5500,6000];
+const MAP_B=[20,30,40,50,60,70,80,90,100];
+
+const EP={
+  i4_na:    {name:"I4 NA 2.0L",       cyl:4,disp:2.0,cr:10.2,idle:800,maxr:7200,maxb:0, inj:"PFI", diesel:0,turbo:0,glow:0,oi:25,oc:50,egt:650,pat:"60-2", fir:[1,3,4,2]},
+  v6_na:    {name:"V6 NA 3.5L",        cyl:6,disp:3.5,cr:10.8,idle:700,maxr:6800,maxb:0, inj:"PFI", diesel:0,turbo:0,glow:0,oi:28,oc:55,egt:660,pat:"60-2", fir:[1,2,3,4,5,6]},
+  v8_na:    {name:"V8 NA 5.7L",        cyl:8,disp:5.7,cr:9.5, idle:650,maxr:6500,maxb:0, inj:"SFI", diesel:0,turbo:0,glow:0,oi:25,oc:45,egt:680,pat:"58x",  fir:[1,8,4,3,6,5,7,2]},
+  i4_turbo: {name:"I4 Turbo 2.0T",     cyl:4,disp:2.0,cr:9.0, idle:800,maxr:6800,maxb:18,inj:"DI",  diesel:0,turbo:1,glow:0,oi:30,oc:60,egt:720,pat:"60-2", fir:[1,3,4,2]},
+  v6_turbo: {name:"V6 BiTurbo 3.0T",   cyl:6,disp:3.0,cr:9.3, idle:700,maxr:6500,maxb:16,inj:"DI",  diesel:0,turbo:1,glow:0,oi:35,oc:65,egt:750,pat:"60-2", fir:[1,4,2,5,3,6]},
+  v8_turbo: {name:"V8 SC 6.2L",        cyl:8,disp:6.2,cr:9.1, idle:650,maxr:6200,maxb:9, inj:"SFI", diesel:0,turbo:1,glow:0,oi:30,oc:55,egt:760,pat:"58x",  fir:[1,8,4,3,6,5,7,2]},
+  i4_diesel:{name:"I4 Diesel 2.2L",    cyl:4,disp:2.2,cr:16.5,idle:850,maxr:4800,maxb:22,inj:"CRDI",diesel:1,turbo:1,glow:1,oi:35,oc:65,egt:580,pat:"36-1", fir:[1,3,4,2]},
+  v6_diesel:{name:"V6 TDI 3.0L",       cyl:6,disp:3.0,cr:16.8,idle:800,maxr:4500,maxb:24,inj:"CRDI",diesel:1,turbo:1,glow:1,oi:40,oc:70,egt:590,pat:"36-1", fir:[1,4,2,5,3,6]},
+  i6_hd:    {name:"I6 HD Diesel 6.7L", cyl:6,disp:6.7,cr:17.3,idle:700,maxr:3400,maxb:35,inj:"CRDI",diesel:1,turbo:1,glow:1,oi:45,oc:80,egt:540,pat:"36-1", fir:[1,5,3,6,2,4]},
+  v8_hd:    {name:"V8 HD Diesel 6.6L", cyl:8,disp:6.6,cr:17.5,idle:750,maxr:3200,maxb:30,inj:"CRDI",diesel:1,turbo:1,glow:1,oi:45,oc:80,egt:545,pat:"58x",  fir:[1,8,4,3,6,5,7,2]},
+  i6_semi:  {name:"I6 Semi 15L",        cyl:6,disp:15, cr:18.0,idle:600,maxr:2100,maxb:45,inj:"CRDI",diesel:1,turbo:1,glow:0,oi:50,oc:90,egt:510,pat:"36-1", fir:[1,5,3,6,2,4]},
+  i6_cat:   {name:"I6 Cat 13L",         cyl:6,disp:13, cr:17.5,idle:600,maxr:2100,maxb:42,inj:"CRDI",diesel:1,turbo:1,glow:0,oi:50,oc:88,egt:515,pat:"36-1", fir:[1,5,3,6,2,4]},
+};
+const TP={
+  "6spd":   {name:"6L80 Auto",    gears:6,ratios:[4.03,2.36,1.53,1.15,0.85,0.67],final:3.42,li:70,ld:140},
+  "8spd":   {name:"8HP Auto",     gears:8,ratios:[4.71,3.14,2.11,1.67,1.29,1.0,0.84,0.67],final:3.15,li:75,ld:145},
+  "cvt":    {name:"CVT Belt",     gears:0,ratios:[2.5,1.0,0.45],final:4.1, li:50,ld:200},
+  "dct":    {name:"DCT 7-spd",    gears:7,ratios:[3.9,2.7,1.93,1.45,1.17,0.95,0.81],final:3.06,li:80,ld:160},
+  "allison":{name:"Allison 1000", gears:6,ratios:[3.51,1.9,1.42,1.0,0.75,0.64],final:3.73,li:90,ld:175},
+  "prius":  {name:"Toyota EVT",   gears:0,ratios:[2.4,1.0,0.4],final:3.267,li:0,ld:0},
+};
+const FS={E10:14.5,E85:9.8,"91oct":14.7,"93oct":14.7,"98oct":14.7,diesel:14.5,B20:14.1};
+
+const SIGS=["Wideband O2","Narrowband O2","MAP Sensor","TPS","CLT","IAT","Battery",
+            "Injector PW","Crank Signal","Cam Signal","Ignition Pri","Knock Sensor","EGT","Oil Pressure","Boost Pressure"];
+const SCOL={"Wideband O2":"#00ff88","Narrowband O2":"#ff8844","MAP Sensor":"#4488ff",
+  "TPS":"#ffff44","CLT":"#ff4040","IAT":"#00ccff","Battery":"#cc55ff",
+  "Injector PW":"#ffaa00","Crank Signal":"#00ff88","Cam Signal":"#aaffcc",
+  "Ignition Pri":"#ff6644","Knock Sensor":"#ff4488","EGT":"#ff9900",
+  "Oil Pressure":"#33ddaa","Boost Pressure":"#dd88ff"};
+
+const FD=[
+  ["fault_o2","O2 SENSOR FAIL","Stuck low — open loop, EGO off, lean condition undetected"],
+  ["fault_map","MAP SENSOR FAIL","Stuck 50kPa — stale VE lookup, wrong fueling"],
+  ["fault_clt","CLT SENSOR OPEN","Reads -40°C — locked in cold start enrichment"],
+  ["fault_lean","VACUUM LEAK","Unmetered air — lean AFR, STFT chases positive"],
+  ["fault_ign","RETARDED TIMING","10° pulled — power loss, detonation risk at WOT"],
+  ["fault_inj","STUCK OPEN INJECTOR","Shorted driver — flooding, hydrolocking risk"],
+];
+
+const SVC={
+  generic:[["Oil Reset","0x31 0xA100","Resets oil life 100% — key cycle after"],["Throttle Relearn","Disconnect bat 10min idle 10min","IAC/DBW adaptation"],["EVAP Test","Mode01 PID 41 EVAP monitor","Leak readiness — cold soak needed"],["DPF Regen","0x31 0xBF00",">60kph sustained EGT 550-650°C"],["AdBlue Reset","0x2E 0xD003","Reset DEF timer after fill"],["Steering Cal","0x31 0xF0A1","Level ground, steering centered"],["EPB Service","0x31 0x0206","Retract calipers for pad swap"],["Idle Relearn","Warm idle 10min, drive 30min","Relearns fueling LTFT windows"]],
+  bmw:[["CBS Reset","Kombi 0x31 service category","BMW Condition Based Service"],["Trans Svc","ZGM 0x31 0x6020 01 00","Change at 80k, not lifetime"],["Injector Coding","DME 0x2E 0x12AB 8-byte","8-digit flow code on injector body"],["DME Adapt Clear","0x31 0xFF01 01","Clear fuel/idle/misfire adapts"],["VANOS Adapt","0x31 0x9000","Cam phaser relearn after timing work"],["Battery Reg","BMS 0x2E 0xC840","Register Ah and chemistry into BMS"],["EGS Adapt","EGS 0x31 0xE100","Shift adapts — new fluid or component"]],
+  ford:[["KAM Reset","PCM 0x11 01","Clear KAM — 40min idle relearn"],["PATS Key","PCM 0x27 + 0x2E","Needs 2 existing keys or override"],["MS-CAN Actuator","BCM 0x31 at 125kbps","Ford body separate 125kbps bus"],["Injector Char","0x2E 0xF00A 4B/cyl","Flow offset codes per cylinder"],["ETC Throttle","0x31 0xF080 01","Idle hot, no loads, 10 min"],["DPS6 Clutch","TCM 0x31 0x0600","PowerShift kiss-point 10 slow engagements"]],
+  gm:[["KAM Reset","0x27 seed+key 0x11 03","Clear idle/fuel/trans adapts"],["CASE Relearn","Fixed idle, throttle cycles","CKP pattern removal after crank/sensor"],["AFM Check","PCM 0x22 0xB003","Active Fuel Management P3400/P3401"],["Allison Reset","TCM 0x2E 0x4501","TranSynd interval — 250kbps J1939"],["TPMS Relearn","Drive>25kph 10min or tool","Schrader 315MHz FL-FR-RL-RR"],["Inj Balance","PCM 0x31 0xA105 01","Per-cyl fuel trim — all cyls needed"]],
+  toyota:[["Throttle Relearn","IGN ON-OFF-5sec idle 10min","Sub-throttle valve relearn"],["VSC Cal","Chassis 0x31 0x0234","Yaw/lateral G — level stationary"],["D4-S Injector","ECM 0x2E 0x01A5 12 bytes","GR engine injector flow codes"],["HV Inspect","HV ECU 0x22 0x0281","Cell voltage spread >0.3V = failing pack"],["EPB Bleed","Skid ECU 0x31 0x0100","ABS open — 2 operators needed"],["Speedo Cal","Combo meter 0x2E ratio","Required after tire size change"]],
+  vw:[["TDI DPF Reset","ECM 0x31 routine 0x03","After new DPF — reset ash counter"],["Injector IQ","ECM 0x2E 0x0100 8 codes","IQ codes etched on injector body"],["DSG Reset","Mechatronic 0x2E counter","After fluid+filter change"],["Throttle Adapt","Basic settings group 060","Lower stop then upper stop learn"],["AdBlue Quality","ECM 0x31 0x4401","NOx sensor baseline after exhaust work"],["Air Mass Adapt","Basic settings 0x0023","MAF adaptation after replacement"]],
+  hd:[["Cummins Clear","J1939 DM11 PGN 0xFEDA","HD DTC clear — tester addr 0xF9"],["DDEC Reset","SPN 2848 FMI 14","Detroit Diesel J1939 proprietary SPNs"],["Allison Cal","Allison DOC 250kbps 29-bit","Shift cals — needs DOC or J1939 tool"],["Regen Force","J1939 0x31 DPF >95% soot","Neutral, PTO-off, park-brake, 1200rpm"],["EGR Cal","J1939 DM7 PGN 0xC300","EGR valve cal after cleaning/replace"],["Inj Trim HD","EEPROM via J2534","INSITE/DDDL — individual cyl trim"]],
+};
+
+const TRIGGERS={"60-2":"Toyota/Ford/GM — most common petrol","36-1":"Diesel CRDI / VAG TDI — Bosch standard","58x":"GM LS/LT reluctor wheel — 58 teeth, 2 missing","4+1":"Early TBI/carb — distributor","Sub6+2":"Subaru EJ series — split-tooth pattern","36-1+1":"Mitsubishi distributor CAS","EDIS36-1":"Ford EDIS distributorless — cam sync separate","GM7x":"HEI distributor — 7x crank signal"};
+
+const INJ={"Bosch EV1 Yellow (0280156065)":{flow:235,dt14:0.80},"Bosch EV14 Green (0280158040)":{flow:440,dt14:0.58},"Siemens Deka (06A906031)":{flow:630,dt14:0.65},"Denso 550cc (23250-46090)":{flow:550,dt14:0.62},"FIC 1650cc High-Z":{flow:1650,dt14:0.45},"Denso CRDI Common Rail":{flow:0,dt14:0}};
+
+// ══════════════════════════════════════════════════════════════════
+// MATH
+// ══════════════════════════════════════════════════════════════════
+function rn(){let u=0,v=0;while(!u)u=Math.random();while(!v)v=Math.random();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);}
+function i1(xs,ys,v){if(v<=xs[0])return ys[0];if(v>=xs[xs.length-1])return ys[ys.length-1];for(let i=0;i<xs.length-1;i++)if(xs[i]<=v&&v<=xs[i+1]){const t=(v-xs[i])/(xs[i+1]-xs[i]);return ys[i]+t*(ys[i+1]-ys[i]);}return ys[ys.length-1];}
+function ib(bins,v){for(let i=0;i<bins.length;i++)if(v<=bins[i])return i;return bins.length-1;}
+function i2(tbl,rpm,kpa){const ri=ib(RPM_B,rpm),mi=ib(MAP_B,kpa),r0=Math.max(0,ri-1),r1=Math.min(11,ri),m0=Math.max(0,mi-1),m1=Math.min(8,mi);const rx=Math.max(0,Math.min(1,(rpm-RPM_B[r0])/Math.max(RPM_B[r1]-RPM_B[r0],1)));const mx=Math.max(0,Math.min(1,(kpa-MAP_B[m0])/Math.max(MAP_B[m1]-MAP_B[m0],1)));return tbl[m0][r0]*(1-rx)*(1-mx)+tbl[m0][r1]*rx*(1-mx)+tbl[m1][r0]*(1-rx)*mx+tbl[m1][r1]*rx*mx;}
+function cl(v,lo,hi){return Math.max(lo,Math.min(hi,v));}
+function f1(v){return Math.round(v*10)/10;}
+function f2(v){return Math.round(v*100)/100;}
+function f3(v){return Math.round(v*1000)/1000;}
+function fi(v){return Math.round(v);}
+function hex2(n){return n.toString(16).padStart(2,'0').toUpperCase();}
+
+// ══════════════════════════════════════════════════════════════════
+// ECU MAPS BUILD
+// ══════════════════════════════════════════════════════════════════
+function buildMaps(){
+  const m={ve:[],ign:[],afr:[]};
+  for(let mi=0;mi<9;mi++){m.ve[mi]=[];m.ign[mi]=[];m.afr[mi]=[];
+    for(let ri=0;ri<12;ri++){
+      m.ve[mi][ri]=cl(Math.round(38+62*(mi/8)*(0.55+0.45*Math.exp(-0.5*((ri-6)/3.2)**2))+rn()),20,108);
+      m.ign[mi][ri]=cl(Math.round(8+ri*1.9*(1-(mi/8)*0.5)+rn()*0.3),0,45);
+      m.afr[mi][ri]=mi/8>0.85?f2(12.5+(ri/11)*0.8):mi/8<0.25?f2(15.2+(ri/11)*0.4):f2(14.7+rn()*0.1);
+    }
+  }
+  m.req_fuel=7.2;m.soft_cut=6800;m.hard_cut=7200;m.accel_mult=1.6;
+  m.knock_step=2.5;m.knock_max=12.0;m.knock_rec=0.3;m.fuel_psi=43.5;
+  m.clt_ax=[-40,-20,0,20,40,60,80,90,100];m.clt_corr=[185,162,142,122,111,105,100,100,98];
+  m.iat_ax=[-40,-20,0,20,40,60,80,100];m.iat_corr=[114,109,105,100,96,91,85,78];
+  m.dt_v=[8,9,10,11,12,13,14,15];m.dt_ms=[1.9,1.6,1.35,1.1,0.9,0.8,0.7,0.65];
+  m.idle_ax=[0,20,40,60,80,90];m.idle_rpm=[1500,1300,1050,900,850,800];
+  return m;
+}
+function buildBoost(m,p){const mb=p.maxb;m.boost=[];for(let mi=0;mi<9;mi++){m.boost[mi]=[];for(let ri=0;ri<12;ri++)m.boost[mi][ri]=cl(mb*(0.2+ri/11*0.8)*(0.3+mi/8*0.7)+rn()*0.3,0,mb);}}
+
+// ══════════════════════════════════════════════════════════════════
+// ENGINE STATE
+// ══════════════════════════════════════════════════════════════════
+const MAPS=buildMaps();
+const E={
+  maps:MAPS, profile:EP.i4_na, trans:TP["6spd"],
+  env:{altitude:0,ambient_temp:20,fuel_type:"E10",boost_enabled:1,boost_target:14,cond_override:"auto",road_grade:0},
+  rpm:800,map_kpa:35,tps:0,clt:20,iat:20,batt:12.6,gear:1,spd:0,
+  afr:14.7,lam:1,pw:3,dc:0,dwell:3.5,adv:10,egt:600,oil:45,stft:0,ltft:0,ego:0,
+  kret:0,klvl:0,kcnt:0,at_:0,ptps:0,ptt:Date.now(),rtgt:800,st:0,scenario:"warmup",
+  active_dtcs:[],stored_dtcs:[],
+  fault_o2:0,fault_map:0,fault_clt:0,fault_miss:0,fault_lean:0,fault_ign:0,fault_inj:0,
+  cyl_kill:new Array(8).fill(0),
+  ve_live:0,ign_live:0,afr_tgt:14.7,accel:0,boost_psi:0,glow_ready:0,
+  hv_soc:68,hv_voltage:201.6,hv_current:0,mg1_rpm:0,mg2_rpm:0,
+  can:{j1939:[],obd:[],lin:[],autopoll:0,_jt:0,_ot:0,_lt:0},
+  scope:{bufs:{},t:0},
+};
+SIGS.forEach(k=>E.scope.bufs[k]=[]);
+
+function resetE(){
+  const p=E.profile;
+  E.rpm=p.idle;E.map_kpa=35;E.tps=0;E.clt=20;E.iat=20;E.batt=12.6;E.gear=1;E.spd=0;
+  E.afr=14.7;E.lam=1;E.pw=3;E.dc=0;E.dwell=3.5;E.adv=10;E.egt=600;E.oil=45;E.stft=0;E.ltft=0;E.ego=0;
+  E.kret=0;E.klvl=0;E.kcnt=0;E.at_=0;E.ptps=0;E.ptt=Date.now();E.rtgt=p.idle;E.st=0;E.scenario="warmup";
+  E.active_dtcs=[];E.stored_dtcs=[];
+  E.fault_o2=0;E.fault_map=0;E.fault_clt=0;E.fault_miss=0;E.fault_lean=0;E.fault_ign=0;E.fault_inj=0;
+  E.cyl_kill=new Array(8).fill(0);E.ve_live=0;E.ign_live=0;E.afr_tgt=14.7;E.accel=0;E.boost_psi=0;E.glow_ready=0;
+  E.hv_soc=68;E.hv_voltage=201.6;E.hv_current=0;E.mg1_rpm=0;E.mg2_rpm=0;
+  buildBoost(E.maps,p);
+  SIGS.forEach(k=>E.scope.bufs[k]=[]);
+}
+
+// ══════════════════════════════════════════════════════════════════
+// PHYSICS STEP
+// ══════════════════════════════════════════════════════════════════
+function autoScen(dt){
+  const p=E.profile,c=E.st%150;
+  if(c<20){E.scenario="warmup";E.tps=Math.max(0,0.5+rn()*0.3);E.gear=1;}
+  else if(c<40){E.scenario="cruise";E.tps=Math.max(0,22+Math.sin(E.st*.1)*5);E.gear=3;E.rtgt=2200+Math.sin(E.st*.08)*200;}
+  else if(c<60){E.scenario="wot";E.tps=Math.min(100,98+rn()*.5);E.gear=2;E.rtgt=Math.min(p.maxr*.9,E.rtgt+40);}
+  else if(c<80){E.scenario="decel";E.tps=0;E.gear=4;E.rtgt=Math.max(p.idle,E.rtgt-70);}
+  else if(c<100){E.scenario="hwy";E.tps=Math.max(0,35+rn()*2);E.gear=4;E.rtgt=p.diesel?1800:3000+rn()*100;}
+  else{E.scenario="idle";E.tps=Math.max(0,.2+rn()*.2);E.gear=1;E.rtgt=p.idle;}
+  if(E.env.road_grade>0)E.rtgt+=E.env.road_grade*30;
+}
+function applyCond(cond,dt){
+  const p=E.profile;
+  const c={warmup:[.5,1,p.idle*1.3],idle:[.2,1,p.idle],cruise:[25,4,2200],
+            wot:[100,2,Math.min(p.maxr*.9,E.rtgt+30)],decel:[0,4,Math.max(p.idle,E.rtgt-50)],
+            boost_test:[85,2,Math.min(p.maxr*.85,E.rtgt+20)]};
+  if(c[cond]){E.tps=c[cond][0];E.gear=c[cond][1];E.rtgt=c[cond][2];E.scenario=cond;}
+  else autoScen(dt);
+}
+function updateDTCs(){
+  const chk=[[E.batt<11,"P0562","Battery Voltage Low"],[E.oil<8&&E.rpm>500,"P0520","Oil Pressure Low"],
+              [E.ltft>20,"P0171","Fuel Trim Lean B1"],[E.ltft<-20,"P0172","Fuel Trim Rich B1"],
+              [E.kcnt>50,"P0325","Knock Sensor Circuit"],[E.fault_o2,"P0131","O2 Sensor Low B1S1"],
+              [E.fault_miss>0,"P030"+E.fault_miss,"Cyl "+E.fault_miss+" Misfire"],
+              [E.fault_clt,"P0117","ECT Sensor Low"],[E.fault_inj,"P0201","Injector Circuit Cyl1"]];
+  const codes=E.active_dtcs.map(d=>d[0]);
+  for(const[cond,code,desc]of chk)if(cond&&!codes.includes(code)){E.active_dtcs.push([code,desc]);if(!E.stored_dtcs.find(d=>d[0]===code))E.stored_dtcs.push([code,desc]);}
+}
+
+function step(dt){
+  const p=E.profile,t=E.trans,m=E.maps;
+  E.st+=dt;
+  E.env.cond_override!=="auto"?applyCond(E.env.cond_override,dt):autoScen(dt);
+  if(E.tps<1)E.rtgt=i1(m.idle_ax,m.idle_rpm,E.clt)+rn()*15;
+  const rm=p.maxr*(p.diesel?.85:1);
+  E.rpm+=(E.rtgt-E.rpm)*3*dt+rn()*E.rpm*.003;E.rpm=cl(E.rpm,0,rm);
+  const baro=Math.max(.6,1-(E.env.altitude/10000)*.12);
+  let mt=cl(20+E.tps*.78-(E.rpm/rm)*8,15,105);
+  if(E.fault_map)mt=50;if(E.fault_lean)mt+=8;
+  mt*=baro;E.map_kpa+=(mt-E.map_kpa)*5*dt;E.map_kpa=cl(E.map_kpa,15,105);
+  if(p.turbo&&E.env.boost_enabled){
+    let tgt=Math.min(p.maxb,E.env.boost_target)*(E.tps/100);
+    if(E.rpm<p.maxr*.3)tgt*=E.rpm/Math.max(p.maxr*.3,1);
+    E.boost_psi+=(tgt-E.boost_psi)*2*dt;E.boost_psi=Math.max(0,E.boost_psi);
+    E.map_kpa=Math.min(105,E.map_kpa+E.boost_psi*6.895*.1);
+  }else E.boost_psi=0;
+  E.ve_live=i2(m.ve,E.rpm,E.map_kpa);
+  const stoich=FS[E.env.fuel_type]||14.7;
+  E.afr_tgt=i2(m.afr,E.rpm,E.map_kpa)*(stoich/14.7);
+  E.ign_live=i2(m.ign,E.rpm,E.map_kpa);
+  const cu=E.fault_clt?-40:E.clt;
+  const cc=i1(m.clt_ax,m.clt_corr,cu)/100;
+  const ic=i1(m.iat_ax,m.iat_corr,E.iat)/100;
+  const dead=i1(m.dt_v,m.dt_ms,E.batt);
+  const now=Date.now(),rate=(E.tps-E.ptps)/Math.max((now-E.ptt)/1000,.001)*.1;
+  E.ptps=E.tps;E.ptt=now;
+  if(rate>m.accel_mult)E.at_=.35;
+  E.accel=E.at_>0;const am=1+(E.at_>0)*(m.accel_mult-1)*(E.at_/.35);
+  if(E.at_>0)E.at_=Math.max(0,E.at_-dt);
+  const killed=E.cyl_kill.slice(0,p.cyl).filter(k=>k).length;
+  const ac=Math.max(1,p.cyl-killed),cf=p.cyl/ac;
+  if(E.fault_inj){E.pw=99;E.dc=100;}
+  else{
+    const et=1+(E.stft+E.ltft)/100;
+    E.pw=m.req_fuel*(E.ve_live/100)*(stoich/E.afr_tgt)*cc*ic*am*et*cf+dead;
+    if(E.rpm>=m.hard_cut)E.pw=0;
+    else if(E.rpm>=m.soft_cut&&Math.random()<.5)E.pw=0;
+    const cy=120000/Math.max(E.rpm,100);E.dc=Math.min(100,(E.pw/cy)*100);
+  }
+  let ib2=E.ign_live;if(E.fault_ign)ib2=Math.max(0,ib2-10);
+  const risk=Math.max(0,(ib2-25)/15)*(E.map_kpa/100)*(E.rpm/rm);
+  const mr=(E.fault_miss>0&&Math.random()<.15)?.4:0;
+  if(Math.random()<(risk+mr)*.08){E.kret=Math.min(E.kret+m.knock_step,m.knock_max);E.klvl=Math.min(1,E.klvl+.4);E.kcnt++;}
+  else{E.kret=Math.max(0,E.kret-m.knock_rec*dt*10);E.klvl=Math.max(0,E.klvl-.05);}
+  E.adv=Math.max(0,ib2-E.kret);E.dwell=Math.max(1.5,3.8*(13.5/Math.max(E.batt,8))-E.rpm*.0001);
+  const ln=E.fault_lean?1.5:0;
+  if(E.fault_o2){E.afr=E.afr_tgt+ln+rn()*.3;E.ego=0;}
+  else if(E.fault_inj){E.afr=10.2+Math.random()*1.3;E.ego=0;}
+  else E.afr=cl(E.afr_tgt+ln+rn()*.08,8,22);
+  E.lam=E.afr/stoich;
+  if(!E.fault_o2&&E.clt>75&&E.tps<80&&E.rpm<4500){E.ego=1;E.stft+=(E.afr_tgt-E.afr)*.8*dt;E.stft=cl(E.stft,-25,25);E.ltft+=E.stft*.003*dt;E.ltft=cl(E.ltft,-25,25);}
+  else if(!E.fault_o2){E.stft*=.95;E.ego=0;}
+  E.egt=cl(p.egt+(E.rpm/rm)*280+(E.map_kpa/100)*180+(E.lam-1)*100+rn()*5,200,1050);
+  if(E.fault_clt)E.clt=-40+rn()*.5;
+  else if(E.clt<90)E.clt+=((E.rpm/rm)*.35+(E.map_kpa/100)*.18)*dt;
+  else E.clt=87+rn();
+  E.iat+=(E.env.ambient_temp+E.rpm*.003-E.iat)*.01*dt+rn()*.1;
+  const tv=E.rpm>900?14.2:12;E.batt=cl(E.batt+(tv-E.batt)*dt+rn()*.02,10,15);
+  const gr=t.gears>0?t.ratios[cl(E.gear-1,0,t.gears-1)]:t.ratios[1];
+  E.spd=Math.max(0,E.rpm/(gr*t.final)*p.disp/2*60/1000*.8);
+  E.oil=cl(E.rpm<100?0:p.oi+(E.rpm/rm)*(p.oc-p.oi)+rn(),0,p.oc+15);
+  E.glow_ready=p.glow&&E.clt<40;
+  if(t.name==="Toyota EVT"){
+    E.hv_soc=cl(E.hv_soc+(Math.random()-.5)*.2,20,80);
+    E.hv_voltage=201.6*(E.hv_soc/80)*.9+rn();E.hv_current=(E.tps/100)*50+rn()*2;
+    E.mg1_rpm=E.rpm*.4+rn()*10;E.mg2_rpm=E.spd*45+rn()*5;
+  }
+  updateDTCs();
+}
+
+// ══════════════════════════════════════════════════════════════════
+// SCOPE STEP
+// ══════════════════════════════════════════════════════════════════
+function scopeStep(dt){
+  const sc=E.scope;sc.t+=dt;const f=Math.max(E.rpm/60,.1);const NP=150;
+  const v={
+    "Wideband O2":E.afr+Math.sin(sc.t*.3)*.4+rn()*.06,
+    "Narrowband O2":E.lam<1?.15+Math.random()*.15:.8+Math.random()*.15,
+    "MAP Sensor":E.map_kpa+Math.sin(sc.t*f*Math.PI*2)*3+rn()*.5,
+    "TPS":E.tps+rn()*.2,"CLT":E.clt+rn()*.1,"IAT":E.iat+rn()*.1,
+    "Battery":E.batt+Math.sin(sc.t*1.2)*.08+rn()*.01,
+    "Injector PW":E.pw+rn()*.03,
+    "Crank Signal":(Math.floor(sc.t*f*60)%60<58&&Math.sin(sc.t*f*2*Math.PI*30)>.2)?3.3:.1,
+    "Cam Signal":Math.sin(sc.t*(f/2)*2*Math.PI)>.4?5:0,
+    "Ignition Pri":(sc.t*f/2*2*Math.PI%(2*Math.PI))<(E.dwell/1000*Math.max(f/2,.01)*2*Math.PI)?12:0,
+    "Knock Sensor":E.klvl*Math.sin(sc.t*800+rn())*2.5+rn()*.08,
+    "EGT":E.egt+rn()*4,"Oil Pressure":E.oil+rn()*1.5,"Boost Pressure":E.boost_psi+rn()*.3,
+  };
+  for(const k of SIGS){sc.bufs[k].push(v[k]);if(sc.bufs[k].length>NP)sc.bufs[k].shift();}
+}
+
+// ══════════════════════════════════════════════════════════════════
+// CAN STEP
+// ══════════════════════════════════════════════════════════════════
+const J1939P={"F004":["EEC1","Engine Speed"],"FEFF":["EEC2","Throttle"],"FEF5":["CCVS","Veh Speed"],"FEEE":["ET1","Eng Temps"],"FEEF":["EFL","Fluid/Press"],"FEF6":["LFC","Fuel Rate"]};
+const JPGN=Object.keys(J1939P);
+const LINNODES={"0x01":"HVAC","0x02":"Mirror","0x10":"Window","0x20":"Seat","0x3C":"Lighting"};
+const LINKEYS=Object.keys(LINNODES);
+function canStep(dt){
+  const c=E.can;c._jt+=dt;c._ot+=dt;c._lt+=dt;
+  const ts=((Date.now()/1000)%10000).toFixed(2);
+  const rb=()=>Array.from({length:8},()=>hex2(Math.floor(Math.random()*256))).join(' ');
+  if(c._jt>.2){c._jt=0;const pgn=JPGN[Math.floor(Math.random()*JPGN.length)];const[nm,desc]=J1939P[pgn];c.j1939.push({t:ts,id:"0CF"+pgn+"00",pgn,name:nm,data:rb(),decoded:desc+" "+fi(E.rpm)});if(c.j1939.length>80)c.j1939.shift();}
+  if(c._ot>.4&&c.autopoll){c._ot=0;const pids=["0C","0D","05","0F","04","11"];const pid=pids[Math.floor(Math.random()*pids.length)];c.obd.push({t:ts,id:"0x7DF",dir:"Req",data:"02 01 "+pid+" 00 00 00 00 00",decoded:""});c.obd.push({t:ts,id:"0x7E8",dir:"Resp",data:"04 41 "+pid+" "+hex2(Math.floor(Math.random()*256))+" 00 00",decoded:"PID "+pid});if(c.obd.length>80)c.obd.shift();}
+  if(c._lt>.3){c._lt=0;const lid=LINKEYS[Math.floor(Math.random()*LINKEYS.length)];c.lin.push({id:lid,node:LINNODES[lid],data:Array.from({length:4},()=>hex2(Math.floor(Math.random()*256))).join(' '),chk:hex2(Math.floor(Math.random()*256))});if(c.lin.length>30)c.lin.shift();}
+}
+
+// ══════════════════════════════════════════════════════════════════
+// UI
+// ══════════════════════════════════════════════════════════════════
+let AT='dash';
+function showTab(n,btn){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('act'));
+  document.querySelectorAll('.tb').forEach(b=>b.classList.remove('act'));
+  document.getElementById('tab-'+n).classList.add('act');
+  btn.classList.add('act');AT=n;
+}
+function se(id,v){const e=document.getElementById(id);if(e)e.textContent=v;}
+function sc2(id,c){const e=document.getElementById(id);if(e)e.style.color=c;}
+
+function updateUI(){
+  // Colour rules
+  const afrC=E.afr<12.5||E.afr>15.5?'#ff4040':E.afr<13.5||E.afr>15.2?'#ffaa00':'#00ff88';
+  const stftC=Math.abs(E.stft)>15?'#ff4040':Math.abs(E.stft)>8?'#ffaa00':'#00ff88';
+  const ltftC=Math.abs(E.ltft)>15?'#ff4040':Math.abs(E.ltft)>8?'#ffaa00':'#00ff88';
+  const knkC=E.kret>6?'#ff4040':E.kret>2?'#ffaa00':'#00ff88';
+  const oilC=E.oil<10?'#ff4040':E.oil<20?'#ffaa00':'#00ddaa';
+  const batC=E.batt<11.5?'#ff4040':E.batt<12.2?'#ffaa00':'#cc55ff';
+  const g=E.trans.gears===0?'CVT':String(E.gear);
+
+  // Status bar
+  se('s0',fi(E.rpm));se('s1',f1(E.map_kpa));se('s2',f1(E.tps));
+  se('s3',f1(E.clt));se('s4',f1(E.iat));
+  se('s5',f2(E.afr));sc2('s5',afrC);
+  se('s6',f3(E.lam));
+  se('s7',f1(E.stft));sc2('s7',stftC);
+  se('s8',f1(E.ltft));sc2('s8',ltftC);
+  se('s9',f1(E.adv));se('s10',f1(E.kret));sc2('s10',knkC);
+  se('s11',fi(E.egt));se('s12',f2(E.pw));
+  se('s13',f1(E.oil));sc2('s13',oilC);
+  se('s14',f2(E.batt));sc2('s14',batC);
+  se('s15',f1(E.spd));se('s16',f1(E.boost_psi));se('s17',g);
+
+  // DTC bar
+  const db=document.getElementById('dtcbar');
+  if(E.active_dtcs.length){db.textContent=E.active_dtcs.map(d=>d[0]).join(' ');db.style.color='#ff4040';}
+  else{db.textContent='NO DTCs';db.style.color='#00ff88';}
+  se('scenebar',E.scenario.toUpperCase());
+  const ego=document.getElementById('egobar');
+  if(ego){ego.textContent=E.ego?'EGO:CL':'EGO:OL';ego.style.color=E.ego?'#00ff88':'#ffaa00';}
+
+  if(AT==='dash'){
+    const vals=[fi(E.rpm),f1(E.map_kpa),f1(E.tps),f1(E.clt),f1(E.iat),f2(E.afr),f3(E.lam),f1(E.stft),f1(E.ltft),f1(E.adv),f1(E.kret),fi(E.egt),f2(E.pw),f1(E.dc),f1(E.ve_live),f1(E.oil),f2(E.batt),f1(E.spd),f1(E.boost_psi),g,f2(E.dwell),String(E.kcnt)];
+    vals.forEach((v,i)=>se('g'+i,v));
+    sc2('g5',afrC);sc2('g7',stftC);sc2('g8',ltftC);sc2('g10',knkC);sc2('g15',oilC);sc2('g16',batC);
+    const hvp=document.getElementById('hv-pan');
+    if(hvp){const isHV=E.trans.name==="Toyota EVT";hvp.style.display=isHV?'block':'none';if(isHV){[f1(E.hv_voltage),f1(E.hv_soc),f1(E.hv_current),fi(E.mg1_rpm),fi(E.mg2_rpm)].forEach((v,i)=>se('hv'+i,v));}}
+  }
+  if(AT==='scope')drawScope();
+  if(AT==='can')updateCAN();
+  if(AT==='faults'){
+    const ad=document.getElementById('active-dtcs');if(ad)ad.textContent=E.active_dtcs.length?E.active_dtcs.map(d=>d[0]+': '+d[1]).join('\n'):'No active DTCs';
+    const sd=document.getElementById('stored-dtcs');if(sd)sd.textContent=E.stored_dtcs.length?E.stored_dtcs.map(d=>d[0]+': '+d[1]).join('\n'):'No stored DTCs';
+  }
+  if(AT==='build'){
+    const ec=document.getElementById('eng-cfg');
+    if(ec){const p=E.profile,t=E.trans;ec.textContent=['Engine:       '+p.name,'Cylinders:    '+p.cyl,'Displacement: '+p.disp+'L ('+Math.round(p.disp*1000)+'cc)','Comp Ratio:   '+p.cr+':1','Firing Order: '+p.fir.join('-'),'Trigger:      '+p.pat,'Injection:    '+p.inj,'Turbo:        '+(p.turbo?'YES — max '+p.maxb+' psi':'N/A'),'Diesel/Glow:  '+(p.diesel?'YES':'NO')+' / '+(p.glow?'YES':'NO'),'Idle:         '+p.idle+' RPM  Rev Limit: '+p.maxr,'EGT base:     '+p.egt+'°C','','Trans:        '+t.name,'Gears:        '+(t.gears||'CVT'),'Ratios:       '+t.ratios.join(' / '),'Final Drive:  '+t.final].join('\n');}
+  }
+}
+
+// ── SCOPE ──────────────────────────────────────────────────────
+function drawScope(){
+  const cv=document.getElementById('scope-cv');
+  const ch1=document.getElementById('ch1')?.value;
+  const ch2=document.getElementById('ch2')?.value;
+  drawScopeCanvas(cv,ch1,ch2,null,false);
+}
+
+// ── CAN ────────────────────────────────────────────────────────
+function updateCAN(){
+  const j=document.getElementById('j1939-tb');
+  if(j){j.innerHTML='';E.can.j1939.slice(-15).forEach(fr=>{j.innerHTML+=`<tr><td>${fr.t}</td><td>${fr.id}</td><td>${fr.pgn}</td><td>${fr.name}</td><td>${fr.data}</td><td>${fr.decoded}</td></tr>`;});}
+  const o=document.getElementById('obd-tb');
+  if(o&&E.can.autopoll){o.innerHTML='';E.can.obd.slice(-14).forEach(fr=>{o.innerHTML+=`<tr><td>${fr.t}</td><td>${fr.id}</td><td style="color:${fr.dir==='Req'?'#ffaa00':'#00ff88'}">${fr.dir}</td><td>${fr.data}</td><td>${fr.decoded}</td></tr>`;});}
+  const l=document.getElementById('lin-tb');
+  if(l){l.innerHTML='';E.can.lin.slice(-10).forEach(fr=>{l.innerHTML+=`<tr><td>${fr.id}</td><td style="color:#00ccff">${fr.node}</td><td>${fr.data}</td><td>${fr.chk}</td></tr>`;});}
+}
+
+// ── OBD FUNCTIONS ──────────────────────────────────────────────
+function obdReq(pid,name){
+  const v={"0C":fi(E.rpm)+" RPM","0D":f1(E.spd)+" km/h","05":f1(E.clt)+"°C","0F":f1(E.iat)+"°C","04":f1(E.ve_live)+"% calc load","11":f1(E.tps)+"%","0B":f1(E.map_kpa)+" kPa","14":E.ego?"Closed Loop":"Open Loop","2D":f1(E.kret)+" deg retard","M9":"VIN: 1FTFW1ED3MFB12345"};
+  document.getElementById('obd-out').textContent="TX 0x7DF: 02 01 "+pid+"\nRX 0x7E8: Positive Response\n  "+name+": "+v[pid];
+}
+function dtcRead(mode){
+  const dtcs=mode===3?E.active_dtcs:E.stored_dtcs;
+  document.getElementById('obd-out').textContent="Mode 0"+mode+": "+(dtcs.length?dtcs.map(d=>d[0]).join(' '):'No DTCs')+(dtcs.length?'\n'+dtcs.map(d=>"  "+d[0]+" — "+d[1]).join('\n'):'');
+}
+function freezeFrame(){
+  document.getElementById('obd-out').textContent="FREEZE FRAME (DTC: "+(E.active_dtcs[0]?E.active_dtcs[0][0]:'N/A')+"):\n  RPM: "+fi(E.rpm)+"  MAP: "+f1(E.map_kpa)+"kPa  TPS: "+f1(E.tps)+"%\n  CLT: "+f1(E.clt)+"°C  AFR: "+f2(E.afr)+"  STFT: "+f1(E.stft)+"%\n  VE: "+f1(E.ve_live)+"% load  BATT: "+f2(E.batt)+"V\n  IGN: "+f1(E.adv)+"°  KNOCK: "+f1(E.kret)+"°  EGT: "+fi(E.egt)+"°C";
+}
+function clearDTCs(){
+  E.active_dtcs=[];E.stft=0;E.ltft=0;E.kcnt=0;
+  document.getElementById('obd-out').textContent="Mode 04: DTCs cleared\nCycle ignition and retest";
+  const db=document.getElementById('dtcbar');db.textContent='NO DTCs';db.style.color='#00ff88';
+}
+function uds(sid,name){
+  const r={"0x10":"Session changed to Extended Diagnostic","0x11":"ECU hard reset — 5s power cycle","0x19":"Active DTCs: "+(E.active_dtcs.map(d=>d[0]).join(' ')||'None'),"0x22":"DID 0xF190: "+fi(E.rpm)+" RPM / "+f1(E.map_kpa)+" kPa / "+f1(E.clt)+"°C CLT","0x27":"Seed: 0x4A2B  Key: 0x8F1C  Security access granted","0x2E":"Write DID: Positive [0x6E]","0x31":"Routine 0xA100: Positive [0x71]","0x3E":"TesterPresent acknowledged"};
+  document.getElementById('uds-out').textContent="TX: "+sid+" ("+name+")\nRX: "+r[sid];
+}
+
+// ── ENGINE / TRANS CONTROLS ─────────────────────────────────────
+function setEngine(k){
+  E.profile=EP[k]||EP.i4_na;buildBoost(E.maps,E.profile);resetE();
+  rebuildCylKill();rebuildMissRow();
+}
+function setTrans(k){E.trans=TP[k]||TP["6spd"];}
+
+// ── FAULT ROWS ─────────────────────────────────────────────────
+function buildFaultRows(){
+  const c=document.getElementById('fault-rows');c.innerHTML='';
+  for(const[key,label,desc]of FD){
+    const d=document.createElement('div');d.className='fr';
+    d.innerHTML=`<span class="fn">${label}</span><span class="fd">${desc}</span>`;
+    const btn=document.createElement('button');btn.id='fb-'+key;btn.textContent='OFF';btn.className='g';
+    btn.onclick=()=>{E[key]=E[key]?0:1;btn.textContent=E[key]?'ACTIVE':'OFF';btn.className=E[key]?'r':'g';};
+    d.appendChild(btn);c.appendChild(d);
+  }
+}
+function rebuildMissRow(){
+  const row=document.getElementById('miss-row');if(!row)return;row.innerHTML='';
+  const off=document.createElement('button');off.textContent='OFF';off.className=E.fault_miss===0?'g':'';
+  off.onclick=()=>{E.fault_miss=0;rebuildMissRow();};row.appendChild(off);
+  for(let i=1;i<=E.profile.cyl;i++){
+    const b=document.createElement('button');b.textContent='CYL '+i;b.className=E.fault_miss===i?'r':'';
+    b.onclick=(()=>{const n=i;return()=>{E.fault_miss=n;rebuildMissRow();}})();row.appendChild(b);
+  }
+}
+function rebuildCylKill(){
+  const row=document.getElementById('cyl-kill-row');if(!row)return;row.innerHTML='';
+  for(let i=0;i<E.profile.cyl;i++){
+    const b=document.createElement('button');b.textContent='CYL '+(i+1);b.className=E.cyl_kill[i]?'r':'';
+    b.onclick=(()=>{const n=i;return()=>{E.cyl_kill[n]=E.cyl_kill[n]?0:1;rebuildCylKill();const kl=E.cyl_kill.map((k,j)=>k?j+1:0).filter(Boolean);se('cyl-kill-lbl',kl.length?'Killed: Cyl '+kl.join(', '):'All cylinders active');}})();
+    row.appendChild(b);
+  }
+}
+
+// ── SERVICE ────────────────────────────────────────────────────
+function buildSvcNav(){
+  const nav=document.getElementById('svc-nav');nav.innerHTML='';
+  [['generic','GENERIC'],['bmw','BMW'],['ford','FORD'],['gm','GM'],['toyota','TOYOTA'],['vw','VW/AUDI'],['hd','HD']].forEach(([k,lbl])=>{
+    const b=document.createElement('button');b.textContent=lbl;b.onclick=()=>loadSvc(k);nav.appendChild(b);
+  });
+}
+function loadSvc(k){
+  const c=document.getElementById('svc-content');c.innerHTML='';
+  for(const[name,cmd,desc]of SVC[k]||[]){
+    const card=document.createElement('div');card.className='scard';
+    const res=document.createElement('div');res.className='sr';
+    card.innerHTML=`<div class="sn">${name}</div><div class="scmd">${cmd}</div><div class="sd">${desc}</div>`;
+    card.appendChild(res);
+    const btn=document.createElement('button');btn.className='g';btn.textContent='EXECUTE';
+    btn.onclick=(()=>{const r=res,n=name,c2=cmd;return()=>{r.textContent='Executing: '+n+'\n> '+c2+'\n< Positive Response [DEMO]';setTimeout(()=>r.textContent+='\n[OK] Cycle ignition and retest',800);}})();
+    card.appendChild(btn);c.appendChild(card);
+  }
+}
+
+// ── BUILD ──────────────────────────────────────────────────────
+function buildBuildTab(){
+  const tl=document.getElementById('trig-list');tl.innerHTML='';
+  Object.entries(TRIGGERS).forEach(([p,d])=>{tl.innerHTML+=`<div class="bcard"><span class="bt" style="color:#00ccff">${p}</span><span class="bi">${d}</span></div>`;});
+  const il=document.getElementById('inj-list');il.innerHTML='';
+  Object.entries(INJ).forEach(([n,d])=>{const info=d.flow?`Flow: ${d.flow}cc/min  Dead time @14V: ${d.dt14}ms`:'Common rail — pressure-based control';il.innerHTML+=`<div class="bcard"><span class="bt" style="color:#ffaa00;min-width:190px;font-size:10px">${n}</span><span class="bi">${info}</span></div>`;});
+  const sel=document.getElementById('inj-sel');sel.innerHTML='';
+  Object.keys(INJ).forEach(n=>sel.innerHTML+=`<option>${n}</option>`);
+  const trl=document.getElementById('trans-list');trl.innerHTML='';
+  Object.entries(TP).forEach(([k,t])=>{trl.innerHTML+=`<div class="bcard"><span class="bt" style="color:#cc55ff;min-width:130px">${t.name}</span><span class="bi">Gears: ${t.gears||'CVT'}  Ratios: ${t.ratios.join(' / ')}  Final: ${t.final}  ${t.li?'Line: '+t.li+'-'+t.ld+'psi':''}</span></div>`;});
+}
+function calcDT(){
+  const n=document.getElementById('inj-sel').value;
+  const v=parseFloat(document.getElementById('inj-v').value)||13.5;
+  const inj=INJ[n];const el=document.getElementById('dt-res');
+  if(!inj||!inj.flow){el.textContent='Common rail — pressure-based control, no dead time calc';return;}
+  const dt=inj.dt14+(14-v)*0.08;
+  el.textContent=n+'\n@ '+v+'V  Dead time: '+dt.toFixed(3)+'ms  Flow: '+inj.flow+'cc/min\nAdjust +0.08ms per volt below 14V';
+}
+
+// ── CONFIG ─────────────────────────────────────────────────────
+function applyEnv(){
+  E.env.altitude=parseFloat(document.getElementById('cfg-alt').value)||0;
+  E.env.ambient_temp=parseFloat(document.getElementById('cfg-amb').value)||20;
+  E.env.fuel_type=document.getElementById('cfg-fuel').value;
+  E.env.road_grade=parseFloat(document.getElementById('cfg-grade').value)||0;
+  document.getElementById('env-res').textContent='Applied — alt '+E.env.altitude+'m  amb '+E.env.ambient_temp+'°C  fuel '+E.env.fuel_type+'  grade '+E.env.road_grade+'%';
+}
+function applyBoost(){
+  E.env.boost_enabled=document.getElementById('boost-en').checked?1:0;
+  E.env.boost_target=parseFloat(document.getElementById('boost-tgt').value)||14;
+}
+
+// ══════════════════════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════════════════════
+function init(){
+  // Engine selector
+  const es=document.getElementById('eng-sel');
+  Object.entries(EP).forEach(([k,p])=>es.innerHTML+=`<option value="${k}">${p.name}</option>`);
+  // Trans selector
+  const ts=document.getElementById('trans-sel');
+  Object.entries(TP).forEach(([k,t])=>ts.innerHTML+=`<option value="${k}">${t.name}</option>`);
+  // Scope channels
+  const ch1=document.getElementById('ch1'),ch2=document.getElementById('ch2');
+  ch1.innerHTML='';ch2.innerHTML='<option value="--">-- None --</option>';
+  SIGS.forEach((s,i)=>{ch1.innerHTML+=`<option${i===0?' selected':''}>${s}</option>`;ch2.innerHTML+=`<option${i===2?' selected':''}>${s}</option>`;});
+  // Build tabs
+  buildFaultRows();rebuildMissRow();rebuildCylKill();
+  buildSvcNav();loadSvc('generic');
+  buildBuildTab();
+  buildBoost(E.maps,E.profile);
+  const cb=document.getElementById('connbadge');
+  cb.textContent='RUNNING';cb.style.color='#00ff88';cb.style.borderColor='#00ff88';
+}
+
+// ══════════════════════════════════════════════════════════════════
+// GAUGE INTERACTION — LONG PRESS → MENU, DRAG → REORDER
+// ══════════════════════════════════════════════════════════════════
+const gaugeSettings={};  // idx → {size:'s'|'m'|'l', pinned:bool}
+let gMenuTarget=null, holdTimer=null, dragSrc=null;
+
+// Gauge definitions — matches g0…g21
+const GDEFS=[
+  {id:'g0',lbl:'RPM',attr:'rpm',col:'#00ff88'},
+  {id:'g1',lbl:'MAP kPa',attr:'map_kpa',col:'#4488ff'},
+  {id:'g2',lbl:'TPS %',attr:'tps',col:'#ffff44'},
+  {id:'g3',lbl:'CLT °C',attr:'clt',col:'#ff4040'},
+  {id:'g4',lbl:'IAT °C',attr:'iat',col:'#00ccff'},
+  {id:'g5',lbl:'AFR',attr:'afr',col:'#00ff88'},
+  {id:'g6',lbl:'Lambda λ',attr:'lam',col:'#00ff88'},
+  {id:'g7',lbl:'STFT %',attr:'stft',col:'#00ff88'},
+  {id:'g8',lbl:'LTFT %',attr:'ltft',col:'#00ff88'},
+  {id:'g9',lbl:'IGN deg',attr:'adv',col:'#00ccff'},
+  {id:'g10',lbl:'KNOCK deg',attr:'kret',col:'#00ff88'},
+  {id:'g11',lbl:'EGT °C',attr:'egt',col:'#ff7722'},
+  {id:'g12',lbl:'PW ms',attr:'pw',col:'#ffaa00'},
+  {id:'g13',lbl:'DC %',attr:'dc',col:'#ffaa00'},
+  {id:'g14',lbl:'VE %',attr:'ve_live',col:'#4488ff'},
+  {id:'g15',lbl:'OIL psi',attr:'oil',col:'#00ddaa'},
+  {id:'g16',lbl:'BAT V',attr:'batt',col:'#cc55ff'},
+  {id:'g17',lbl:'SPEED kph',attr:'spd',col:'#ffff44'},
+  {id:'g18',lbl:'BOOST psi',attr:'boost_psi',col:'#ff7722'},
+  {id:'g19',lbl:'GEAR',attr:'gear',col:'#cc55ff'},
+  {id:'g20',lbl:'DWELL ms',attr:'dwell',col:'#00ccff'},
+  {id:'g21',lbl:'KNOCK CNT',attr:'kcnt',col:'#ff4040'},
+];
+let gaugeOrder=[...Array(GDEFS.length).keys()];
+
+function initGaugeInteractions(){
+  GDEFS.forEach((def,idx)=>{
+    const el=document.getElementById(def.id);if(!el)return;
+    const wrapper=el.closest('.g');if(!wrapper)return;
+    wrapper.setAttribute('draggable','true');
+    wrapper.dataset.idx=idx;
+    // Long press
+    const startHold=(e)=>{
+      holdTimer=setTimeout(()=>{
+        holdTimer=null;showGaugeMenu(idx,wrapper,e);
+      },500);
+    };
+    const cancelHold=()=>{if(holdTimer){clearTimeout(holdTimer);holdTimer=null;}};
+    wrapper.addEventListener('mousedown',startHold);
+    wrapper.addEventListener('touchstart',startHold,{passive:true});
+    wrapper.addEventListener('mouseup',cancelHold);
+    wrapper.addEventListener('touchend',cancelHold);
+    wrapper.addEventListener('mouseleave',cancelHold);
+    // Drag reorder
+    wrapper.addEventListener('dragstart',e=>{dragSrc=idx;wrapper.classList.add('dragging');e.dataTransfer.effectAllowed='move';});
+    wrapper.addEventListener('dragend',()=>wrapper.classList.remove('dragging'));
+    wrapper.addEventListener('dragover',e=>{e.preventDefault();e.dataTransfer.dropEffect='move';});
+    wrapper.addEventListener('drop',e=>{e.preventDefault();if(dragSrc!==null&&dragSrc!==idx)swapGauges(dragSrc,idx);dragSrc=null;});
+  });
+}
+
+function swapGauges(a,b){
+  const ga=gaugeOrder.indexOf(a),gb=gaugeOrder.indexOf(b);
+  [gaugeOrder[ga],gaugeOrder[gb]]=[gaugeOrder[gb],gaugeOrder[ga]];
+  const gg=document.querySelector('.gg');if(!gg)return;
+  const cells=[...gg.querySelectorAll('.g')];
+  gaugeOrder.forEach((defIdx,pos)=>{
+    const el=cells[pos];if(!el)return;
+    const def=GDEFS[defIdx];
+    el.dataset.idx=defIdx;
+    el.querySelector('.gl').textContent=def.lbl;
+    el.querySelector('.gv').id=def.id;
+    el.querySelector('.gv').style.color=def.col;
+  });
+  showToast('Gauges reordered');
+}
+
+// GAUGE MENU
+function showGaugeMenu(idx,el,e){
+  gMenuTarget={idx,el};
+  const menu=document.getElementById('gmenu');
+  const def=GDEFS[idx];
+  document.getElementById('gm-label').textContent=def.lbl;
+  const gs=gaugeSettings[idx]||{size:'m',pinned:false};
+  ['s','m','l'].forEach(s=>{const b=document.getElementById('gm-'+s);if(b)b.className=gs.size===s?'act':'';});
+  const pb=document.getElementById('gm-pin');if(pb)pb.textContent=gs.pinned?'Unpin':'Pin to Top';
+  // Position near touch
+  const x=e.touches?e.touches[0].clientX:e.clientX;
+  const y=e.touches?e.touches[0].clientY:e.clientY;
+  menu.style.left=Math.min(x,window.innerWidth-170)+'px';
+  menu.style.top=Math.min(y+8,window.innerHeight-140)+'px';
+  menu.style.display='block';
+  // Close on outside click
+  setTimeout(()=>document.addEventListener('click',outsideGMenu,{once:true}),10);
+}
+function outsideGMenu(e){if(!document.getElementById('gmenu').contains(e.target))closeGMenu();}
+function closeGMenu(){document.getElementById('gmenu').style.display='none';gMenuTarget=null;}
+
+function setGaugeSize(sz){
+  if(!gMenuTarget)return;
+  const {idx,el}=gMenuTarget;
+  if(!gaugeSettings[idx])gaugeSettings[idx]={size:'m',pinned:false};
+  gaugeSettings[idx].size=sz;
+  el.classList.remove('sz-s','sz-l');
+  if(sz==='s')el.classList.add('sz-s');
+  if(sz==='l')el.classList.add('sz-l');
+  ['s','m','l'].forEach(s=>{const b=document.getElementById('gm-'+s);if(b)b.className=s===sz?'act':'';});
+  showToast('Gauge size: '+sz.toUpperCase());
+}
+
+function toggleGaugePin(){
+  if(!gMenuTarget)return;
+  const {idx,el}=gMenuTarget;
+  if(!gaugeSettings[idx])gaugeSettings[idx]={size:'m',pinned:false};
+  gaugeSettings[idx].pinned=!gaugeSettings[idx].pinned;
+  el.classList.toggle('pinned',gaugeSettings[idx].pinned);
+  document.getElementById('gm-pin').textContent=gaugeSettings[idx].pinned?'Unpin':'Pin to Top';
+  rebuildPinnedRow();
+  showToast(gaugeSettings[idx].pinned?'Pinned to top bar':'Unpinned');
+}
+
+function rebuildPinnedRow(){
+  const row=document.getElementById('pinned-row');if(!row)return;
+  row.innerHTML='';
+  const pins=GDEFS.filter((_,i)=>gaugeSettings[i]&&gaugeSettings[i].pinned);
+  if(pins.length){
+    row.classList.add('has-pins');
+    pins.forEach(def=>{
+      const d=document.createElement('div');d.className='pin-g';
+      d.innerHTML=`<span class="pl">${def.lbl}</span><span class="pv" id="pin-${def.attr}" style="color:${def.col}">--</span>`;
+      row.appendChild(d);
+    });
+  }else row.classList.remove('has-pins');
+}
+
+function updatePinnedRow(){
+  GDEFS.forEach((def,i)=>{
+    if(gaugeSettings[i]&&gaugeSettings[i].pinned){
+      const el=document.getElementById('pin-'+def.attr);
+      if(el){const raw=E[def.attr];el.textContent=typeof raw==='number'?Math.round(raw*100)/100:raw;}
+    }
+  });
+}
+
+// ══════════════════════════════════════════════════════════════════
+// STATUS BAR LONG-PRESS — SHOW/HIDE ITEMS
+// ══════════════════════════════════════════════════════════════════
+const SB_DEFS=[
+  {id:'s0',lbl:'RPM'},{id:'s1',lbl:'MAP kPa'},{id:'s2',lbl:'TPS %'},
+  {id:'s3',lbl:'CLT °C'},{id:'s4',lbl:'IAT °C'},{id:'s5',lbl:'AFR'},
+  {id:'s6',lbl:'LAMBDA'},{id:'s7',lbl:'STFT %'},{id:'s8',lbl:'LTFT %'},
+  {id:'s9',lbl:'IGN deg'},{id:'s10',lbl:'KNOCK'},{id:'s11',lbl:'EGT °C'},
+  {id:'s12',lbl:'PW ms'},{id:'s13',lbl:'OIL psi'},{id:'s14',lbl:'BAT V'},
+  {id:'s15',lbl:'SPD kph'},{id:'s16',lbl:'BOOST psi'},{id:'s17',lbl:'GEAR'},
+];
+const sbVisible=new Array(SB_DEFS.length).fill(true);
+
+function initSbLongPress(){
+  const sb=document.getElementById('sb');if(!sb)return;
+  let ht=null;
+  sb.addEventListener('touchstart',()=>{ht=setTimeout(()=>{ht=null;openSbEdit();},600);},{passive:true});
+  sb.addEventListener('touchend',()=>{if(ht){clearTimeout(ht);ht=null;}});
+  sb.addEventListener('mousedown',()=>{ht=setTimeout(()=>{ht=null;openSbEdit();},600);});
+  sb.addEventListener('mouseup',()=>{if(ht){clearTimeout(ht);ht=null;}});
+}
+
+function openSbEdit(){
+  const panel=document.getElementById('sb-edit-panel');
+  const ov=document.getElementById('sb-edit-overlay');
+  if(!panel||!ov)return;
+  const ch=document.getElementById('sb-checks');ch.innerHTML='';
+  SB_DEFS.forEach((def,i)=>{
+    const sv=document.getElementById(def.id);
+    const cur=sv?sv.textContent:'--';
+    const row=document.createElement('label');row.className='sb-check';
+    row.innerHTML=`<input type="checkbox" ${sbVisible[i]?'checked':''} onchange="sbToggle(${i},this.checked)"><span>${def.lbl}</span><span class="sb-cv">${cur}</span>`;
+    ch.appendChild(row);
+  });
+  ov.classList.add('open');panel.style.display='block';
+}
+function closeSbEdit(){
+  document.getElementById('sb-edit-overlay').classList.remove('open');
+  document.getElementById('sb-edit-panel').style.display='none';
+}
+function sbToggle(i,vis){
+  sbVisible[i]=vis;
+  const el=document.getElementById(SB_DEFS[i].id);
+  if(el){const wrapper=el.closest('.sc');if(wrapper)wrapper.style.display=vis?'':'none';}
+}
+function sbResetAll(){sbVisible.fill(true);SB_DEFS.forEach((_,i)=>sbToggle(i,true));closeSbEdit();}
+
+// ══════════════════════════════════════════════════════════════════
+// SCOPE FULLSCREEN OVERLAY
+// ══════════════════════════════════════════════════════════════════
+let scopeFrozen=false, frozenBufs={};
+
+function openScopeOverlay(){
+  const ov=document.getElementById('scope-overlay');ov.classList.add('open');
+  // Sync channel selectors
+  const c1=document.getElementById('ch1'),c2=document.getElementById('ch2');
+  const ov1=document.getElementById('ov-ch1'),ov2=document.getElementById('ov-ch2'),ov3=document.getElementById('ov-ch3');
+  [ov1,ov2,ov3].forEach(s=>{s.innerHTML='<option value="--">-- None --</option>';SIGS.forEach(sig=>s.innerHTML+=`<option>${sig}</option>`);});
+  if(c1&&ov1)ov1.value=c1.value;if(c2&&ov2)ov2.value=c2.value;ov3.value='--';
+  scopeFrozen=false;document.getElementById('freeze-btn').textContent='❚❚ FREEZE';
+}
+function closeScopeOverlay(){document.getElementById('scope-overlay').classList.remove('open');scopeFrozen=false;}
+
+function freezeScope(){
+  scopeFrozen=!scopeFrozen;
+  document.getElementById('freeze-btn').textContent=scopeFrozen?'▶ RESUME':'❚❚ FREEZE';
+  if(scopeFrozen){frozenBufs={};SIGS.forEach(k=>frozenBufs[k]=[...E.scope.bufs[k]]);}
+  showToast(scopeFrozen?'Scope frozen':'Scope live');
+}
+
+function drawScopeCanvas(cv,ch1v,ch2v,ch3v,overlay){
+  if(!cv)return;
+  const W=cv.parentElement.offsetWidth-(overlay?16:14)||300;
+  const H=parseInt(cv.style.height)||parseInt(cv.height)||220;
+  cv.width=W;cv.height=H;
+  const ctx=cv.getContext('2d');
+  ctx.fillStyle='#070c14';ctx.fillRect(0,0,W,H);
+  // Grid
+  ctx.strokeStyle='#1a2a3a';ctx.lineWidth=.5;
+  for(let x=0;x<W;x+=W/10){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,H);ctx.stroke();}
+  for(let y=0;y<H;y+=H/5){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(W,y);ctx.stroke();}
+  const bufs=scopeFrozen?frozenBufs:E.scope.bufs;
+  const chs=[[ch1v,'#00ff88'],[ch2v,'#ffaa00'],[ch3v||'--','#cc55ff']].filter(c=>c[0]&&c[0]!=='--');
+  for(const[ch,col]of chs){
+    const buf=bufs[ch];if(!buf||buf.length<2)continue;
+    const mn=Math.min(...buf),mx=Math.max(...buf),rng=Math.max(mx-mn,.001);
+    ctx.strokeStyle=col;ctx.lineWidth=overlay?2:1.5;ctx.beginPath();
+    buf.forEach((v,i)=>{const x=i*(W/(buf.length-1)),y=H-((v-mn)/rng)*(H-20)-10;i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);});
+    ctx.stroke();
+    // Value readout
+    if(buf.length){const last=buf[buf.length-1];ctx.fillStyle=col;ctx.font='bold 10px Courier New';ctx.fillText(ch+': '+(Math.round(last*100)/100),6,chs.indexOf([ch,col])*14+14);}
+  }
+  // Legend element
+  const legId=overlay?'ov-leg':'scope-leg';
+  const leg=document.getElementById(legId);
+  if(leg){leg.innerHTML='';for(const[ch,col]of chs){const sp=document.createElement('span');sp.style.color=col;sp.textContent='▬ '+ch;leg.appendChild(sp);}}
+  // Crank pattern
+  const ci=document.getElementById(overlay?'ov-crank':'crank-info');
+  if(ci){const p=E.profile;ci.textContent='Pattern: '+p.pat+' | Cyls: '+p.cyl+' | Fire: '+p.fir.join('-')+' | Inj: '+p.inj;}
+}
+
+// ══════════════════════════════════════════════════════════════════
+// SCOPE PANEL HEIGHT RESIZE
+// ══════════════════════════════════════════════════════════════════
+function initScopeResize(){
+  const handle=document.getElementById('scope-resize');
+  const cv=document.getElementById('scope-cv');
+  if(!handle||!cv)return;
+  let dragging=false,startY=0,startH=0;
+  const start=e=>{dragging=true;startY=e.touches?e.touches[0].clientY:e.clientY;startH=parseInt(cv.height)||220;e.preventDefault();};
+  const move=e=>{if(!dragging)return;const y=e.touches?e.touches[0].clientY:e.clientY;const dh=y-startY;const nh=Math.max(80,Math.min(500,startH+dh));cv.height=nh;cv.style.height=nh+'px';};
+  const end=()=>{dragging=false;showToast('Scope height: '+cv.height+'px');};
+  handle.addEventListener('mousedown',start);handle.addEventListener('touchstart',start,{passive:false});
+  document.addEventListener('mousemove',move);document.addEventListener('touchmove',move,{passive:true});
+  document.addEventListener('mouseup',end);document.addEventListener('touchend',end);
+}
+
+// ══════════════════════════════════════════════════════════════════
+// TOAST
+// ══════════════════════════════════════════════════════════════════
+let toastTimer=null;
+function showToast(msg){
+  const t=document.getElementById('toast');if(!t)return;
+  t.textContent=msg;t.style.opacity='1';
+  if(toastTimer)clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>{t.style.opacity='0';},1800);
+}
+
+// ══════════════════════════════════════════════════════════════════
+// MAIN LOOP
+// ══════════════════════════════════════════════════════════════════
+const DT=0.08;
+function tick(){
+  step(DT);scopeStep(DT);canStep(DT);updateUI();updatePinnedRow();
+  // Overlay scope (always draw if open)
+  if(document.getElementById('scope-overlay').classList.contains('open')){
+    const ov1=document.getElementById('ov-ch1'),ov2=document.getElementById('ov-ch2'),ov3=document.getElementById('ov-ch3');
+    const ovcv=document.getElementById('scope-ov-cv');
+    if(ovcv){ovcv.style.height=(window.innerHeight-80)+'px';ovcv.height=(window.innerHeight-80);}
+    drawScopeCanvas(ovcv,ov1?.value,ov2?.value,ov3?.value,true);
+  }
+}
+init();
+initGaugeInteractions();
+initSbLongPress();
+initScopeResize();
+setInterval(tick,80);
+</script>
+</body>
+</html>
